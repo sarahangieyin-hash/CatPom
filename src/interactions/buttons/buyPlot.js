@@ -3,8 +3,8 @@ import {
 } from 'discord.js';
 
 import {
-    getPoints,
-    removePoints
+    getPomp,
+    removePomp
 } from '../../utils/points.js';
 
 
@@ -12,19 +12,22 @@ const plots = {
 
     buy_plot_C: {
         name: 'Parcela C',
-        size: '25x25',
+        emoji: '🏠',
+        size: '25x25 bloques',
         price: 500
     },
 
     buy_plot_B: {
         name: 'Parcela B',
-        size: '30x30',
+        emoji: '🏡',
+        size: '30x30 bloques',
         price: 1000
     },
 
     buy_plot_A: {
         name: 'Parcela A',
-        size: '50x50',
+        emoji: '🏰',
+        size: '50x50 bloques',
         price: 2500
     }
 
@@ -47,10 +50,15 @@ export default {
         if (!plot) return;
 
 
+
         const userId = interaction.user.id;
 
 
-        const points = await getPoints(userId);
+
+        const points = await getPomp(
+            interaction.guild.id,
+            userId
+        );
 
 
 
@@ -59,10 +67,23 @@ export default {
 
             return interaction.reply({
 
-                content:
-                    `❌ No tienes suficientes puntos.\n\n` +
-                    `Necesitas: **${plot.price} puntos**\n` +
-                    `Tienes: **${points} puntos**`,
+                embeds: [
+
+                    new EmbedBuilder()
+
+                    .setTitle('❌ Compra rechazada')
+
+                    .setDescription(
+                        `No tienes suficientes **Pomp** para esta parcela.\n\n` +
+
+                        `💎 Tienes: **${points} Pomp**\n` +
+
+                        `💰 Necesitas: **${plot.price} Pomp**`
+                    )
+
+                    .setColor('#FF0000')
+
+                ],
 
                 ephemeral: true
 
@@ -72,28 +93,49 @@ export default {
 
 
 
-        await removePoints(
+        const remaining = await removePomp(
+
+            interaction.guild.id,
+
             userId,
+
             plot.price
+
         );
 
 
 
         const embed = new EmbedBuilder()
 
-            .setTitle('🏡 Parcela adquirida')
+        .setTitle('🏡 Parcela adquirida')
 
-            .setDescription(
-                `🎉 ${interaction.user} ha comprado una parcela.\n\n` +
-                `🏠 Tipo: **${plot.name}**\n` +
-                `📐 Tamaño: **${plot.size} bloques**\n` +
-                `💰 Pagado: **${plot.price} puntos**`
-            )
+        .setDescription(
 
-            .setColor('#4CAF50');
+            `${plot.emoji} ${interaction.user} ha adquirido una nueva parcela.\n\n` +
+
+            `📜 **Información del terreno**\n` +
+
+            `🏠 Tipo: **${plot.name}**\n` +
+
+            `📐 Tamaño: **${plot.size}**\n` +
+
+            `💎 Precio pagado: **${plot.price} Pomp**\n\n` +
+
+            `💰 Pomp restantes: **${remaining}**`
+
+        )
+
+        .setColor('#4CAF50')
+
+        .setFooter({
+
+            text: 'Gobierno de Metztlán • Oficina de Tierras'
+
+        });
 
 
-        await interaction.reply({
+
+        return interaction.reply({
 
             embeds: [embed]
 
