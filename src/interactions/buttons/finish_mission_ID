@@ -4,7 +4,7 @@ import { addPomp } from '../../utils/points.js';
 
 export default {
 
-customIdPrefix:'finish_mission_',
+customId: 'finish_mission',
 
 
 async execute(interaction){
