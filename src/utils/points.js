@@ -1,4 +1,4 @@
-import { getFromDb, setInDb } from './database.js';
+import { getFromDb, setInDb } from './database/wrapper.js';
 
 
 function getPointsKey(guildId, userId) {
