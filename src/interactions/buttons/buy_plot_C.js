@@ -4,7 +4,7 @@ export default {
 
     customId: 'buy_plot_C',
 
-    async execute(interaction, client) {
+    async execute(interaction) {
 
         const price = 500;
 
@@ -13,14 +13,12 @@ export default {
             interaction.user.id
         );
 
-
         if (points < price) {
             return interaction.reply({
-                content: `❌ No tienes suficientes Pomp.\nNecesitas **${price}** y tienes **${points}**.`,
+                content: `❌ No tienes suficientes Pomp. Necesitas **${price}** y tienes **${points}**.`,
                 ephemeral: true
             });
         }
-
 
         await removePomp(
             interaction.guild.id,
@@ -28,9 +26,8 @@ export default {
             price
         );
 
-
         await interaction.reply({
-            content: `🟩 Compraste la Parcela C (25x25) por **${price} Pomp**.\n💎 Te quedan **${points - price} Pomp**.`,
+            content: `🟩 Compraste la Parcela C (25x25).\n💎 Gastaste **${price} Pomp**.`,
             ephemeral: true
         });
 
