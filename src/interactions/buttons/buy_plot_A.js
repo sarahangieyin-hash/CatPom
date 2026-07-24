@@ -2,11 +2,11 @@ import { getPomp, removePomp } from '../../utils/points.js';
 
 export default {
 
-    customId: 'buy_plot_C',
+    customId: 'buy_plot_A',
 
     async execute(interaction) {
 
-        const price = 500;
+        const price = 2500;
 
         const points = await getPomp(
             interaction.guild.id,
@@ -27,7 +27,7 @@ export default {
         );
 
         await interaction.reply({
-            content: `🟩 Compraste la Parcela C (25x25).\n💎 Gastaste **${price} Pomp**.`,
+            content: `🟨 Compraste la Parcela A (50x50).\n💎 Gastaste **${price} Pomp**.`,
             ephemeral: true
         });
 
