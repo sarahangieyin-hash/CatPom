@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { getPomp } from '../../utils/points.js';
 
 
@@ -17,22 +17,20 @@ export default {
 
     async execute(interaction) {
 
+
         const role = interaction.options.getRole('rol');
 
 
-        const members = await interaction.guild.members.fetch();
+        await interaction.guild.members.fetch();
 
 
         let ranking = [];
 
 
-        for (const member of members.values()) {
-
-            if(!member.roles.cache.has(role.id))
-                continue;
+        for (const member of role.members.values()) {
 
 
-            if(member.user.bot)
+            if (member.user.bot)
                 continue;
 
 
@@ -43,53 +41,94 @@ export default {
 
 
             ranking.push({
+
+                id: member.id,
                 name: member.user.username,
                 points
+
             });
 
         }
+
+
+
+        if (ranking.length === 0) {
+
+            return interaction.reply({
+
+                content:
+                `❌ No hay miembros con el rol ${role}.`,
+
+                ephemeral: true
+
+            });
+
+        }
+
 
 
         ranking.sort(
-            (a,b)=> b.points - a.points
+            (a,b) => b.points - a.points
         );
 
-
-        if(ranking.length === 0){
-
-            return interaction.reply({
-                content:`❌ Nadie tiene el rol ${role}.`,
-                ephemeral:true
-            });
-
-        }
 
 
         let table = "";
 
 
+
         ranking.forEach((user,index)=>{
 
+
+            let position;
+
+
+            if(index === 0)
+                position = "🥇";
+
+            else if(index === 1)
+                position = "🥈";
+
+            else if(index === 2)
+                position = "🥉";
+
+            else
+                position = `**${index + 1}.**`;
+
+
+
             table +=
-            `**${index + 1}.** ${user.name} — 💎 ${user.points} Pomp\n`;
+            `${position} <@${user.id}> — 💎 **${user.points} Pomp**\n`;
+
 
         });
+
+
+
+        const embed = new EmbedBuilder()
+
+            .setTitle(`🏦 Registro de Pomp — ${role.name}`)
+
+            .setDescription(table)
+
+            .setColor('#D4AF37')
+
+            .setFooter({
+
+                text:
+                'Economía de Metztlán • Ranking por rol'
+
+            });
 
 
 
         return interaction.reply({
 
-            embeds:[{
-
-                title:`🏦 Registro de Pomp — ${role.name}`,
-
-                description:table,
-
-                color:"#D4AF37"
-
-            }]
+            embeds:[embed]
 
         });
 
+
     }
+
 };
