@@ -1,5 +1,11 @@
 export const pgDb = {
     insertVerificationAudit: async () => {
-        return false;
+        return true;
+    },
+    query: async () => {
+        return [];
+    },
+    connect: async () => {
+        return true;
     }
 };
