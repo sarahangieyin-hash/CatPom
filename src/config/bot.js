@@ -24,7 +24,7 @@ export const botConfig = {
     owners:
       process.env.OWNER_IDS
         ?.split(",")
-        .map((id) => id.trim())
+        .map((id) => id.trim()) 
         .filter(Boolean) || [],
 
     defaultCooldown: 3,
