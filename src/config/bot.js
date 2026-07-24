@@ -878,7 +878,11 @@ export function getRandomColor() {
 }
 
 export function getDefaultApplicationQuestions() {
-    return botConfig.applications.defaultQuestions;
+  return [
+    { question: "What is your name?", required: true },
+    { question: "How old are you?", required: true },
+    { question: "Why do you want to join?", required: true },
+  ];
 }
 
 export default botConfig;
