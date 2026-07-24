@@ -11,6 +11,23 @@ import { handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import pkg from '../package.json' with { type: 'json' };
 
 
+// ================================
+// DEBUG CRASH HANDLERS
+// ================================
+process.on('uncaughtException', (error) => {
+  console.error('💥 UNCAUGHT EXCEPTION');
+  console.error(error);
+});
+
+process.on('unhandledRejection', (error) => {
+  console.error('💥 UNHANDLED REJECTION');
+  console.error(error);
+});
+
+console.log("APP STARTED");
+
+
+
 class CatPom extends Client {
   constructor() {
     super({
@@ -65,6 +82,7 @@ class CatPom extends Client {
 
     } catch (error) {
       logger.error('Failed to start bot:', error);
+      console.error(error);
       process.exit(1);
     }
   }
@@ -189,6 +207,8 @@ process.on('uncaughtException', error => {
     { fatal: true }
   );
 
+  console.error(error);
+
   bot.shutdown(
     'UNCAUGHT_EXCEPTION'
   );
@@ -206,6 +226,8 @@ process.on('unhandledRejection', reason => {
       errorCode: ErrorCodes.UNHANDLED_REJECTION
     }
   );
+
+  console.error(reason);
 });
 
 
