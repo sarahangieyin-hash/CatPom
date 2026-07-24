@@ -1,4 +1,4 @@
-import { getMission, updateMission } from '../utils/missions.js';
+import { getMission, updateMission } from '../../utils/missions.js';
 
 
 export default {
