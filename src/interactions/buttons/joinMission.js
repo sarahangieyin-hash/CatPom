@@ -3,7 +3,7 @@ import { getMission, updateMission } from '../../utils/missions.js';
 
 export default {
 
-customIdPrefix:'join_mission_',
+customId: 'join_mission',
 
 
 async execute(interaction){
