@@ -1,4 +1,3 @@
-console.log("SCHEMAS LOADED");
 export function normalizeEconomyData(data = {}) {
     return {
         balance: Number(data.balance || 0),
