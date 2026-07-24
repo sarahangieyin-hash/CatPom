@@ -47,8 +47,10 @@ class CatPom extends Client {
 
     this.db = null;
 
-    this.rest = new REST({ version: '10' })
-      .setToken(config.bot.token);
+this.rest = new REST({ version: '10' })
+  .setToken(
+    process.env.DISCORD_TOKEN || process.env.TOKEN
+  );
   }
 
 
@@ -71,7 +73,9 @@ class CatPom extends Client {
       this.startWebServer();
 
       startupLog('Logging into Discord...');
-      await this.login(this.config.bot.token);
+   await this.login(
+  process.env.DISCORD_TOKEN || process.env.TOKEN
+);
 
       startupLog('Registering slash commands...');
       await this.registerCommands();
@@ -135,9 +139,9 @@ class CatPom extends Client {
 
   async registerCommands() {
     try {
-      await registerSlashCommands(this, {
-        clientId: this.config.bot.clientId
-      });
+   await registerSlashCommands(this, {
+  clientId: process.env.CLIENT_ID
+});
 
     } catch (error) {
       logger.error(
