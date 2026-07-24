@@ -5,3 +5,10 @@ export function normalizeEconomyData(data = {}) {
         ...data
     };
 }
+export function validateGuildConfigOrThrow(config) {
+    if (!config || typeof config !== 'object') {
+        throw new Error('Invalid guild config');
+    }
+
+    return config;
+}
