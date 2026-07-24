@@ -8,35 +8,62 @@ export default {
 
   async execute(client) {
     try {
-      client.user.setPresence(
-        config.bot.presence
-      );
 
+      // =========================
+      // BOT PRESENCE
+      // =========================
+      if (config.presence) {
+
+        client.user.setPresence({
+          status: config.presence.status ?? "online",
+
+          activities:
+            config.presence.activities ?? []
+        });
+
+      }
+
+
+      // =========================
+      // STARTUP LOGS
+      // =========================
       startupLog(
         `Ready! Logged in as ${client.user.tag}`
       );
+
 
       startupLog(
         `Serving ${client.guilds.cache.size} guild(s)`
       );
 
-      startupLog(
-        `Loaded ${client.commands.size} commands`
-      );
 
       startupLog(
-        `Buttons loaded: ${client.buttons.size}`
+        `Loaded ${client.commands?.size ?? 0} commands`
       );
 
+
       startupLog(
-        `Select menus loaded: ${client.selectMenus.size}`
+        `Buttons loaded: ${client.buttons?.size ?? 0}`
       );
+
+
+      startupLog(
+        `Select menus loaded: ${client.selectMenus?.size ?? 0}`
+      );
+
+
+      startupLog(
+        "Bot is fully online ✅"
+      );
+
 
     } catch (error) {
+
       logger.error(
         "Error in ready event:",
         error
       );
+
     }
   },
 };
