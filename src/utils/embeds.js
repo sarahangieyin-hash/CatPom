@@ -1,11 +1,17 @@
 import { EmbedBuilder } from 'discord.js';
 import { BotConfig } from '../config/bot.js';
 
+
 export function createEmbed(options = {}) {
     const embed = new EmbedBuilder();
 
-    if (options.title) embed.setTitle(options.title);
-    if (options.description) embed.setDescription(options.description);
+    if (options.title) {
+        embed.setTitle(options.title);
+    }
+
+    if (options.description) {
+        embed.setDescription(options.description);
+    }
 
     embed.setColor(
         options.color || BotConfig.embeds.colors.primary
@@ -28,12 +34,14 @@ export function createEmbed(options = {}) {
     return embed;
 }
 
+
 export function successEmbed(description) {
     return createEmbed({
         description,
         color: BotConfig.embeds.colors.success
     });
 }
+
 
 export function errorEmbed(description) {
     return createEmbed({
@@ -42,12 +50,23 @@ export function errorEmbed(description) {
     });
 }
 
+
 export function infoEmbed(description) {
     return createEmbed({
         description,
         color: BotConfig.embeds.colors.info
     });
 }
+
+
+export function warningEmbed(description) {
+    return createEmbed({
+        description,
+        color: BotConfig.embeds.colors.warning || "#FEE75C"
+    });
+}
+
+
 export function buildUserErrorEmbed(type, description) {
     return createEmbed({
         title: "Error",
@@ -55,9 +74,7 @@ export function buildUserErrorEmbed(type, description) {
         color: BotConfig.embeds.colors.error
     });
 }
-export function warningEmbed(message) {
-  return createEmbed({
-    color: '#FEE75C',
-    description: message
-  });
-}
+
+
+// DEBUG
+console.log("embeds.js loaded: warningEmbed exported");
