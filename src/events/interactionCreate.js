@@ -3,106 +3,80 @@ import { logger } from '../utils/logger.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
 
 export default {
-  name: Events.InteractionCreate,
+    name: Events.InteractionCreate,
 
-  async execute(interaction, client) {
+    async execute(interaction, client) {
 
-    try {
+        try {
 
-      if (interaction.isChatInputCommand()) {
+            if (interaction.isChatInputCommand()) {
 
-        const command = client.commands.get(
-          interaction.commandName
-        );
+                const command = client.commands.get(
+                    interaction.commandName
+                );
 
-        if (!command) return;
+                if (!command) return;
 
-        await command.execute(
-          interaction,
-          client
-        );
-
-        return;
-      }
-
-
-      if (interaction.isButton()) {
-
-        const [customId, ...args] =
-          interaction.customId.split(':');
-
-
-        let button =
-          client.buttons.get(customId);
-
-
-        if (!button) {
-
-          for (const btn of client.buttons.values()) {
-
-            if (
-              btn.customIdPrefix &&
-              customId.startsWith(btn.customIdPrefix)
-            ) {
-              button = btn;
-              break;
+                await command.execute(interaction, client);
+                return;
             }
 
-          }
 
+            if (interaction.isButton()) {
+
+                console.log("BOTON:", interaction.customId);
+
+                const button = client.buttons.get(
+                    interaction.customId
+                );
+
+
+                if (!button) {
+                    console.log("BOTON NO ENCONTRADO");
+                    return;
+                }
+
+
+                await button.execute(
+                    interaction,
+                    client
+                );
+
+                return;
+            }
+
+
+            if (interaction.isStringSelectMenu()) {
+
+                const menu = client.selectMenus.get(
+                    interaction.customId
+                );
+
+                if (!menu) return;
+
+                await menu.execute(
+                    interaction,
+                    client
+                );
+
+                return;
+            }
+
+
+        } catch (error) {
+
+            logger.error(
+                'Interaction error:',
+                error
+            );
+
+
+            if (!interaction.replied) {
+                await handleInteractionError(
+                    interaction,
+                    error
+                );
+            }
         }
-
-
-        if (!button) return;
-
-
-        await button.execute(
-          interaction,
-          client,
-          args
-        );
-
-        return;
-      }
-
-
-      if (interaction.isStringSelectMenu()) {
-
-        const [customId, ...args] =
-          interaction.customId.split(':');
-
-
-        const menu =
-          client.selectMenus.get(customId);
-
-
-        if (!menu) return;
-
-
-        await menu.execute(
-          interaction,
-          client,
-          args
-        );
-
-        return;
-      }
-
-
-    } catch (error) {
-
-      logger.error(
-        'Interaction error:',
-        error
-      );
-
-
-      await handleInteractionError(
-        interaction,
-        error
-      );
-
     }
-
-  }
 };
