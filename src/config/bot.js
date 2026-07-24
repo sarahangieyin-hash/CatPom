@@ -638,10 +638,10 @@ const configErrors = validateConfig(botConfig);
 
 if (configErrors.length > 0) {
 
-  logger.error(
-    "Bot configuration errors:",
-    configErrors.join("\n")
-  );
+logger.error(
+  "Bot configuration errors:",
+  JSON.stringify(configErrors, null, 2)
+);
 
 
   if (process.env.NODE_ENV === "production") {
