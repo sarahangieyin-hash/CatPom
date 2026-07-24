@@ -2,45 +2,41 @@ import { getMission } from '../../utils/missions.js';
 import { addPomp } from '../../utils/points.js';
 
 export default {
+    customId: 'finish_mission',
 
-    customIdPrefix: 'finish_mission_',
+    async execute(interaction) {
 
-    async execute(interaction){
-
-        if(!interaction.member.permissions.has('Administrator')){
+        if (!interaction.member.permissions.has('Administrator')) {
             return interaction.reply({
-                content:'❌ Solo admins.',
-                ephemeral:true
+                content: '❌ Solo admins.',
+                ephemeral: true
             });
         }
 
-        const id = interaction.customId.replace('finish_mission_', '');
+        const id = interaction.customId.split(':')[1];
 
         const mission = await getMission(
             interaction.guild.id,
             id
         );
 
-        if(!mission){
+        if (!mission) {
             return interaction.reply({
-                content:'❌ Misión no encontrada.',
-                ephemeral:true
+                content: '❌ Misión no encontrada.',
+                ephemeral: true
             });
         }
 
-        for(const user of mission.usuarios){
-
+        for (const user of mission.usuarios) {
             await addPomp(
                 interaction.guild.id,
                 user,
                 mission.puntos
             );
-
         }
 
         await interaction.reply(
             `✅ Misión completada. ${mission.usuarios.length} personas recibieron ${mission.puntos} Pomp.`
         );
     }
-
 };
