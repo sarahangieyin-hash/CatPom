@@ -1,47 +1,48 @@
+import { getEconomyKey } from './database.js';
 import { getFromDb, setInDb } from './database.js';
 
 
-function getPompKey(guildId, userId) {
-    return `guild:${guildId}:pomp:${userId}`;
+
+function getPointsKey(guildId, userId){
+
+    return `pomp:${guildId}:${userId}`;
+
 }
 
 
-export async function getPomp(guildId, userId) {
+
+// Obtener puntos
+
+export async function getPomp(guildId, userId){
+
+    const key = getPointsKey(
+        guildId,
+        userId
+    );
+
 
     const data = await getFromDb(
-        getPompKey(guildId, userId),
-        { points: 0 }
+        key,
+        {
+            points:0
+        }
     );
+
 
     return Number(data.points || 0);
+
 }
 
 
 
-export async function addPomp(guildId, userId, amount) {
 
-    const current = await getPomp(
-        guildId,
-        userId
-    );
+// Añadir puntos
 
-    const total = current + amount;
-
-
-    await setInDb(
-        getPompKey(guildId, userId),
-        {
-            points: total
-        }
-    );
-
-
-    return total;
-}
-
-
-
-export async function removePomp(guildId, userId, amount) {
+export async function addPomp(
+    guildId,
+    userId,
+    amount
+){
 
     const current = await getPomp(
         guildId,
@@ -49,19 +50,71 @@ export async function removePomp(guildId, userId, amount) {
     );
 
 
-    const total = Math.max(
-        0,
-        current - amount
-    );
+    const total =
+        current + amount;
+
 
 
     await setInDb(
-        getPompKey(guildId, userId),
+
+        getPointsKey(
+            guildId,
+            userId
+        ),
+
         {
             points: total
         }
+
     );
 
 
     return total;
+
+}
+
+
+
+
+// Quitar puntos
+
+export async function removePomp(
+    guildId,
+    userId,
+    amount
+){
+
+
+    const current = await getPomp(
+        guildId,
+        userId
+    );
+
+
+    let total =
+        current - amount;
+
+
+
+    if(total < 0)
+        total = 0;
+
+
+
+    await setInDb(
+
+        getPointsKey(
+            guildId,
+            userId
+        ),
+
+        {
+            points: total
+        }
+
+    );
+
+
+    return total;
+
 }
