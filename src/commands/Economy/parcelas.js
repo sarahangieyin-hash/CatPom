@@ -6,60 +6,71 @@ import {
     ButtonStyle
 } from 'discord.js';
 
+
 export default {
 
     data: new SlashCommandBuilder()
         .setName('parcelas')
-        .setDescription('Compra una parcela'),
+        .setDescription('Oficina de tierras'),
 
     async execute(interaction) {
 
+
         const embed = new EmbedBuilder()
-            .setTitle('🏡 Parcelas disponibles')
+            .setTitle('🏛️ Oficina de Tierras')
             .setDescription(
 `
-Elige la parcela que quieres comprar:
+Bienvenida a la oficina de tierras.
 
-🟩 **Parcela C**
-📐 25x25 bloques
-💎 500 puntos
+Aquí puedes adquirir una parcela para construir tu hogar dentro del pueblo.
 
-🟦 **Parcela B**
-📐 30x30 bloques
-💎 1000 puntos
+Selecciona el tamaño de terreno que deseas solicitar:
 
-🟨 **Parcela A**
-📐 50x50 bloques
-💎 2500 puntos
+🏠 **Casa pequeña**
+Parcela C
+25x25 bloques
+
+🏡 **Casa mediana**
+Parcela B
+30x30 bloques
+
+🏰 **Casa grande**
+Parcela A
+50x50 bloques
 `
             )
-            .setColor('#7CFC00');
+            .setColor('#8B5A2B')
+            .setFooter({
+                text: 'Gobierno de Metztlán • Registro de tierras'
+            });
 
 
-        const row = new ActionRowBuilder()
+        const botones = new ActionRowBuilder()
             .addComponents(
 
                 new ButtonBuilder()
                     .setCustomId('buy_plot_C')
-                    .setLabel('Comprar C')
-                    .setStyle(ButtonStyle.Success),
+                    .setEmoji('🏠')
+                    .setStyle(ButtonStyle.Secondary),
+
 
                 new ButtonBuilder()
                     .setCustomId('buy_plot_B')
-                    .setLabel('Comprar B')
+                    .setEmoji('🏡')
                     .setStyle(ButtonStyle.Primary),
+
 
                 new ButtonBuilder()
                     .setCustomId('buy_plot_A')
-                    .setLabel('Comprar A')
-                    .setStyle(ButtonStyle.Danger)
+                    .setEmoji('🏰')
+                    .setStyle(ButtonStyle.Success)
 
             );
 
 
         await interaction.reply({
             embeds: [embed],
-            components: [row]
+            components: [botones]
         });
 
     }
