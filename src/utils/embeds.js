@@ -48,3 +48,10 @@ export function infoEmbed(description) {
         color: BotConfig.embeds.colors.info
     });
 }
+export function buildUserErrorEmbed(type, description) {
+    return createEmbed({
+        title: "Error",
+        description,
+        color: BotConfig.embeds.colors.error
+    });
+}
