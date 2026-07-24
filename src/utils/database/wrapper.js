@@ -2,7 +2,7 @@ import { pgDb } from '../postgresDatabase.js';
 import { MemoryStorage } from '../memoryStorage.js';
 import { logger } from '../logger.js';
 import { validateGuildConfigOrThrow } from '../schemas.js';
-
+console.log("WRAPPER CARGADO");
 class DatabaseWrapper {
     constructor() {
         this.initialized = false;
