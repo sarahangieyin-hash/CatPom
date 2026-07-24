@@ -4,29 +4,27 @@ const { Pool } = pg;
 
 const pool = new Pool({
     connectionString: process.env.POSTGRES_URL,
-    ssl: process.env.POSTGRES_SSL ? { rejectUnauthorized: false } : false
+    ssl: { rejectUnauthorized: false }
 });
 
 export const pgDb = {
-    connect: async () => {
+    async connect() {
         await pool.query("SELECT 1");
         return true;
     },
 
-    get: async (key, defaultValue = null) => {
+    async get(key, defaultValue = null) {
         const result = await pool.query(
             "SELECT value FROM bot_storage WHERE key = $1",
             [key]
         );
 
-        if (result.rows.length === 0) {
-            return defaultValue;
-        }
+        if (!result.rows.length) return defaultValue;
 
         return result.rows[0].value;
     },
 
-    set: async (key, value) => {
+    async set(key, value) {
         await pool.query(
             `
             INSERT INTO bot_storage (key, value)
@@ -34,13 +32,13 @@ export const pgDb = {
             ON CONFLICT (key)
             DO UPDATE SET value = EXCLUDED.value
             `,
-            [key, value]
+            [key, JSON.stringify(value)]
         );
 
         return true;
     },
 
-    delete: async (key) => {
+    async delete(key) {
         await pool.query(
             "DELETE FROM bot_storage WHERE key = $1",
             [key]
@@ -49,20 +47,16 @@ export const pgDb = {
         return true;
     },
 
-    list: async (prefix) => {
+    async list(prefix) {
         const result = await pool.query(
             "SELECT key FROM bot_storage WHERE key LIKE $1",
             [`${prefix}%`]
         );
 
-        return result.rows.map(row => row.key);
+        return result.rows.map(r => r.key);
     },
 
-    query: async (text, params = []) => {
-        return pool.query(text, params);
-    },
-
-    insertVerificationAudit: async (record) => {
+    async insertVerificationAudit() {
         return true;
     }
 };
