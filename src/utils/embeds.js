@@ -55,3 +55,9 @@ export function buildUserErrorEmbed(type, description) {
         color: BotConfig.embeds.colors.error
     });
 }
+export function warningEmbed(message) {
+  return createEmbed({
+    color: '#FEE75C',
+    description: message
+  });
+}
