@@ -49,25 +49,3 @@ export default {
         );
     }
 };
-export async function addPomp(guildId, userId, amount) {
-
-    const current = await getPomp(guildId, userId);
-
-    console.log("PUNTOS ANTES:", current);
-
-    const total = current + amount;
-
-    console.log("GUARDANDO:", {
-        key: getPointsKey(guildId, userId),
-        value: { points: total }
-    });
-
-    await setInDb(
-        getPointsKey(guildId, userId),
-        {
-            points: total
-        }
-    );
-
-    return total;
-}
