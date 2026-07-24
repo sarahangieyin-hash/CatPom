@@ -12,9 +12,23 @@ import pkg from '../package.json' with { type: 'json' };
 
 
 console.log("APP STARTED");
+
+const BOT_TOKEN =
+  process.env.DISCORD_TOKEN ||
+  process.env.TOKEN;
+
+const CLIENT_ID =
+  process.env.CLIENT_ID;
+
+
 console.log(
   "TOKEN EXISTS:",
-  !!(process.env.DISCORD_TOKEN || process.env.TOKEN)
+  Boolean(BOT_TOKEN)
+);
+
+console.log(
+  "CLIENT ID EXISTS:",
+  Boolean(CLIENT_ID)
 );
 
 
@@ -49,9 +63,7 @@ class CatPom extends Client {
     this.rest = new REST({
       version: '10'
     })
-    .setToken(
-      process.env.DISCORD_TOKEN || process.env.TOKEN
-    );
+    .setToken(BOT_TOKEN);
 
   }
 
@@ -66,7 +78,8 @@ class CatPom extends Client {
 
       startupLog('Initializing database...');
 
-      const dbInstance = await initializeDatabase();
+      const dbInstance =
+        await initializeDatabase();
 
       this.db = dbInstance.db;
 
@@ -97,9 +110,7 @@ class CatPom extends Client {
       startupLog('Logging into Discord...');
 
 
-      await this.login(
-        process.env.DISCORD_TOKEN || process.env.TOKEN
-      );
+      await this.login(BOT_TOKEN);
 
 
 
@@ -114,7 +125,7 @@ class CatPom extends Client {
       );
 
 
-    } catch (error) {
+    } catch(error) {
 
 
       logger.error(
@@ -137,23 +148,21 @@ class CatPom extends Client {
 
   startWebServer() {
 
-
     const app = express();
 
 
-    const port = Number(
-      process.env.PORT || 3000
-    );
+    const port =
+      Number(process.env.PORT || 3000);
 
 
 
-    app.get('/', (req, res) => {
+    app.get('/', (req,res)=>{
 
       res.json({
 
-        message: 'CatPom online',
+        message:'CatPom online',
 
-        version: pkg.version,
+        version:pkg.version,
 
       });
 
@@ -161,13 +170,13 @@ class CatPom extends Client {
 
 
 
-    app.get('/health', (req, res) => {
+    app.get('/health',(req,res)=>{
 
       res.json({
 
-        status: 'healthy',
+        status:'healthy',
 
-        uptime: process.uptime(),
+        uptime:process.uptime(),
 
       });
 
@@ -175,16 +184,14 @@ class CatPom extends Client {
 
 
 
-    this.webServer = app.listen(
-      port,
-      () => {
+    this.webServer =
+      app.listen(port,()=>{
 
         startupLog(
           `Web server running on port ${port}`
         );
 
-      }
-    );
+      });
 
   }
 
@@ -192,31 +199,25 @@ class CatPom extends Client {
 
 
 
-  async loadHandlers() {
+  async loadHandlers(){
 
-
-    const handlers = [
+    const handlers=[
       'events',
       'interactions'
     ];
 
 
+    for(const handler of handlers){
 
-    for (const handler of handlers) {
-
-
-      const module = await import(
-        `./handlers/loaders/${handler}.js`
-      );
-
+      const module =
+        await import(
+          `./handlers/loaders/${handler}.js`
+        );
 
 
-      if (
-        typeof module.default === 'function'
-      ) {
+      if(typeof module.default === 'function'){
 
         await module.default(this);
-
 
         startupLog(
           `Loaded ${handler}`
@@ -232,28 +233,24 @@ class CatPom extends Client {
 
 
 
-  async registerCommands() {
+  async registerCommands(){
 
-
-    try {
-
+    try{
 
       await registerSlashCommands(
         this,
         {
-          clientId: process.env.CLIENT_ID
+          clientId: CLIENT_ID
         }
       );
 
 
-    } catch (error) {
-
+    }catch(error){
 
       logger.error(
         'Command registration failed:',
         error
       );
-
 
     }
 
@@ -263,19 +260,17 @@ class CatPom extends Client {
 
 
 
-  async shutdown(reason = 'UNKNOWN') {
-
+  async shutdown(reason='UNKNOWN'){
 
     shutdownLog(
       `CatPom shutting down: ${reason}`
     );
 
 
+    try{
 
-    try {
 
-
-      if (this.webServer) {
+      if(this.webServer){
 
         this.webServer.close();
 
@@ -283,7 +278,7 @@ class CatPom extends Client {
 
 
 
-      if (this.db?.db?.pool) {
+      if(this.db?.db?.pool){
 
         await this.db.db.pool.end();
 
@@ -293,19 +288,16 @@ class CatPom extends Client {
 
       this.destroy();
 
-
       process.exit(0);
 
 
 
-    } catch (error) {
-
+    }catch(error){
 
       logger.error(
         'Shutdown error:',
         error
       );
-
 
       process.exit(1);
 
@@ -325,14 +317,13 @@ const bot = new CatPom();
 
 process.on(
   'SIGTERM',
-  () => bot.shutdown('SIGTERM')
+  ()=>bot.shutdown('SIGTERM')
 );
-
 
 
 process.on(
   'SIGINT',
-  () => bot.shutdown('SIGINT')
+  ()=>bot.shutdown('SIGINT')
 );
 
 
@@ -340,7 +331,7 @@ process.on(
 
 process.on(
   'uncaughtException',
-  error => {
+  error=>{
 
     console.error(
       '💥 UNCAUGHT EXCEPTION'
@@ -353,13 +344,8 @@ process.on(
       'uncaught_exception',
       error,
       {
-        fatal: true
+        fatal:true
       }
-    );
-
-
-    bot.shutdown(
-      'UNCAUGHT_EXCEPTION'
     );
 
   }
@@ -370,16 +356,13 @@ process.on(
 
 process.on(
   'unhandledRejection',
-  reason => {
-
+  reason=>{
 
     console.error(
       '💥 UNHANDLED REJECTION'
     );
 
-
     console.error(reason);
-
 
 
     handleTaskError(
@@ -395,7 +378,6 @@ process.on(
 
   }
 );
-
 
 
 
