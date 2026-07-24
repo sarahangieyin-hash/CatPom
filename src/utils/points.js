@@ -1,138 +1,50 @@
-import { getFromDb, setInDb } from './database.js';
+import { SlashCommandBuilder } from 'discord.js';
+import { getPomp } from '../../utils/points.js';
 
 
-function getPointsKey(guildId, userId) {
+export default {
 
-    return `pomp:${guildId}:${userId}`;
-
-}
-
-
-
-// Ver puntos de un usuario
-
-export async function getPomp(guildId, userId) {
-
-    const key = getPointsKey(
-        guildId,
-        userId
-    );
+    data: new SlashCommandBuilder()
+        .setName('pompsee')
+        .setDescription('Ver tus Pomp'),
 
 
-    const data = await getFromDb(
-        key,
-        {
-            points: 0
+    async execute(interaction) {
+
+        try {
+
+            const points = await getPomp(
+                interaction.guild.id,
+                interaction.user.id
+            );
+
+
+            return interaction.reply({
+
+                content:
+                    `💎 Tienes **${points} Pomp**.`,
+
+                ephemeral: true
+
+            });
+
+
+        } catch (error) {
+
+            console.error('ERROR EN POMPSEE:', error);
+
+
+            return interaction.reply({
+
+                content:
+                    '❌ No se pudieron cargar tus Pomp. Revisa la consola del bot.',
+
+                ephemeral: true
+
+            });
+
         }
-    );
 
+    }
 
-    return Number(data.points || 0);
-
-}
-
-
-
-// Añadir Pomp
-
-export async function addPomp(
-    guildId,
-    userId,
-    amount
-) {
-
-    const current = await getPomp(
-        guildId,
-        userId
-    );
-
-
-    const total =
-        current + amount;
-
-
-
-    await setInDb(
-        getPointsKey(
-            guildId,
-            userId
-        ),
-        {
-            points: total
-        }
-    );
-
-
-    return total;
-
-}
-
-
-
-// Quitar Pomp
-
-export async function removePomp(
-    guildId,
-    userId,
-    amount
-) {
-
-    const current = await getPomp(
-        guildId,
-        userId
-    );
-
-
-    const total = Math.max(
-        0,
-        current - amount
-    );
-
-
-
-    await setInDb(
-        getPointsKey(
-            guildId,
-            userId
-        ),
-        {
-            points: total
-        }
-    );
-
-
-    return total;
-
-}
-
-
-
-// Alias para botones de parcelas
-
-export async function getPoints(
-    guildId,
-    userId
-) {
-
-    return getPomp(
-        guildId,
-        userId
-    );
-
-}
-
-
-
-export async function removePoints(
-    guildId,
-    userId,
-    amount
-) {
-
-    return removePomp(
-        guildId,
-        userId,
-        amount
-    );
-
-}
+};
