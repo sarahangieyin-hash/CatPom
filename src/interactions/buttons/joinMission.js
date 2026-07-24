@@ -1,6 +1,5 @@
 import { getMission, updateMission } from '../../utils/missions.js';
 
-
 export default {
 
 customId: 'join_mission',
