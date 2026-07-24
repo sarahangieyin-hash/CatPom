@@ -5,6 +5,7 @@ export function normalizeEconomyData(data = {}) {
         ...data
     };
 }
+
 export function validateGuildConfigOrThrow(config) {
     if (!config || typeof config !== 'object') {
         throw new Error('Invalid guild config');
@@ -12,3 +13,5 @@ export function validateGuildConfigOrThrow(config) {
 
     return config;
 }
+
+console.log("schemas loaded correctly");
