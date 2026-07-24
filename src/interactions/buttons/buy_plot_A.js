@@ -20,29 +20,14 @@ export default {
             });
         }
 
-
         await removePomp(
             interaction.guild.id,
             interaction.user.id,
             price
         );
 
-
         await interaction.reply({
             content: `🟩 Compraste la Parcela C (25x25).\n💎 Gastaste **${price} Pomp**.`,
-            ephemeral: true
-        });
-
-    }
-
-};export default {
-
-    customId: 'buy_plot_A',
-
-    async execute(interaction, client) {
-
-        await interaction.reply({
-            content: '🟨 Compraste la Parcela A (50x50) por 2500 puntos.',
             ephemeral: true
         });
 
