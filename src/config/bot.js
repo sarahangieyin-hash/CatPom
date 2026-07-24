@@ -1,9 +1,8 @@
-import { logger } from '../utils/logger.js';
+import { logger } from "../utils/logger.js";
+
 
 export const botConfig = {
-  // =========================
-  // BOT PRESENCE
-  // =========================
+
   presence: {
     status: "online",
 
@@ -17,46 +16,61 @@ export const botConfig = {
   },
 
 
-  // =========================
-  // COMMAND BEHAVIOR
-  // =========================
   commands: {
+
     owners:
       process.env.OWNER_IDS
         ?.split(",")
-        .map((id) => id.trim()) 
+        .map(id => id.trim())
         .filter(Boolean) || [],
+
 
     defaultCooldown: 3,
 
     deleteCommands: false,
 
-    testGuildId: process.env.TEST_GUILD_ID,
+
+    testGuildId:
+      process.env.TEST_GUILD_ID || null,
+
 
     maintenanceMode:
       process.env.MAINTENANCE_MODE === "true",
 
-    // Prefijo para comandos de texto:
-    // Ejemplo: visca help
-    prefix: process.env.PREFIX || "visca",
+
+    prefix:
+      process.env.PREFIX || "visca",
   },
 
 
-  // =========================
-  // APPLICATIONS SYSTEM
-  // =========================
   applications: {
+
     defaultQuestions: [
-      { question: "What is your name?", required: true },
-      { question: "How old are you?", required: true },
-      { question: "Why do you want to join?", required: true },
+      {
+        question: "What is your name?",
+        required: true
+      },
+      {
+        question: "How old are you?",
+        required: true
+      },
+      {
+        question: "Why do you want to join?",
+        required: true
+      }
     ],
 
+
     statusColors: {
+
       pending: "#F1C40F",
+
       approved: "#57F287",
+
       denied: "#ED4245",
+
     },
+
 
     applicationCooldown: 24,
 
@@ -64,144 +78,150 @@ export const botConfig = {
 
     deleteApprovedAfter: 30,
 
+
     managerRoles: [],
   },
 
 
-  // =========================
-  // EMBED COLORS & BRANDING
-  // =========================
   embeds: {
+
     colors: {
 
-      // Amarillo suave principal
-      primary: "#F4D35E",
+      primary:"#F4D35E",
 
-      // Fondo oscuro elegante
-      secondary: "#2B2D31",
+      secondary:"#2B2D31",
 
-      success: "#57F287",
-      error: "#ED4245",
-      warning: "#FEE75C",
-      info: "#F7DC6F",
+      success:"#57F287",
 
-      light: "#FFFFFF",
-      dark: "#202225",
-      gray: "#99AAB5",
+      error:"#ED4245",
 
-      blurple: "#5865F2",
-      green: "#57F287",
-      yellow: "#F4D35E",
-      fuchsia: "#EB459E",
-      red: "#ED4245",
-      black: "#000000",
+      warning:"#FEE75C",
 
-      giveaway: {
-        active: "#F4D35E",
-        ended: "#ED4245",
+      info:"#F7DC6F",
+
+      light:"#FFFFFF",
+
+      dark:"#202225",
+
+      gray:"#99AAB5",
+
+      blurple:"#5865F2",
+
+      green:"#57F287",
+
+      yellow:"#F4D35E",
+
+      red:"#ED4245",
+
+      black:"#000000",
+
+
+      giveaway:{
+        active:"#F4D35E",
+        ended:"#ED4245"
       },
 
-      ticket: {
-        open: "#57F287",
-        claimed: "#FAA61A",
-        closed: "#ED4245",
-        pending: "#99AAB5",
+
+      ticket:{
+        open:"#57F287",
+        claimed:"#FAA61A",
+        closed:"#ED4245",
+        pending:"#99AAB5"
       },
 
-      // Economía ahora usa amarillo
-      economy: "#F7DC6F",
 
-      birthday: "#E91E63",
+      economy:"#F7DC6F",
 
-      moderation: "#9B59B6",
+      birthday:"#E91E63",
 
-      priority: {
-        none: "#95A5A6",
-        low: "#3498db",
-        medium: "#2ecc71",
-        high: "#f1c40f",
-        urgent: "#e74c3c",
-      },
+      moderation:"#9B59B6",
+
+
+      priority:{
+        none:"#95A5A6",
+        low:"#3498db",
+        medium:"#2ecc71",
+        high:"#f1c40f",
+        urgent:"#e74c3c"
+      }
+
     },
 
 
-footer: {
-  text: "Visca Bot",
-      icon: null,
+    footer:{
+      text:"Visca Bot",
+      icon:null
     },
 
 
-    thumbnail: null,
+    thumbnail:null,
 
 
-    author: {
-      name: null,
-      icon: null,
-      url: null,
-    },
+    author:{
+      name:null,
+      icon:null,
+      url:null
+    }
+
   },
 
 
-  // =========================
-  // ECONOMY SETTINGS
-  // =========================
   economy: {
+
     currency: {
 
-      // Nombre de la moneda
-      name: "puntos",
+      name:"puntos",
 
-      // Plural
-      namePlural: "puntos",
+      namePlural:"puntos",
 
-      // Símbolo visible
-      symbol: "⭐ Pt",
+      symbol:"⭐ Pt"
+
     },
 
 
-    startingBalance: 0,
+    startingBalance:0,
 
 
-    baseBankCapacity: 100000,
+    baseBankCapacity:100000,
 
 
-    dailyAmount: 100,
+    dailyAmount:100,
 
 
-    workMin: 10,
+    workMin:10,
 
-    workMax: 100,
-
-
-    begMin: 5,
-
-    begMax: 50,
+    workMax:100,
 
 
-    cooldowns: {
-      daily: 24 * 60 * 60 * 1000,
-      work: 60 * 60 * 1000,
-      crime: 2 * 60 * 60 * 1000,
-      rob: 4 * 60 * 60 * 1000,
+    begMin:5,
+
+    begMax:50,
+
+
+    cooldowns:{
+
+      daily:86400000,
+
+      work:3600000,
+
+      crime:7200000,
+
+      rob:14400000
+
     },
 
 
-    robSuccessRate: 0.4,
+    robSuccessRate:0.4,
 
 
-    robFailJailTime: 3600000,
+    robFailJailTime:3600000
+
   },
-  // =========================
-  // SHOP SETTINGS
-  // =========================
-  shop: {
+    shop: {
 
   },
 
 
-  // =========================
-  // TICKET SYSTEM
-  // =========================
   tickets: {
 
     defaultCategory: null,
@@ -210,11 +230,13 @@ footer: {
 
 
     priorities: {
+
       none: {
         emoji: "⚪",
         color: "#95A5A6",
         label: "None",
       },
+
 
       low: {
         emoji: "🟢",
@@ -222,11 +244,13 @@ footer: {
         label: "Low",
       },
 
+
       medium: {
         emoji: "🟡",
         color: "#F4D35E",
         label: "Medium",
       },
+
 
       high: {
         emoji: "🔴",
@@ -234,31 +258,28 @@ footer: {
         label: "High",
       },
 
+
       urgent: {
         emoji: "🚨",
         color: "#E91E63",
         label: "Urgent",
       },
+
     },
 
 
     defaultPriority: "none",
 
-
     archiveCategory: null,
 
-
     logChannel: null,
+
   },
 
 
-  // =========================
-  // GIVEAWAY SETTINGS
-  // =========================
   giveaways: {
 
     defaultDuration: 86400000,
-
 
     minimumWinners: 1,
 
@@ -273,99 +294,117 @@ footer: {
     allowedRoles: [],
 
     bypassRoles: [],
+
   },
 
 
-  // =========================
-  // BIRTHDAY SETTINGS
-  // =========================
   birthday: {
 
     defaultRole: null,
 
-
     announcementChannel: null,
 
-
     timezone: "UTC",
+
   },
 
 
-  // =========================
-  // VERIFICATION SETTINGS
-  // =========================
   verification: {
 
     defaultMessage:
       "Click the button below to verify yourself and gain access to the server!",
 
 
-    defaultButtonText: "Verify",
+    defaultButtonText:
+      "Verify",
 
 
     autoVerify: {
 
-      defaultCriteria: "none",
+      defaultCriteria:
+        "none",
 
 
-      defaultAccountAgeDays: 7,
+      defaultAccountAgeDays:
+        7,
 
 
-      serverSizeThreshold: 1000,
+      serverSizeThreshold:
+        1000,
 
 
-      minAccountAge: 1,
+      minAccountAge:
+        1,
 
-      maxAccountAge: 365,
+
+      maxAccountAge:
+        365,
 
 
-      sendDMNotification: true,
+      sendDMNotification:
+        true,
 
 
       criteria: {
+
         account_age:
           "Account must be older than specified days",
+
 
         server_size:
           "All users if server has less than 1000 members",
 
+
         none:
           "All users immediately",
+
       },
+
     },
 
 
-    verificationCooldown: 5000,
+    verificationCooldown:
+      5000,
 
 
-    maxVerificationAttempts: 3,
+    maxVerificationAttempts:
+      3,
 
 
-    attemptWindow: 60000,
+    attemptWindow:
+      60000,
 
 
-    maxCooldownEntries: 10000,
-
-    maxAttemptEntries: 10000,
-
-
-    cooldownCleanupInterval: 300000,
+    maxCooldownEntries:
+      10000,
 
 
-    maxAuditMetadataBytes: 4096,
+    maxAttemptEntries:
+      10000,
 
 
-    maxInMemoryAuditEntries: 1000,
+    cooldownCleanupInterval:
+      300000,
 
 
-    logAllVerifications: true,
+    maxAuditMetadataBytes:
+      4096,
 
 
-    keepAuditTrail: true,
+    maxInMemoryAuditEntries:
+      1000,
+
+
+    logAllVerifications:
+      true,
+
+
+    keepAuditTrail:
+      true,
+
   },
-    // =========================
-  // WELCOME / GOODBYE MESSAGES
-  // =========================
+
+
   welcome: {
 
     defaultWelcomeMessage:
@@ -376,36 +415,34 @@ footer: {
       "{user} has left the server. We now have {memberCount} members.",
 
 
-    defaultWelcomeChannel: null,
+    defaultWelcomeChannel:
+      null,
 
 
-    defaultGoodbyeChannel: null,
+    defaultGoodbyeChannel:
+      null,
+
   },
-
-
-  // =========================
-  // COUNTER CHANNELS
-  // =========================
-  counters: {
+    counters: {
 
     defaults: {
 
       name: "{name} Counter",
 
-
       description: "Server {name} counter",
-
 
       type: "voice",
 
-
       channelName: "{name}-{count}",
+
     },
 
 
     permissions: {
 
-      deny: ["VIEW_CHANNEL"],
+      deny: [
+        "VIEW_CHANNEL"
+      ],
 
 
       allow: [
@@ -413,16 +450,21 @@ footer: {
         "CONNECT",
         "SPEAK",
       ],
+
     },
 
 
     messages: {
 
-      created: "✅ Created counter **{name}**",
+      created:
+        "✅ Created counter **{name}**",
 
-      deleted: "🗑️ Deleted counter **{name}**",
+      deleted:
+        "🗑️ Deleted counter **{name}**",
 
-      updated: "🔄 Updated counter **{name}**",
+      updated:
+        "🔄 Updated counter **{name}**",
+
     },
 
 
@@ -437,6 +479,7 @@ footer: {
 
         getCount: (guild) =>
           guild.memberCount.toString(),
+
       },
 
 
@@ -449,9 +492,10 @@ footer: {
 
         getCount: (guild) =>
           guild.members.cache
-            .filter((m) => m.user.bot)
+            .filter(m => m.user.bot)
             .size
             .toString(),
+
       },
 
 
@@ -460,21 +504,21 @@ footer: {
         name: "👤 Humans",
 
         description:
-          "Total human members (non-bots)",
+          "Total human members",
 
         getCount: (guild) =>
           guild.members.cache
-            .filter((m) => !m.user.bot)
+            .filter(m => !m.user.bot)
             .size
             .toString(),
+
       },
+
     },
+
   },
 
 
-  // =========================
-  // GENERIC BOT MESSAGES
-  // =========================
   messages: {
 
     noPermission:
@@ -499,12 +543,10 @@ footer: {
 
     maintenanceMode:
       "The bot is currently in maintenance mode.",
+
   },
 
 
-  // =========================
-  // FEATURE TOGGLES
-  // =========================
   features: {
 
     economy: true,
@@ -517,7 +559,6 @@ footer: {
 
     welcome: true,
 
-
     tickets: true,
 
     giveaways: true,
@@ -526,13 +567,11 @@ footer: {
 
     counter: true,
 
-
     verification: true,
 
     reactionRoles: true,
 
     joinToCreate: true,
-
 
     voice: true,
 
@@ -547,111 +586,119 @@ footer: {
     fun: true,
 
     music: true,
+
   },
+
+
 };
+
+
+
 export function validateConfig(config) {
+
   const errors = [];
 
-  if (process.env.NODE_ENV !== "production") {
-    logger.debug("Environment variables check:");
-    logger.debug(
-      "DISCORD_TOKEN exists:",
-      !!process.env.DISCORD_TOKEN
-    );
-    logger.debug(
-      "TOKEN exists:",
-      !!process.env.TOKEN
-    );
-    logger.debug(
-      "CLIENT_ID exists:",
-      !!process.env.CLIENT_ID
-    );
-    logger.debug(
-      "GUILD_ID exists:",
-      !!process.env.GUILD_ID
-    );
-    logger.debug(
-      "POSTGRES_HOST exists:",
-      !!process.env.POSTGRES_HOST
-    );
-    logger.debug(
-      "NODE_ENV:",
-      process.env.NODE_ENV
-    );
-  }
+
+  const token =
+    process.env.DISCORD_TOKEN ||
+    process.env.TOKEN;
 
 
-  if (!process.env.DISCORD_TOKEN && !process.env.TOKEN) {
+  const clientId =
+    process.env.CLIENT_ID;
+
+
+  const databaseUrl =
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_DATABASE_URL ||
+    process.env["Postgres.DATABASE_URL"];
+
+
+
+  if (!token) {
+
     errors.push(
-      "Bot token is required (DISCORD_TOKEN or TOKEN environment variable)"
+      "Missing Discord token"
     );
+
   }
 
 
-  if (!process.env.CLIENT_ID) {
+
+  if (!clientId) {
+
     errors.push(
-      "Client ID is required (CLIENT_ID environment variable)"
+      "Missing CLIENT_ID"
     );
+
   }
 
 
-  if (process.env.NODE_ENV === "production") {
 
-    const hasConnectionUrl = Boolean(
-      process.env.POSTGRES_URL ||
-      process.env.DATABASE_URL
+  if (
+    process.env.NODE_ENV === "production" &&
+    !databaseUrl
+  ) {
+
+    logger.warn(
+      "PostgreSQL DATABASE_URL missing. Using degraded mode."
     );
 
-
-    if (!hasConnectionUrl) {
-
-      if (!process.env.POSTGRES_HOST) {
-        errors.push(
-          "PostgreSQL connection is required in production"
-        );
-      }
+  }
 
 
-      if (!process.env.POSTGRES_USER) {
-        errors.push(
-          "PostgreSQL user is required in production"
-        );
-      }
 
+  logger.info(
+    "Environment:",
+    {
+      token:
+        Boolean(token),
 
-      if (!process.env.POSTGRES_PASSWORD) {
-        errors.push(
-          "PostgreSQL password is required in production"
-        );
-      }
+      client:
+        Boolean(clientId),
+
+      database:
+        Boolean(databaseUrl),
+
+      node:
+        process.env.NODE_ENV
     }
-  }
+  );
 
 
   return errors;
+
 }
 
 
 
-const configErrors = validateConfig(botConfig);
+const configErrors =
+  validateConfig(botConfig);
+
 
 
 if (configErrors.length > 0) {
 
-logger.error(
-  "Bot configuration errors:",
-  JSON.stringify(configErrors, null, 2)
-);
+  logger.error(
+    "Bot configuration errors:",
+    JSON.stringify(
+      configErrors,
+      null,
+      2
+    )
+  );
 
 
-  if (process.env.NODE_ENV === "production") {
-    process.exit(1);
-  }
+  // NO CRASH LOOP
+  // Se deja iniciar para ver errores reales
+
 }
 
 
 
-export const BotConfig = botConfig;
+export const BotConfig =
+  botConfig;
 
 
 
@@ -692,6 +739,7 @@ const COMMAND_CATEGORY_FEATURE_MAP = {
   verification: "verification",
 
   welcome: "welcome",
+
 };
 
 
@@ -702,6 +750,7 @@ function normalizeCategoryKey(category) {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "_");
+
 }
 
 
@@ -719,7 +768,7 @@ export function getBotOwners() {
   return (
     botConfig.commands?.owners ?? []
   )
-    .map((id) => String(id).trim())
+    .map(id => String(id).trim())
     .filter(Boolean);
 
 }
@@ -728,13 +777,10 @@ export function getBotOwners() {
 
 export function isBotOwner(userId) {
 
-  if (!userId) {
-    return false;
-  }
-
-
   return getBotOwners()
-    .includes(String(userId));
+    .includes(
+      String(userId)
+    );
 
 }
 
@@ -748,18 +794,28 @@ export function isMaintenanceMode() {
 
 
 
-export function getBotMessage(key, replacements = {}) {
+export function getBotMessage(
+  key,
+  replacements = {}
+) {
 
   let message =
     botConfig.messages?.[key] || key;
 
 
-  for (const [placeholder, value] of Object.entries(replacements)) {
+  for (
+    const [placeholder,value]
+    of Object.entries(replacements)
+  ) {
 
-    message = message.replace(
-      new RegExp(`\\{${placeholder}\\}`, "g"),
-      String(value)
-    );
+    message =
+      message.replace(
+        new RegExp(
+          `\\{${placeholder}\\}`,
+          "g"
+        ),
+        String(value)
+      );
 
   }
 
@@ -772,12 +828,10 @@ export function getBotMessage(key, replacements = {}) {
 
 export function isFeatureEnabled(featureKey) {
 
-  if (!featureKey) {
-    return true;
-  }
-
-
-  return botConfig.features?.[featureKey] !== false;
+  return (
+    botConfig.features?.[featureKey]
+    !== false
+  );
 
 }
 
@@ -789,31 +843,31 @@ export function isCommandCategoryEnabled(category) {
     normalizeCategoryKey(category);
 
 
-  if (!normalized || normalized === "core") {
-    return true;
-  }
-
-
-  const featureKey =
+  const feature =
     COMMAND_CATEGORY_FEATURE_MAP[normalized];
 
 
-  if (!featureKey) {
+  if (!feature)
     return true;
-  }
 
 
-  return isFeatureEnabled(featureKey);
+  return isFeatureEnabled(feature);
 
 }
 
 
 
-export function getColor(path, fallback = "#99AAB5") {
+export function getColor(
+  path,
+  fallback = "#99AAB5"
+) {
 
-  if (typeof path === "number") {
+
+  if (
+    typeof path === "number"
+  )
     return path;
-  }
+
 
 
   if (
@@ -822,19 +876,21 @@ export function getColor(path, fallback = "#99AAB5") {
   ) {
 
     return parseInt(
-      path.replace("#", ""),
+      path.replace("#",""),
       16
     );
 
   }
 
 
+
   const result =
     path
       .split(".")
       .reduce(
-        (obj, key) =>
-          obj && obj[key] !== undefined
+        (obj,key)=>
+          obj &&
+          obj[key] !== undefined
             ? obj[key]
             : fallback,
 
@@ -849,7 +905,7 @@ export function getColor(path, fallback = "#99AAB5") {
   ) {
 
     return parseInt(
-      result.replace("#", ""),
+      result.replace("#",""),
       16
     );
 
@@ -861,28 +917,49 @@ export function getColor(path, fallback = "#99AAB5") {
 }
 
 
+
 export function getRandomColor() {
 
   const colors =
-    Object.values(botConfig.embeds.colors)
-      .flatMap((color) =>
-        typeof color === "string"
-          ? color
-          : Object.values(color)
-      );
+    Object.values(
+      botConfig.embeds.colors
+    )
+    .flatMap(color =>
+      typeof color === "string"
+        ? color
+        : Object.values(color)
+    );
+
 
   return colors[
-    Math.floor(Math.random() * colors.length)
+    Math.floor(
+      Math.random() * colors.length
+    )
   ];
 
 }
+
+
 
 export function getDefaultApplicationQuestions() {
+
   return [
-    { question: "What is your name?", required: true },
-    { question: "How old are you?", required: true },
-    { question: "Why do you want to join?", required: true },
+    {
+      question:"What is your name?",
+      required:true
+    },
+    {
+      question:"How old are you?",
+      required:true
+    },
+    {
+      question:"Why do you want to join?",
+      required:true
+    }
   ];
+
 }
+
+
 
 export default botConfig;
