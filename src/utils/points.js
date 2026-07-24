@@ -1,9 +1,7 @@
-import { getEconomyKey } from './database.js';
 import { getFromDb, setInDb } from './database.js';
 
 
-
-function getPointsKey(guildId, userId){
+function getPointsKey(guildId, userId) {
 
     return `pomp:${guildId}:${userId}`;
 
@@ -11,9 +9,9 @@ function getPointsKey(guildId, userId){
 
 
 
-// Obtener puntos
+// Ver puntos de un usuario
 
-export async function getPomp(guildId, userId){
+export async function getPomp(guildId, userId) {
 
     const key = getPointsKey(
         guildId,
@@ -24,7 +22,7 @@ export async function getPomp(guildId, userId){
     const data = await getFromDb(
         key,
         {
-            points:0
+            points: 0
         }
     );
 
@@ -35,14 +33,13 @@ export async function getPomp(guildId, userId){
 
 
 
-
-// Añadir puntos
+// Añadir Pomp
 
 export async function addPomp(
     guildId,
     userId,
     amount
-){
+) {
 
     const current = await getPomp(
         guildId,
@@ -56,16 +53,13 @@ export async function addPomp(
 
 
     await setInDb(
-
         getPointsKey(
             guildId,
             userId
         ),
-
         {
             points: total
         }
-
     );
 
 
@@ -75,15 +69,13 @@ export async function addPomp(
 
 
 
-
-// Quitar puntos
+// Quitar Pomp
 
 export async function removePomp(
     guildId,
     userId,
     amount
-){
-
+) {
 
     const current = await getPomp(
         guildId,
@@ -91,86 +83,56 @@ export async function removePomp(
     );
 
 
-    let total =
-        current - amount;
-
-
-
-    if(total < 0)
-        total = 0;
-
-
-
-    await setInDb(
-
-        getPointsKey(
-            guildId,
-            userId
-        ),
-
-        {
-            points: total
-        }
-
-    );
-
-
-    return total;
-
-}
-export async function getPoints(guildId, userId) {
-    const key = getPointsKey(guildId, userId);
-
-    const points = await getFromDb(key, 0);
-
-    return Number(points || 0);
-}
-
-
-export async function addPoints(guildId, userId, amount) {
-
-    const current = await getPoints(guildId, userId);
-
-    const total = current + amount;
-
-    await setInDb(
-        getPointsKey(guildId, userId),
-        total
-    );
-
-    return total;
-}
-
-
-export async function removePoints(guildId, userId, amount) {
-
-    const current = await getPoints(guildId, userId);
-
     const total = Math.max(
         0,
         current - amount
     );
 
+
+
     await setInDb(
-        getPointsKey(guildId, userId),
-        total
+        getPointsKey(
+            guildId,
+            userId
+        ),
+        {
+            points: total
+        }
     );
 
+
     return total;
+
 }
 
 
-// Alias usados por los comandos Pomp
-export async function getPomp(guildId, userId) {
-    return getPoints(guildId, userId);
+
+// Alias para botones de parcelas
+
+export async function getPoints(
+    guildId,
+    userId
+) {
+
+    return getPomp(
+        guildId,
+        userId
+    );
+
 }
 
 
-export async function addPomp(guildId, userId, amount) {
-    return addPoints(guildId, userId, amount);
-}
 
+export async function removePoints(
+    guildId,
+    userId,
+    amount
+) {
 
-export async function removePomp(guildId, userId, amount) {
-    return removePoints(guildId, userId, amount);
+    return removePomp(
+        guildId,
+        userId,
+        amount
+    );
+
 }
