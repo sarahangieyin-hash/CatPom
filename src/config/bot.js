@@ -882,3 +882,7 @@ export function getRandomColor() {
 
 
 export default botConfig;
+
+export function getDefaultApplicationQuestions() {
+    return [];
+}
