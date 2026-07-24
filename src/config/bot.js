@@ -83,13 +83,13 @@ export const botConfig = {
       success: "#57F287",
       error: "#ED4245",
       warning: "#FEE75C",
-      info: "#F4D35E",
+      info: "#F7DC6F",
 
       light: "#FFFFFF",
       dark: "#202225",
       gray: "#99AAB5",
 
-      blurple: "#F4D35E",
+      blurple: "#5865F2",
       green: "#57F287",
       yellow: "#F4D35E",
       fuchsia: "#EB459E",
@@ -109,7 +109,7 @@ export const botConfig = {
       },
 
       // Economía ahora usa amarillo
-      economy: "#F4D35E",
+      economy: "#F7DC6F",
 
       birthday: "#E91E63",
 
@@ -125,8 +125,8 @@ export const botConfig = {
     },
 
 
-    footer: {
-      text: "Titan Bot",
+footer: {
+  text: "Visca Bot",
       icon: null,
     },
 
@@ -155,7 +155,7 @@ export const botConfig = {
       namePlural: "puntos",
 
       // Símbolo visible
-      symbol: "🟡 Pt",
+      symbol: "⭐ Pt",
     },
 
 
