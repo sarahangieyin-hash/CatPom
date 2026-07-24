@@ -15,6 +15,7 @@ export const pgDb = {
         return true;
     },
 
+
     async get(key, defaultValue = null) {
         try {
             console.log("LEYENDO:", key);
@@ -29,11 +30,13 @@ export const pgDb = {
                 return defaultValue;
             }
 
-            const value = result.rows[0].value;
+            let value = result.rows[0].value;
 
             if (typeof value === "string") {
-                return JSON.parse(value);
+                value = JSON.parse(value);
             }
+
+            console.log("VALOR LEIDO:", value);
 
             return value;
 
