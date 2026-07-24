@@ -880,9 +880,9 @@ export function getRandomColor() {
 }
 
 
+export function getDefaultApplicationQuestions() {
+    return [];
 
 export default botConfig;
 
-export function getDefaultApplicationQuestions() {
-    return [];
 }
