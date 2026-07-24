@@ -11,7 +11,7 @@ export default {
 
     data: new SlashCommandBuilder()
         .setName('parcelas')
-        .setDescription('Oficina de tierras'),
+        .setDescription('Oficina de Tierras de Metztlán'),
 
 
     async execute(interaction) {
@@ -22,8 +22,9 @@ export default {
             .setTitle('🏛️ Oficina de Tierras de Metztlán')
 
             .setDescription(
-                'Aquí puedes adquirir una parcela para construir tu hogar.\n\n' +
-                'Selecciona el tamaño de terreno que deseas solicitar:'
+                '🌱 **Sistema de adquisición de terrenos**\n\n' +
+                'Selecciona la parcela que deseas comprar.\n' +
+                'Los puntos serán descontados automáticamente al confirmar la compra.\n\n'
             )
 
             .addFields(
@@ -31,26 +32,27 @@ export default {
                 {
                     name: '🏠 Parcela C',
                     value:
-                        '📐 Tamaño: **25x25 bloques**\n' +
-                        '💰 Precio: **500 puntos**',
+                        '📐 **25x25 bloques**\n' +
+                        '💰 **500 puntos**\n' +
+                        '⭐ Ideal para casas pequeñas',
                     inline: true
                 },
-
 
                 {
                     name: '🏡 Parcela B',
                     value:
-                        '📐 Tamaño: **30x30 bloques**\n' +
-                        '💰 Precio: **1000 puntos**',
+                        '📐 **30x30 bloques**\n' +
+                        '💰 **1000 puntos**\n' +
+                        '⭐ Ideal para casas medianas',
                     inline: true
                 },
-
 
                 {
                     name: '🏰 Parcela A',
                     value:
-                        '📐 Tamaño: **50x50 bloques**\n' +
-                        '💰 Precio: **2500 puntos**',
+                        '📐 **50x50 bloques**\n' +
+                        '💰 **2500 puntos**\n' +
+                        '⭐ Ideal para grandes proyectos',
                     inline: true
                 }
 
@@ -65,38 +67,35 @@ export default {
 
 
         const buttons = new ActionRowBuilder()
-
             .addComponents(
 
                 new ButtonBuilder()
                     .setCustomId('buy_plot_C')
                     .setEmoji('🏠')
+                    .setLabel('Comprar C')
                     .setStyle(ButtonStyle.Secondary),
 
 
                 new ButtonBuilder()
                     .setCustomId('buy_plot_B')
                     .setEmoji('🏡')
+                    .setLabel('Comprar B')
                     .setStyle(ButtonStyle.Primary),
 
 
                 new ButtonBuilder()
                     .setCustomId('buy_plot_A')
                     .setEmoji('🏰')
+                    .setLabel('Comprar A')
                     .setStyle(ButtonStyle.Success)
 
             );
 
 
-
         await interaction.reply({
-
             embeds: [embed],
-
             components: [buttons]
-
         });
-
 
     }
 
