@@ -24,10 +24,12 @@ class DatabaseWrapper {
             if (pgConnected) {
                 this.db = pgDb;
                 this.connectionType = 'postgresql';
+                 console.log("USANDO POSTGRES");
                 this.degradedReason = null;
                 logger.info('✅ PostgreSQL Database initialized - using persistent database');
                 this.initialized = true;
                 return;
+               
             }
 
             const pgFailure = pgDb.getLastFailure?.();
@@ -47,6 +49,7 @@ class DatabaseWrapper {
         }
 
         this.db = new MemoryStorage();
+        console.log("USANDO MEMORIA");
         this.useFallback = true;
         this.connectionType = 'memory';
         this.degradedReason = 'POSTGRES_UNAVAILABLE';
