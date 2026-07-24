@@ -13,39 +13,59 @@ export default {
         .setName('parcelas')
         .setDescription('Oficina de tierras'),
 
+
     async execute(interaction) {
 
 
         const embed = new EmbedBuilder()
-            .setTitle('🏛️ Oficina de Tierras')
+
+            .setTitle('🏛️ Oficina de Tierras de Metztlán')
+
             .setDescription(
-`
-Bienvenida a la oficina de tierras.
-
-Aquí puedes adquirir una parcela para construir tu hogar dentro del pueblo.
-
-Selecciona el tamaño de terreno que deseas solicitar:
-
-🏠 **Casa pequeña**
-Parcela C
-25x25 bloques
-
-🏡 **Casa mediana**
-Parcela B
-30x30 bloques
-
-🏰 **Casa grande**
-Parcela A
-50x50 bloques
-`
+                'Aquí puedes adquirir una parcela para construir tu hogar.\n\n' +
+                'Selecciona el tamaño de terreno que deseas solicitar:'
             )
+
+            .addFields(
+
+                {
+                    name: '🏠 Parcela C',
+                    value:
+                        '📐 Tamaño: **25x25 bloques**\n' +
+                        '💰 Precio: **500 puntos**',
+                    inline: true
+                },
+
+
+                {
+                    name: '🏡 Parcela B',
+                    value:
+                        '📐 Tamaño: **30x30 bloques**\n' +
+                        '💰 Precio: **1000 puntos**',
+                    inline: true
+                },
+
+
+                {
+                    name: '🏰 Parcela A',
+                    value:
+                        '📐 Tamaño: **50x50 bloques**\n' +
+                        '💰 Precio: **2500 puntos**',
+                    inline: true
+                }
+
+            )
+
             .setColor('#8B5A2B')
+
             .setFooter({
-                text: 'Gobierno de Metztlán • Registro de tierras'
+                text: 'Gobierno de Metztlán • Oficina de Tierras'
             });
 
 
-        const botones = new ActionRowBuilder()
+
+        const buttons = new ActionRowBuilder()
+
             .addComponents(
 
                 new ButtonBuilder()
@@ -68,10 +88,15 @@ Parcela A
             );
 
 
+
         await interaction.reply({
+
             embeds: [embed],
-            components: [botones]
+
+            components: [buttons]
+
         });
+
 
     }
 
