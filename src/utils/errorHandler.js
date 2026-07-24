@@ -24,7 +24,6 @@ import { InteractionHelper } from './interactionHelper.js';
 
 // Re-export so consumers only ever need to import from errorHandler.js
 export { ErrorCodes, getErrorMetadata, resolveErrorCode, getDefaultErrorCodeByType } from './errorRegistry.js';
-export { ensureTypedServiceError, wrapServiceBoundary, wrapServiceClassMethods } from './serviceErrorBoundary.js';
 
 export const ErrorTypes = {
     VALIDATION: 'validation',
