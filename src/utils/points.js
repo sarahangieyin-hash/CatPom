@@ -118,3 +118,59 @@ export async function removePomp(
     return total;
 
 }
+export async function getPoints(guildId, userId) {
+    const key = getPointsKey(guildId, userId);
+
+    const points = await getFromDb(key, 0);
+
+    return Number(points || 0);
+}
+
+
+export async function addPoints(guildId, userId, amount) {
+
+    const current = await getPoints(guildId, userId);
+
+    const total = current + amount;
+
+    await setInDb(
+        getPointsKey(guildId, userId),
+        total
+    );
+
+    return total;
+}
+
+
+export async function removePoints(guildId, userId, amount) {
+
+    const current = await getPoints(guildId, userId);
+
+    const total = Math.max(
+        0,
+        current - amount
+    );
+
+    await setInDb(
+        getPointsKey(guildId, userId),
+        total
+    );
+
+    return total;
+}
+
+
+// Alias usados por los comandos Pomp
+export async function getPomp(guildId, userId) {
+    return getPoints(guildId, userId);
+}
+
+
+export async function addPomp(guildId, userId, amount) {
+    return addPoints(guildId, userId, amount);
+}
+
+
+export async function removePomp(guildId, userId, amount) {
+    return removePoints(guildId, userId, amount);
+}
