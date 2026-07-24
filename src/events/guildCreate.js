@@ -1,10 +1,10 @@
 import { Events } from 'discord.js';
 import { logger } from '../utils/logger.js';
-import { getGuildConfig, setGuildConfig } from '../services/config/guildConfig.js';
 
 export default {
   name: Events.GuildCreate,
-  async execute(guild, client) {
+
+  async execute(guild) {
     try {
       logger.info('Bot joined guild', {
         event: 'guild.create',
@@ -13,10 +13,11 @@ export default {
         memberCount: guild.memberCount,
       });
 
-      const config = await getGuildConfig(client, guild.id);
-      await setGuildConfig(client, guild.id, config);
     } catch (error) {
-      logger.error(`Error initializing guild ${guild?.id} on join:`, error);
+      logger.error(
+        'Error in guildCreate event:',
+        error
+      );
     }
   },
 };
