@@ -861,7 +861,6 @@ export function getColor(path, fallback = "#99AAB5") {
 }
 
 
-
 export function getRandomColor() {
 
   const colors =
@@ -872,17 +871,14 @@ export function getRandomColor() {
           : Object.values(color)
       );
 
-
   return colors[
     Math.floor(Math.random() * colors.length)
   ];
 
 }
 
-
 export function getDefaultApplicationQuestions() {
-    return [];
+    return botConfig.applications.defaultQuestions;
+}
 
 export default botConfig;
-
-}
