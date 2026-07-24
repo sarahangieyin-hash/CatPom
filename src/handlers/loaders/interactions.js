@@ -48,6 +48,7 @@ export default async function loadInteractions(client) {
 
       const data = interaction.default;
 
+
       if (!data?.customId || !data.execute)
         continue;
 
