@@ -8,55 +8,101 @@ const pool = new Pool({
 });
 
 export const pgDb = {
+
     async connect() {
         await pool.query("SELECT 1");
+        console.log("POSTGRES CONECTADO");
         return true;
     },
 
     async get(key, defaultValue = null) {
-        const result = await pool.query(
-            "SELECT value FROM bot_storage WHERE key = $1",
-            [key]
-        );
+        try {
+            console.log("LEYENDO:", key);
 
-        if (!result.rows.length) return defaultValue;
+            const result = await pool.query(
+                "SELECT value FROM bot_storage WHERE key = $1",
+                [key]
+            );
 
-        return result.rows[0].value;
+            if (!result.rows.length) {
+                console.log("NO EXISTE:", key);
+                return defaultValue;
+            }
+
+            const value = result.rows[0].value;
+
+            if (typeof value === "string") {
+                return JSON.parse(value);
+            }
+
+            return value;
+
+        } catch (error) {
+            console.error("ERROR GET:", error);
+            return defaultValue;
+        }
     },
+
 
     async set(key, value) {
-        await pool.query(
-            `
-            INSERT INTO bot_storage (key, value)
-            VALUES ($1, $2)
-            ON CONFLICT (key)
-            DO UPDATE SET value = EXCLUDED.value
-            `,
-            [key, JSON.stringify(value)]
-        );
+        try {
+            console.log("GUARDANDO:", key, value);
 
-        return true;
+            await pool.query(
+                `
+                INSERT INTO bot_storage (key, value)
+                VALUES ($1, $2::jsonb)
+                ON CONFLICT (key)
+                DO UPDATE SET value = EXCLUDED.value
+                `,
+                [
+                    key,
+                    JSON.stringify(value)
+                ]
+            );
+
+            return true;
+
+        } catch (error) {
+            console.error("ERROR SET:", error);
+            return false;
+        }
     },
+
 
     async delete(key) {
-        await pool.query(
-            "DELETE FROM bot_storage WHERE key = $1",
-            [key]
-        );
+        try {
+            await pool.query(
+                "DELETE FROM bot_storage WHERE key = $1",
+                [key]
+            );
 
-        return true;
+            return true;
+
+        } catch (error) {
+            console.error("ERROR DELETE:", error);
+            return false;
+        }
     },
+
 
     async list(prefix) {
-        const result = await pool.query(
-            "SELECT key FROM bot_storage WHERE key LIKE $1",
-            [`${prefix}%`]
-        );
+        try {
+            const result = await pool.query(
+                "SELECT key FROM bot_storage WHERE key LIKE $1",
+                [`${prefix}%`]
+            );
 
-        return result.rows.map(r => r.key);
+            return result.rows.map(row => row.key);
+
+        } catch (error) {
+            console.error("ERROR LIST:", error);
+            return [];
+        }
     },
 
-    async insertVerificationAudit() {
+
+    async insertVerificationAudit(record) {
         return true;
     }
 };
