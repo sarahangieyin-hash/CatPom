@@ -15,7 +15,6 @@ export const pgDb = {
         return true;
     },
 
-
     async get(key, defaultValue = null) {
         try {
             console.log("LEYENDO:", key);
@@ -46,7 +45,6 @@ export const pgDb = {
         }
     },
 
-
     async set(key, value) {
         try {
             console.log("GUARDANDO:", key, value);
@@ -72,13 +70,16 @@ export const pgDb = {
         }
     },
 
-
     async delete(key) {
         try {
+            console.log("ELIMINANDO:", key);
+
             await pool.query(
                 "DELETE FROM bot_storage WHERE key = $1",
                 [key]
             );
+
+            console.log("ELIMINADA");
 
             return true;
 
@@ -87,7 +88,6 @@ export const pgDb = {
             return false;
         }
     },
-
 
     async list(prefix) {
         try {
@@ -114,7 +114,6 @@ export const pgDb = {
             return [];
         }
     },
-
 
     async insertVerificationAudit(record) {
         return true;
