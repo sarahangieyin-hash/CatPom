@@ -9,7 +9,7 @@ export default {
         .addIntegerOption(option =>
             option
                 .setName('numero')
-                .setDescription('Número de la misión del historial')
+                .setDescription('Número de la misión')
                 .setRequired(true)
         ),
 
@@ -35,12 +35,11 @@ export default {
 
 
         const history = missions
-            .map(entry => ({
-                id: entry.key.split(':').pop(),
-                ...entry.value
-            }))
             .filter(mission =>
-                mission.active === false
+                mission &&
+                typeof mission === 'object' &&
+                mission.nombre &&
+                mission.active !== true
             );
 
 
@@ -50,7 +49,7 @@ export default {
         if (!mission) {
 
             return interaction.reply({
-                content: '❌ No existe esa misión en el historial.',
+                content: '❌ No existe esa misión.',
                 ephemeral: true
             });
 
@@ -64,7 +63,7 @@ export default {
 
 
         await interaction.reply(
-            `🗑️ Misión eliminada del historial:\n\n🏗️ ${mission.nombre}`
+            `🗑️ Misión eliminada del historial:\n🏗️ ${mission.nombre}`
         );
 
     }
