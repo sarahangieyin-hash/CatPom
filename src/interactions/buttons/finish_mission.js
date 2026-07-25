@@ -35,8 +35,17 @@ export default {
             );
         }
 
-        await interaction.reply(
-            `✅ Misión completada. ${mission.usuarios.length} personas recibieron ${mission.puntos} Pomp.`
+const participantes = mission.usuarios
+    .map(user => `<@${user}>`)
+    .join('\n');
+
+
+await interaction.reply(
+    `✅ **Misión completada**\n\n` +
+    `👥 Participantes:\n${participantes}\n\n` +
+    `💎 Cada participante recibió **${mission.puntos} Pomp**.`
+    
+);
         );
     }
 };
