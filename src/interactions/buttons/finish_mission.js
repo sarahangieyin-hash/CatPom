@@ -1,4 +1,4 @@
-import { getMission, deleteMission } from '../../utils/missions.js';
+import { getMission, updateMission } from '../../utils/missions.js';
 import { addPomp } from '../../utils/points.js';
 
 export default {
@@ -28,33 +28,37 @@ export default {
             });
         }
 
+
         const usuarios = Array.isArray(mission.usuarios)
             ? mission.usuarios
             : [];
 
+
         for (const user of usuarios) {
+
             await addPomp(
                 interaction.guild.id,
                 user,
                 mission.puntos
             );
+
         }
 
-        console.log("========== FINISH MISSION ==========");
-        console.log("Mission ID:", id);
-        console.log("Guild ID:", interaction.guild.id);
-        console.log("Key:", `mission:${interaction.guild.id}:${id}`);
 
-        await deleteMission(
+        mission.active = false;
+
+
+        await updateMission(
             interaction.guild.id,
-            id
+            id,
+            mission
         );
 
-        console.log("Misión eliminada de la base de datos.");
 
         await interaction.reply(
-            `✅ Misión completada y eliminada. ${usuarios.length} participantes recibieron ${mission.puntos} Pomp.`
+            `✅ Misión completada. ${usuarios.length} participantes recibieron ${mission.puntos} Pomp y fue enviada al historial.`
         );
+
     }
 
 };
