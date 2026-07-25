@@ -39,3 +39,11 @@ export async function getAllMissions(guildId) {
     );
 
 }
+export async function listFromDb(prefix) {
+    try {
+        return await db.list(prefix);
+    } catch (error) {
+        logger.error(`Error listing keys with prefix ${prefix}:`, error);
+        return [];
+    }
+}
