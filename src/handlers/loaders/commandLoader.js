@@ -4,45 +4,78 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+
 export async function loadCommands(client) {
-  const commandsPath = path.join(__dirname, '../../commands');
 
-  const folders = fs.readdirSync(commandsPath);
+    const commandsPath = path.join(
+        __dirname,
+        '../../commands'
+    );
 
-  for (const folder of folders) {
-    const folderPath = path.join(commandsPath, folder);
 
-    if (!fs.statSync(folderPath).isDirectory()) continue;
+    const folders = fs.readdirSync(commandsPath);
 
-    const files = fs.readdirSync(folderPath)
-      .filter(file => file.endsWith('.js'));
 
-    for (const file of files) {
-      const command = await import(
-        `../../commands/${folder}/${file}`
-      );
+    for (const folder of folders) {
 
-      const commandData = command.default;
+        const folderPath = path.join(
+            commandsPath,
+            folder
+        );
 
-      if (!commandData?.data) continue;
 
-      client.commands.set(
-        commandData.data.name,
-        commandData
-      );
+        if (!fs.statSync(folderPath).isDirectory()) continue;
+
+
+        const files = fs.readdirSync(folderPath)
+            .filter(file => file.endsWith('.js'));
+
+
+        for (const file of files) {
+
+            const command = await import(
+                `../../commands/${folder}/${file}`
+            );
+
+
+            const commandData = command.default;
+
+
+            console.log(
+                'COMANDO ENCONTRADO:',
+                folder,
+                file,
+                commandData?.data?.name
+            );
+
+
+            if (!commandData?.data) continue;
+
+
+            client.commands.set(
+                commandData.data.name,
+                commandData
+            );
+
+        }
+
     }
-  }
+
 }
 
 
-export async function registerCommands(client, { clientId }) {
-  const commands = [...client.commands.values()]
-    .map(command => command.data.toJSON());
 
-  await client.rest.put(
-    `/applications/${clientId}/commands`,
-    {
-      body: commands
-    }
-  );
+export async function registerCommands(client, { clientId }) {
+
+    const commands = [...client.commands.values()]
+        .map(command => command.data.toJSON());
+
+
+    await client.rest.put(
+        `/applications/${clientId}/commands`,
+        {
+            body: commands
+        }
+    );
+
 }
