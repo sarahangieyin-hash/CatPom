@@ -17,29 +17,47 @@ export default {
 
                 if (!command) return;
 
-                await command.execute(interaction, client);
+                await command.execute(
+                    interaction,
+                    client
+                );
+
                 return;
             }
 
 
             if (interaction.isButton()) {
 
-                console.log("BOTON:", interaction.customId);
+                const [customId, ...args] =
+                    interaction.customId.split(':');
 
-                const button = client.buttons.get(
-                    interaction.customId
+
+                console.log(
+                    "BOTON:",
+                    customId,
+                    args
                 );
 
 
+                const button =
+                    client.buttons.get(customId);
+
+
                 if (!button) {
-                    console.log("BOTON NO ENCONTRADO");
+
+                    console.log(
+                        "BOTON NO ENCONTRADO:",
+                        customId
+                    );
+
                     return;
                 }
 
 
                 await button.execute(
                     interaction,
-                    client
+                    client,
+                    args
                 );
 
                 return;
@@ -48,15 +66,21 @@ export default {
 
             if (interaction.isStringSelectMenu()) {
 
-                const menu = client.selectMenus.get(
-                    interaction.customId
-                );
+                const [customId, ...args] =
+                    interaction.customId.split(':');
+
+
+                const menu =
+                    client.selectMenus.get(customId);
+
 
                 if (!menu) return;
 
+
                 await menu.execute(
                     interaction,
-                    client
+                    client,
+                    args
                 );
 
                 return;
@@ -72,11 +96,15 @@ export default {
 
 
             if (!interaction.replied) {
+
                 await handleInteractionError(
                     interaction,
                     error
                 );
+
             }
+
         }
+
     }
 };
