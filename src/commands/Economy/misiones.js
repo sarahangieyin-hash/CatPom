@@ -50,7 +50,10 @@ export default {
         }
 
         await interaction.reply({
-            content: text
+            content: text,
+            allowedMentions: {
+                parse: []
+            }
         });
     }
 };
