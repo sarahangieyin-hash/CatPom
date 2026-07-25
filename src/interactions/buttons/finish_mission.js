@@ -1,4 +1,4 @@
-import { getMission } from '../../utils/missions.js';
+import { getMission, deleteMission } from '../../utils/missions.js';
 import { addPomp } from '../../utils/points.js';
 
 export default {
@@ -14,15 +14,12 @@ export default {
             });
         }
 
-
         const id = args[0];
-
 
         const mission = await getMission(
             interaction.guild.id,
             id
         );
-
 
         if (!mission) {
             return interaction.reply({
@@ -31,29 +28,26 @@ export default {
             });
         }
 
+        const usuarios = Array.isArray(mission.usuarios)
+            ? mission.usuarios
+            : [];
 
-        for (const user of mission.usuarios) {
-
+        for (const user of usuarios) {
             await addPomp(
                 interaction.guild.id,
                 user,
                 mission.puntos
             );
-
         }
 
-
-        const participantes = mission.usuarios
-            .map(user => `<@${user}>`)
-            .join('\n');
-
-
-        await interaction.reply(
-            `✅ **Misión completada**\n\n` +
-            `👥 Participantes:\n${participantes}\n\n` +
-            `💎 Cada participante recibió **${mission.puntos} Pomp**.`
+        await deleteMission(
+            interaction.guild.id,
+            id
         );
 
+        await interaction.reply(
+            `✅ Misión completada y eliminada. ${usuarios.length} participantes recibieron ${mission.puntos} Pomp.`
+        );
     }
 
 };
