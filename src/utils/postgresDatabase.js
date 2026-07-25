@@ -92,11 +92,22 @@ export const pgDb = {
     async list(prefix) {
         try {
             const result = await pool.query(
-                "SELECT key FROM bot_storage WHERE key LIKE $1",
+                "SELECT key, value FROM bot_storage WHERE key LIKE $1",
                 [`${prefix}%`]
             );
 
-            return result.rows.map(row => row.key);
+            return result.rows.map(row => {
+                let value = row.value;
+
+                if (typeof value === "string") {
+                    value = JSON.parse(value);
+                }
+
+                return {
+                    key: row.key,
+                    value
+                };
+            });
 
         } catch (error) {
             console.error("ERROR LIST:", error);
