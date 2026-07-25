@@ -4,14 +4,17 @@ import { getAllMissions } from '../../utils/missions.js';
 export default {
 
     data: new SlashCommandBuilder()
-        .setName('historialmisiones')
+        .setName('pomphistory')
         .setDescription('Ver misiones completadas'),
 
     async execute(interaction) {
 
-        let missions = await getAllMissions(interaction.guild.id);
+        let missions = await getAllMissions(
+            interaction.guild.id
+        );
 
         if (!missions) missions = [];
+
 
         const finishedMissions = missions
             .map(entry => entry?.value ?? entry)
@@ -22,15 +25,20 @@ export default {
                 mission.active === false
             );
 
+
         if (finishedMissions.length === 0) {
+
             return interaction.reply({
                 content: '📜 No hay misiones completadas.'
             });
+
         }
 
-        let text = '📜 **Historial de misiones**\n\n';
+
+        let text = '📜 **Historial de misiones Pomp**\n\n';
 
         let number = 1;
+
 
         for (const mission of finishedMissions) {
 
@@ -38,12 +46,15 @@ export default {
                 ? mission.usuarios
                 : [];
 
+
             text += `**${number}.** 🏗️ ${mission.nombre}\n`;
             text += `👥 ${usuarios.length}/${mission.personas} participantes\n`;
             text += `💎 ${mission.puntos} Pomp\n\n`;
 
             number++;
+
         }
+
 
         await interaction.reply({
             content: text,
