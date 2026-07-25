@@ -1,56 +1,43 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { getAllMissions } from '../../utils/missions.js';
+import { getFromDb, setInDb, listFromDb, deleteFromDb } from './database/wrapper.js';
 
-export default {
-    data: new SlashCommandBuilder()
-        .setName('misiones')
-        .setDescription('Ver todas las misiones activas'),
+function missionKey(guildId, id) {
+    return `mission:${guildId}:${id}`;
+}
 
-    async execute(interaction) {
-
-        let missions = await getAllMissions(interaction.guild.id);
-
-        if (!missions) missions = [];
-
-        if (!Array.isArray(missions)) {
-            missions = [];
+export async function createMission(guildId, id, data) {
+    await setInDb(
+        missionKey(guildId, id),
+        {
+            ...data,
+            active: true
         }
+    );
 
-        const validMissions = missions
-            .map(entry => entry?.value ?? entry)
-            .filter(mission => mission && typeof mission === 'object');
+    return data;
+}
 
-        if (validMissions.length === 0) {
-            return interaction.reply({
-                content: 'No hay misiones activas.',
-                ephemeral: true
-            });
-        }
+export async function getMission(guildId, id) {
+    return await getFromDb(
+        missionKey(guildId, id),
+        null
+    );
+}
 
-        let text = '';
+export async function updateMission(guildId, id, data) {
+    await setInDb(
+        missionKey(guildId, id),
+        data
+    );
+}
 
-        for (const mission of validMissions) {
+export async function deleteMission(guildId, id) {
+    await deleteFromDb(
+        missionKey(guildId, id)
+    );
+}
 
-            const usuarios = Array.isArray(mission.usuarios)
-                ? mission.usuarios
-                : [];
-
-            text += `🏗️ **${mission.nombre ?? 'Sin nombre'}**\n`;
-            text += `👥 ${usuarios.length}/${mission.personas ?? 0} participantes\n`;
-            text += `💎 ${mission.puntos ?? 0} Pomp\n`;
-
-            if (usuarios.length === 0) {
-                text += '• Nadie apuntado\n\n';
-            } else {
-                for (const user of usuarios) {
-                    text += `• <@${user}>\n`;
-                }
-                text += '\n';
-            }
-        }
-
-        await interaction.reply({
-            content: text
-        });
-    }
-};
+export async function getAllMissions(guildId) {
+    return await listFromDb(
+        `mission:${guildId}:`
+    );
+}
