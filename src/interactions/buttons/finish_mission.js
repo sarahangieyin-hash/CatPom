@@ -40,10 +40,17 @@ export default {
             );
         }
 
+        console.log("========== FINISH MISSION ==========");
+        console.log("Mission ID:", id);
+        console.log("Guild ID:", interaction.guild.id);
+        console.log("Key:", `mission:${interaction.guild.id}:${id}`);
+
         await deleteMission(
             interaction.guild.id,
             id
         );
+
+        console.log("Misión eliminada de la base de datos.");
 
         await interaction.reply(
             `✅ Misión completada y eliminada. ${usuarios.length} participantes recibieron ${mission.puntos} Pomp.`
