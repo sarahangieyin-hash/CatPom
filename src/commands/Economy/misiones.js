@@ -2,17 +2,25 @@ import { SlashCommandBuilder } from 'discord.js';
 import { getAllMissions } from '../../utils/missions.js';
 
 export default {
-
     data: new SlashCommandBuilder()
         .setName('misiones')
         .setDescription('Ver todas las misiones activas'),
 
     async execute(interaction) {
 
-        const missions = await getAllMissions(interaction.guild.id);
+        let missions = await getAllMissions(interaction.guild.id);
+
+        if (!missions) missions = [];
+
+        if (!Array.isArray(missions)) {
+            missions = Object.values(missions);
+        }
 
         if (missions.length === 0) {
-            return interaction.reply('No hay misiones activas.');
+            return interaction.reply({
+                content: 'No hay misiones activas.',
+                ephemeral: true
+            });
         }
 
         let text = '';
@@ -21,10 +29,10 @@ export default {
 
             text += `🏗️ **${mission.nombre}**\n`;
             text += `👥 ${mission.usuarios.length}/${mission.personas} participantes\n`;
-            text += `💎 ${mission.puntos} Pomp\n\n`;
+            text += `💎 ${mission.puntos} Pomp\n`;
 
             if (mission.usuarios.length === 0) {
-                text += '• Nadie apuntado\n\n';
+                text += `• Nadie apuntado\n\n`;
             } else {
                 for (const user of mission.usuarios) {
                     text += `• <@${user}>\n`;
