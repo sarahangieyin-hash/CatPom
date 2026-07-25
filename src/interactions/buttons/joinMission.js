@@ -2,51 +2,42 @@ import { getMission, updateMission } from '../../utils/missions.js';
 
 export default {
 
-customId: 'join_mission',
+    customId: 'join_mission',
 
+    async execute(interaction, client, args) {
 
-async execute(interaction){
+        const id = args[0];
 
-const id = interaction.customId.split('_')[2];
+        const mission = await getMission(
+            interaction.guild.id,
+            id
+        );
 
+        if (!mission) {
+            return interaction.reply({
+                content: '❌ Misión no encontrada.',
+                ephemeral: true
+            });
+        }
 
-const mission = await getMission(
-    interaction.guild.id,
-    id
-);
+        if (mission.usuarios.includes(interaction.user.id)) {
+            return interaction.reply({
+                content: 'Ya estás apuntado.',
+                ephemeral: true
+            });
+        }
 
+        mission.usuarios.push(interaction.user.id);
 
-if(!mission){
- return interaction.reply({
- content:'❌ Misión no encontrada',
- ephemeral:true
- });
-}
+        await updateMission(
+            interaction.guild.id,
+            id,
+            mission
+        );
 
-
-if(mission.usuarios.includes(interaction.user.id)){
- return interaction.reply({
- content:'Ya estás apuntado.',
- ephemeral:true
- });
-}
-
-
-mission.usuarios.push(interaction.user.id);
-
-
-await updateMission(
-interaction.guild.id,
-id,
-mission
-);
-
-
-await interaction.reply({
-content:'✅ Te has unido a la misión.',
-ephemeral:true
-});
-
-}
-
+        await interaction.reply({
+            content: '✅ Te has unido a la misión.',
+            ephemeral: true
+        });
+    }
 };
