@@ -27,14 +27,18 @@ export default {
 
         for (const mission of missions) {
 
-            text += `🏗️ **${mission.nombre}**\n`;
-            text += `👥 ${mission.usuarios.length}/${mission.personas} participantes\n`;
-            text += `💎 ${mission.puntos} Pomp\n`;
+            const usuarios = Array.isArray(mission?.usuarios)
+                ? mission.usuarios
+                : [];
 
-            if (mission.usuarios.length === 0) {
-                text += `• Nadie apuntado\n\n`;
+            text += `🏗️ **${mission?.nombre ?? 'Sin nombre'}**\n`;
+            text += `👥 ${usuarios.length}/${mission?.personas ?? 0} participantes\n`;
+            text += `💎 ${mission?.puntos ?? 0} Pomp\n`;
+
+            if (usuarios.length === 0) {
+                text += '• Nadie apuntado\n\n';
             } else {
-                for (const user of mission.usuarios) {
+                for (const user of usuarios) {
                     text += `• <@${user}>\n`;
                 }
                 text += '\n';
