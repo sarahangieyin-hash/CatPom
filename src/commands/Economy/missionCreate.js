@@ -63,6 +63,12 @@ export default {
 
 
                 new ButtonBuilder()
+                    .setCustomId(`out_mission:${id}`)
+                    .setLabel('Salir')
+                    .setStyle(ButtonStyle.Secondary),
+
+
+                new ButtonBuilder()
                     .setCustomId(`finish_mission:${id}`)
                     .setLabel('Terminar')
                     .setStyle(ButtonStyle.Danger)
