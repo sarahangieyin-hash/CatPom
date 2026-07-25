@@ -10,26 +10,58 @@ export default {
 
     async execute(interaction) {
 
-        const missions = await getAllMissions(
+        let missions = await getAllMissions(
             interaction.guild.id
         );
 
 
-        console.log(
-            '=== TODAS LAS MISIONES ==='
-        );
+        if (!missions) missions = [];
 
-        console.log(
-            JSON.stringify(
-                missions,
-                null,
-                2
-            )
-        );
+
+        const finishedMissions = missions
+            .filter(mission =>
+                mission &&
+                typeof mission === 'object' &&
+                mission.nombre &&
+                mission.active !== true
+            );
+
+
+        if (finishedMissions.length === 0) {
+
+            return interaction.reply({
+                content: '📜 No hay misiones completadas.'
+            });
+
+        }
+
+
+        let text = '📜 **Historial de misiones Pomp**\n\n';
+
+        let number = 1;
+
+
+        for (const mission of finishedMissions) {
+
+            const usuarios = Array.isArray(mission.usuarios)
+                ? mission.usuarios
+                : [];
+
+
+            text += `**${number}.** 🏗️ ${mission.nombre}\n`;
+            text += `👥 ${usuarios.length}/${mission.personas} participantes\n`;
+            text += `💎 ${mission.puntos} Pomp\n\n`;
+
+            number++;
+
+        }
 
 
         await interaction.reply({
-            content: 'Revisa la consola del bot.'
+            content: text,
+            allowedMentions: {
+                parse: []
+            }
         });
 
     }
