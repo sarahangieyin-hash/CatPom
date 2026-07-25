@@ -4,7 +4,7 @@ import { getAllMissions, deleteMission } from '../../utils/missions.js';
 export default {
 
     data: new SlashCommandBuilder()
-        .setName('clearmission')
+        .setName('pompclear')
         .setDescription('Eliminar una misión del historial')
         .addIntegerOption(option =>
             option
@@ -13,13 +13,16 @@ export default {
                 .setRequired(true)
         ),
 
+
     async execute(interaction) {
 
         if (!interaction.member.permissions.has('Administrator')) {
+
             return interaction.reply({
                 content: '❌ Solo admins.',
                 ephemeral: true
             });
+
         }
 
 
@@ -45,10 +48,12 @@ export default {
 
 
         if (!mission) {
+
             return interaction.reply({
                 content: '❌ No existe esa misión en el historial.',
                 ephemeral: true
             });
+
         }
 
 
