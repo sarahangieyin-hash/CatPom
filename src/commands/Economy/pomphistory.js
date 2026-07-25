@@ -7,11 +7,13 @@ export default {
         .setName('pomphistory')
         .setDescription('Ver misiones completadas'),
 
+
     async execute(interaction) {
 
         let missions = await getAllMissions(
             interaction.guild.id
         );
+
 
         if (!missions) missions = [];
 
@@ -57,10 +59,13 @@ export default {
 
 
         await interaction.reply({
+
             content: text,
+
             allowedMentions: {
                 parse: []
             }
+
         });
 
     }
