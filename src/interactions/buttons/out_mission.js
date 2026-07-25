@@ -1,4 +1,5 @@
 import { getMission, updateMission } from '../../utils/missions.js';
+import { EmbedBuilder } from 'discord.js';
 
 export default {
 
@@ -7,6 +8,7 @@ export default {
     async execute(interaction, client, args) {
 
         const id = args[0];
+
 
         const mission = await getMission(
             interaction.guild.id,
@@ -36,10 +38,9 @@ export default {
         }
 
 
-        mission.usuarios =
-            mission.usuarios.filter(
-                user => user !== userId
-            );
+        mission.usuarios = mission.usuarios.filter(
+            user => user !== userId
+        );
 
 
         await updateMission(
@@ -47,6 +48,18 @@ export default {
             id,
             mission
         );
+
+
+        const embed = new EmbedBuilder()
+            .setTitle(`🏗️ ${mission.nombre}`)
+            .setDescription(
+                `👥 Participantes: ${mission.usuarios.length}/${mission.personas}\n\n💎 Recompensa: ${mission.puntos} Pomp`
+            );
+
+
+        await interaction.message.edit({
+            embeds: [embed]
+        });
 
 
         await interaction.reply({
