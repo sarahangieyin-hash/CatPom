@@ -13,7 +13,7 @@ export default {
     let content = message.content;
 
 
-    // Sistema con mención al bot
+    // Comandos usando mención al bot
     if (message.mentions.has(client.user)) {
 
       content = content
@@ -23,7 +23,7 @@ export default {
 
     }
 
-    // Sistema con prefijo normal
+    // Comandos usando prefijo visca
     else {
 
       const prefix = getCommandPrefix();
@@ -35,6 +35,9 @@ export default {
         .trim();
 
     }
+
+
+    if (!content) return;
 
 
     const args = content.split(/\s+/);
@@ -59,7 +62,7 @@ export default {
     } catch (error) {
 
       logger.error(
-        "Prefix command error:",
+        "Message command error:",
         error
       );
 
