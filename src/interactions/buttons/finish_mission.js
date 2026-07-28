@@ -28,25 +28,48 @@ export default {
             });
         }
 
-
         const usuarios = Array.isArray(mission.usuarios)
             ? mission.usuarios
             : [];
 
-
-        for (const user of usuarios) {
+        // Repartir recompensa
+        for (const userId of usuarios) {
 
             await addPomp(
                 interaction.guild.id,
-                user,
+                userId,
                 mission.puntos
             );
 
+            // Quitar el rol temporal
+            if (mission.roleId) {
+
+                const member = await interaction.guild.members
+                    .fetch(userId)
+                    .catch(() => null);
+
+                if (member) {
+                    await member.roles
+                        .remove(mission.roleId)
+                        .catch(() => {});
+                }
+
+            }
+
         }
 
+        // Eliminar el rol de la misión
+        if (mission.roleId) {
+
+            const role = interaction.guild.roles.cache.get(mission.roleId);
+
+            if (role) {
+                await role.delete().catch(() => {});
+            }
+
+        }
 
         mission.active = false;
-
 
         await updateMission(
             interaction.guild.id,
@@ -54,9 +77,8 @@ export default {
             mission
         );
 
-
         await interaction.reply(
-            `✅ Misión completada. ${usuarios.length} participantes recibieron ${mission.puntos} Pomp y fue enviada al historial.`
+            `✅ Misión completada. ${usuarios.length} participantes recibieron ${mission.puntos} Pomp y la misión fue enviada al historial.`
         );
 
     }
