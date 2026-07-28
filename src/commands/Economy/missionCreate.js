@@ -1,6 +1,12 @@
-import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { createMission } from '../../utils/missions.js';
+import {
+    SlashCommandBuilder,
+    EmbedBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle
+} from 'discord.js';
 
+import { createMission } from '../../utils/missions.js';
 
 export default {
 
@@ -23,16 +29,20 @@ export default {
                 .setRequired(true)
         ),
 
-
     async execute(interaction) {
 
         const nombre = interaction.options.getString('nombre');
         const personas = interaction.options.getInteger('personas');
         const puntos = interaction.options.getInteger('puntos');
 
-
         const id = Date.now().toString();
 
+        // Crear rol temporal de la misión
+        const role = await interaction.guild.roles.create({
+            name: nombre,
+            mentionable: true,
+            reason: `Rol temporal de la misión "${nombre}"`
+        });
 
         await createMission(
             interaction.guild.id,
@@ -41,17 +51,16 @@ export default {
                 nombre,
                 personas,
                 puntos,
+                roleId: role.id,
                 usuarios: []
             }
         );
-
 
         const embed = new EmbedBuilder()
             .setTitle(`🏗️ ${nombre}`)
             .setDescription(
                 `👥 Participantes: 0/${personas}\n\n💎 Recompensa: ${puntos} Pomp`
             );
-
 
         const row = new ActionRowBuilder()
             .addComponents(
@@ -61,12 +70,10 @@ export default {
                     .setLabel('Unirse')
                     .setStyle(ButtonStyle.Success),
 
-
                 new ButtonBuilder()
                     .setCustomId(`out_mission:${id}`)
                     .setLabel('Salir')
                     .setStyle(ButtonStyle.Secondary),
-
 
                 new ButtonBuilder()
                     .setCustomId(`finish_mission:${id}`)
@@ -74,7 +81,6 @@ export default {
                     .setStyle(ButtonStyle.Danger)
 
             );
-
 
         await interaction.reply({
             embeds: [embed],
