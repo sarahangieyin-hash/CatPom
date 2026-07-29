@@ -41,6 +41,11 @@ export async function calculateLayout(
 
 
 
+    /*
+        ESPACIADO
+    */
+
+
     const memberSpacing =
         Math.max(
             160,
@@ -74,13 +79,12 @@ export async function calculateLayout(
 
 
 
-    const centerX =
-        0;
-
 
 
     /*
         MIEMBROS PRINCIPALES 💍
+
+        Se colocan centrados.
     */
 
 
@@ -157,6 +161,7 @@ export async function calculateLayout(
                 );
 
 
+
             if (
                 left &&
                 right
@@ -198,6 +203,8 @@ export async function calculateLayout(
 
     /*
         HIJOS 👶
+
+        Siempre debajo.
     */
 
 
@@ -241,6 +248,9 @@ export async function calculateLayout(
 
     /*
         PADRES 👨‍👩‍👧
+
+        Arriba, pero sin crear
+        espacio enorme.
     */
 
 
@@ -269,7 +279,7 @@ export async function calculateLayout(
 
 
                 y:
-                    50
+                    60
 
             });
 
@@ -303,7 +313,7 @@ export async function calculateLayout(
 
 
                 x:
-                    -300 +
+                    -250 +
                     index * 220,
 
 
@@ -322,7 +332,11 @@ export async function calculateLayout(
 
 
     /*
-        AJUSTAR LIENZO AL CONTENIDO REAL
+        AJUSTE DEL LIENZO
+
+        - Sin espacio vacío arriba.
+        - Crece hacia abajo con hijos.
+        - Centrado horizontal.
     */
 
 
@@ -339,48 +353,64 @@ export async function calculateLayout(
 
     const minX =
         Math.min(
+
             ...visibleNodes.map(
                 node => node.x
-            ),
-            0
+            )
+
         );
 
 
 
     const maxX =
         Math.max(
+
             ...visibleNodes.map(
                 node => node.x
-            ),
-            0
+            )
+
         );
 
 
 
     const minY =
         Math.min(
+
             ...visibleNodes.map(
                 node => node.y
-            ),
-            0
+            )
+
         );
 
 
 
     const maxY =
         Math.max(
+
             ...visibleNodes.map(
                 node => node.y
-            ),
-            0
+            )
+
         );
 
 
 
 
 
-    const marginX = 250;
-    const marginY = 180;
+    const marginX =
+        120;
+
+
+
+    const marginTop =
+        80;
+
+
+
+    const marginBottom =
+        120;
+
+
 
 
 
@@ -388,7 +418,7 @@ export async function calculateLayout(
 
         Math.max(
 
-            900,
+            800,
 
             (
                 maxX -
@@ -401,18 +431,21 @@ export async function calculateLayout(
 
 
 
+
+
     const height =
 
         Math.max(
 
-            700,
+            650,
 
             (
                 maxY -
                 minY
             )
             +
-            marginY * 2
+            marginTop +
+            marginBottom
 
         );
 
@@ -421,7 +454,7 @@ export async function calculateLayout(
 
 
     /*
-        CENTRAR NODOS
+        CENTRAR SOLO HORIZONTALMENTE
     */
 
 
@@ -443,17 +476,10 @@ export async function calculateLayout(
 
     const offsetY =
 
-        (
-            height -
-            (
-                maxY -
-                minY
-            )
-        )
-        /
-        2
-        -
+        marginTop -
         minY;
+
+
 
 
 
@@ -462,6 +488,7 @@ export async function calculateLayout(
         node => {
 
             node.x += offsetX;
+
             node.y += offsetY;
 
         }
