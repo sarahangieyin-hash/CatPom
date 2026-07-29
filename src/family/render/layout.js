@@ -39,16 +39,14 @@ export async function calculateLayout(
 
 
 
-    const centerX = 700;
+    const centerX = 800;
 
 
 
     /*
-        NODO DE UNIÓN 💍
-        Sirve como punto central para conectar
-        parejas e hijos.
+        ANILLO DE UNIÓN 💍
+        Siempre en medio de la pareja
     */
-
 
     nodes.push({
 
@@ -62,20 +60,39 @@ export async function calculateLayout(
             centerX,
 
         y:
-            250
+            300
 
     });
 
 
 
     /*
-        PAREJA PRINCIPAL 👩 💍 👨
+        PAREJAS 👩 💍 👨
+        Siempre alrededor del anillo
     */
+
+    const radius = 180;
 
 
     members.forEach(
 
         (id, index) => {
+
+
+            const total =
+                members.length;
+
+
+            const angle =
+                (
+                    Math.PI *
+                    2 *
+                    index /
+                    total
+                )
+                -
+                Math.PI / 2;
+
 
 
             nodes.push({
@@ -88,16 +105,14 @@ export async function calculateLayout(
 
                 x:
                     centerX +
-                    (
-                        index -
-                        (members.length - 1) / 2
-                    )
-                    *
-                    180,
+                    Math.cos(angle) *
+                    radius,
 
 
                 y:
-                    250
+                    300 +
+                    Math.sin(angle) *
+                    radius / 2
 
             });
 
@@ -110,7 +125,7 @@ export async function calculateLayout(
 
     /*
         HIJOS 👶
-        Siempre debajo de la unión
+        Siempre debajo del matrimonio
     */
 
 
@@ -136,11 +151,11 @@ export async function calculateLayout(
                         (children.length - 1) / 2
                     )
                     *
-                    220,
+                    240,
 
 
                 y:
-                    600
+                    650
 
             });
 
@@ -153,6 +168,7 @@ export async function calculateLayout(
 
     /*
         PADRES 👨‍👩‍👧
+        Arriba conectados al anillo
     */
 
 
@@ -178,11 +194,11 @@ export async function calculateLayout(
                         (parents.length - 1) / 2
                     )
                     *
-                    260,
+                    280,
 
 
                 y:
-                    80
+                    100
 
             });
 
@@ -215,11 +231,11 @@ export async function calculateLayout(
 
                 x:
                     150 +
-                    index * 220,
+                    index * 230,
 
 
                 y:
-                    250
+                    300
 
             });
 
@@ -234,11 +250,11 @@ export async function calculateLayout(
 
 
         width:
-            1600,
+            1800,
 
 
         height:
-            900,
+            1000,
 
 
         guild,
