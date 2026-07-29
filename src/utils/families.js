@@ -196,31 +196,138 @@ export async function updateFamily(
 
 }
 
+
+
+
+
 export async function cleanFamilyChildren(
     guildId,
     familyId
 ) {
 
+
     const family =
         await getFromDb(
-            familyKey(guildId, familyId),
+
+            familyKey(
+                guildId,
+                familyId
+            ),
+
             null
+
         );
+
 
 
     if (!family)
         return null;
 
 
+
     family.children = [];
 
 
+
     await setInDb(
-        familyKey(guildId, familyId),
+
+        familyKey(
+            guildId,
+            familyId
+        ),
+
         family
+
     );
 
 
+
     return family;
+
+}
+
+
+
+
+
+/*
+    COMPROBACIÓN DE UNIONES 💍
+
+    Evita matrimonios incorrectos:
+
+    ❌ padre con hijo
+    ❌ madre con hijo
+    ❌ hermanos
+    ❌ hijos propios
+
+    Permite:
+    ✅ personas externas
+    ✅ poliamor si está activado
+*/
+
+
+export function canMarry(
+    family,
+    userId
+) {
+
+
+    if (!family)
+        return true;
+
+
+
+    if (
+
+        family.children?.some(
+
+            child =>
+                child.id === userId
+
+        )
+
+    ) {
+
+        return false;
+
+    }
+
+
+
+    if (
+
+        family.parents?.some(
+
+            parent =>
+                parent.id === userId
+
+        )
+
+    ) {
+
+        return false;
+
+    }
+
+
+
+    if (
+
+        family.siblings?.some(
+
+            sibling =>
+                sibling.id === userId
+
+        )
+
+    ) {
+
+        return false;
+
+    }
+
+
+
+    return true;
 
 }
