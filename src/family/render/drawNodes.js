@@ -36,6 +36,7 @@ registerFont(
 
 
 
+
 export async function drawNodes(
     ctx,
     layout
@@ -44,6 +45,8 @@ export async function drawNodes(
 
     const drawn =
         new Set();
+
+
 
 
 
@@ -62,48 +65,25 @@ export async function drawNodes(
 
 
     /*
-        TAMAÑO DINÁMICO
+        TAMAÑO BASE
 
-        Poca familia:
-        cuadros grandes.
+        La familia crece,
+        pero las cajas no se hacen pequeñas.
 
-        Mucha familia:
-        cuadros más pequeños.
     */
-
-
-    const size =
-
-        Math.max(
-
-            85,
-
-            Math.min(
-
-                160,
-
-                160 -
-                (
-                    totalPeople * 7
-                )
-
-            )
-
-        );
-
 
 
     const fontSize =
 
         Math.max(
 
-            12,
+            16,
 
             Math.min(
 
-                24,
+                22,
 
-                size / 7
+                22 - totalPeople
 
             )
 
@@ -118,16 +98,15 @@ export async function drawNodes(
     ) {
 
 
-        /*
-            IGNORAR NODOS INTERNOS
-        */
-
 
         if (
 
             node.type !== 'member' &&
+
             node.type !== 'child' &&
+
             node.type !== 'parent' &&
+
             node.type !== 'sibling'
 
         ) {
@@ -138,11 +117,6 @@ export async function drawNodes(
 
 
 
-
-
-        /*
-            IGNORAR IDS INVALIDOS
-        */
 
 
         if (
@@ -159,14 +133,6 @@ export async function drawNodes(
 
 
 
-
-
-        /*
-            EVITAR DUPLICADOS
-
-            Una persona no puede salir
-            dos veces si es hijo y miembro.
-        */
 
 
         if (
@@ -215,6 +181,75 @@ export async function drawNodes(
 
 
 
+        const safeName =
+
+            username
+
+                .normalize('NFD')
+
+                .replace(
+                    /[\u0300-\u036f]/g,
+                    ''
+                )
+
+                .replace(
+                    /[^a-zA-Z0-9_-]/g,
+                    ''
+                )
+
+                .slice(
+                    0,
+                    18
+                );
+
+
+
+
+
+        /*
+            CAJA DINÁMICA
+
+            El ancho depende del nombre.
+            La altura siempre igual.
+
+        */
+
+
+        ctx.font =
+
+            `bold ${fontSize}px DejaVuCustom`;
+
+
+
+        const textWidth =
+
+            ctx.measureText(
+                safeName || '???'
+            )
+            .width;
+
+
+
+        const boxWidth =
+
+            Math.max(
+
+                120,
+
+                textWidth + 50
+
+            );
+
+
+
+        const boxHeight =
+
+            120;
+
+
+
+
+
         /*
             CAJA
         */
@@ -227,13 +262,13 @@ export async function drawNodes(
 
         ctx.fillRect(
 
-            node.x - size / 2,
+            node.x - boxWidth / 2,
 
-            node.y - size / 2,
+            node.y - boxHeight / 2,
 
-            size,
+            boxWidth,
 
-            size
+            boxHeight
 
         );
 
@@ -253,13 +288,13 @@ export async function drawNodes(
 
         ctx.strokeRect(
 
-            node.x - size / 2,
+            node.x - boxWidth / 2,
 
-            node.y - size / 2,
+            node.y - boxHeight / 2,
 
-            size,
+            boxWidth,
 
-            size
+            boxHeight
 
         );
 
@@ -277,12 +312,6 @@ export async function drawNodes(
 
 
 
-        ctx.font =
-
-            `bold ${fontSize}px DejaVuCustom`;
-
-
-
         ctx.textAlign =
             'center';
 
@@ -290,33 +319,6 @@ export async function drawNodes(
 
         ctx.textBaseline =
             'middle';
-
-
-
-
-
-        const safeName =
-
-            username
-
-                .normalize('NFD')
-
-                .replace(
-                    /[\u0300-\u036f]/g,
-                    ''
-                )
-
-                .replace(
-                    /[^a-zA-Z0-9_-]/g,
-                    ''
-                )
-
-                .slice(
-                    0,
-                    12
-                );
-
-
 
 
 
