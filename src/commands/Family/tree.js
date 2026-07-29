@@ -3,7 +3,8 @@ import {
 } from 'discord.js';
 
 import {
-    getFamilyByMember
+    getFamilyByMember,
+    updateFamily
 } from '../../utils/families.js';
 
 import {
@@ -24,7 +25,7 @@ export default {
     async execute(interaction) {
 
 
-        const family =
+        let family =
             await getFamilyByMember(
 
                 interaction.guild.id,
@@ -47,6 +48,73 @@ export default {
             });
 
         }
+
+
+
+        /*
+            LIMPIEZA AUTOMÁTICA
+
+            - Quita hijos duplicados
+            - Quita hijos que también estén como miembros
+        */
+
+
+        if (
+            Array.isArray(family.children)
+        ) {
+
+            family.children =
+                Array.from(
+
+                    new Map(
+
+                        family.children.map(
+
+                            child => [
+
+                                child.id,
+
+                                child
+
+                            ]
+
+                        )
+
+                    ).values()
+
+                );
+
+
+
+            const childIds =
+                family.children.map(
+                    child =>
+                        child.id
+                );
+
+
+
+            family.members =
+                family.members.filter(
+
+                    id =>
+                        !childIds.includes(id)
+
+                );
+
+        }
+
+
+
+        await updateFamily(
+
+            interaction.guild.id,
+
+            family.id,
+
+            family
+
+        );
 
 
 
