@@ -7,6 +7,10 @@ import {
     createFamily
 } from '../../utils/families.js';
 
+import {
+    EmbedBuilder
+} from 'discord.js';
+
 
 
 export default {
@@ -117,30 +121,48 @@ export default {
 
                 interaction.guild.id,
 
-                {
-
-                    members:
-                        updated.members,
-
-                    lovers:
-                        [],
-
-                    parents:
-                        [],
-
-                    children:
-                        []
-
-                }
+                updated.members
 
             );
+
+
+
+            const embed =
+                new EmbedBuilder()
+
+                    .setTitle(
+                        '💍✨ ¡Felicidades! ✨💍'
+                    )
+
+                    .setDescription(
+
+                        'La unión se ha completado correctamente.\n\n' +
+
+                        updated.members
+                            .map(
+                                id => `❤️ <@${id}>`
+                            )
+                            .join('\n\n') +
+
+                        '\n\n¡Que vuestra historia dure para siempre!'
+
+                    )
+
+                    .setColor(
+                        0xff69b4
+                    );
 
 
 
             await interaction.update({
 
                 content:
-                    '💍 Unión creada correctamente.',
+                    '',
+
+                embeds:
+                    [
+                        embed
+                    ],
 
                 components:
                     []
