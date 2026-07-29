@@ -5,27 +5,31 @@ export async function calculateLayout(
 
 
     const members =
-        Array.isArray(
-            family.members
-        )
+        Array.isArray(family.members)
             ? family.members
             : [];
 
 
-
     const children =
-        Array.isArray(
-            family.children
-        )
+        Array.isArray(family.children)
             ? family.children
             : [];
 
 
+    const parents =
+        Array.isArray(family.parents)
+            ? family.parents
+            : [];
+
+
+    const siblings =
+        Array.isArray(family.siblings)
+            ? family.siblings
+            : [];
+
 
     const lovers =
-        Array.isArray(
-            family.lovers
-        )
+        Array.isArray(family.lovers)
             ? family.lovers
             : [];
 
@@ -35,14 +39,19 @@ export async function calculateLayout(
 
 
 
-    const centerY = 250;
+    const centerX = 600;
 
+
+
+    /*
+        UNIÓN PRINCIPAL 💍
+    */
 
     const memberSpacing = 220;
 
 
-
     members.forEach(
+
         (id, index) => {
 
 
@@ -54,7 +63,9 @@ export async function calculateLayout(
                     'member',
 
                 x:
-                    300 +
+
+                    centerX +
+
                     (
                         index -
                         (members.length - 1) / 2
@@ -62,9 +73,9 @@ export async function calculateLayout(
                     *
                     memberSpacing,
 
-                y:
-                    centerY
 
+                y:
+                    350
 
             });
 
@@ -75,7 +86,13 @@ export async function calculateLayout(
 
 
 
+    /*
+        HIJOS 👶
+    */
+
+
     children.forEach(
+
         (child, index) => {
 
 
@@ -84,20 +101,25 @@ export async function calculateLayout(
                 id:
                     child.id,
 
+
                 type:
                     'child',
 
+
                 x:
-                    300 +
+
+                    centerX +
+
                     (
                         index -
                         (children.length - 1) / 2
                     )
                     *
-                    memberSpacing,
+                    180,
+
 
                 y:
-                    550
+                    650
 
 
             });
@@ -109,7 +131,98 @@ export async function calculateLayout(
 
 
 
+    /*
+        PADRES 👨‍👩‍👧
+    */
+
+
+    parents.forEach(
+
+        (parent, index) => {
+
+
+            nodes.push({
+
+                id:
+                    parent.id,
+
+
+                type:
+                    'parent',
+
+
+                x:
+
+                    centerX +
+
+                    (
+                        index -
+                        (parents.length - 1) / 2
+                    )
+                    *
+                    220,
+
+
+                y:
+                    100
+
+
+            });
+
+
+        }
+
+    );
+
+
+
+    /*
+        HERMANOS 👥
+    */
+
+
+    siblings.forEach(
+
+        (sibling, index) => {
+
+
+            nodes.push({
+
+                id:
+                    sibling.id,
+
+
+                type:
+                    'sibling',
+
+
+                x:
+
+                    150 +
+                    index *
+                    220,
+
+
+                y:
+                    350
+
+
+            });
+
+
+        }
+
+    );
+
+
+
+    /*
+        AMANTES 🔥
+    */
+
+
     lovers.forEach(
+
         (id, index) => {
 
 
@@ -120,13 +233,17 @@ export async function calculateLayout(
                 type:
                     'lover',
 
+
                 x:
-                    100 +
+
+                    centerX +
+
                     index *
                     180,
 
+
                 y:
-                    100
+                    180
 
 
             });
@@ -142,15 +259,11 @@ export async function calculateLayout(
 
 
         width:
-            Math.max(
-                1200,
-                members.length *
-                memberSpacing
-            ),
+            1400,
 
 
         height:
-            800,
+            900,
 
 
         nodes,
@@ -162,7 +275,14 @@ export async function calculateLayout(
         children,
 
 
+        parents,
+
+
+        siblings,
+
+
         lovers
+
 
     };
 
