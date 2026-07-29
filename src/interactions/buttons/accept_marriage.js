@@ -159,20 +159,20 @@ export default {
 
 
 
-            await interaction.message.edit({
+ await interaction.update({
 
-                content:
-                    '',
+    content:
+        null,
 
-                embeds:
-                    [
-                        embed
-                    ],
+    embeds:
+        [
+            embed
+        ],
 
-                components:
-                    []
+    components:
+        []
 
-            });
+});
 
 
 
