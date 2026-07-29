@@ -27,6 +27,46 @@ export async function drawNodes(
 
 
 
+        /*
+            NOMBRE ARRIBA
+        */
+
+        if (user) {
+
+
+            ctx.fillStyle = '#000000';
+
+            ctx.font =
+                'bold 20px DejaVu Sans';
+
+            ctx.textAlign =
+                'center';
+
+            ctx.textBaseline =
+                'bottom';
+
+
+
+            ctx.fillText(
+
+                user.username,
+
+                node.x,
+
+                node.y - radius - 12
+
+            );
+
+
+        }
+
+
+
+        /*
+            CIRCULO AVATAR
+        */
+
+
         ctx.beginPath();
 
 
@@ -50,16 +90,19 @@ export async function drawNodes(
             '#ffffff';
 
 
+
         ctx.fill();
 
 
 
         ctx.strokeStyle =
-            '#000000';
+            '#5865F2';
+
 
 
         ctx.lineWidth =
             4;
+
 
 
         ctx.stroke();
@@ -103,7 +146,7 @@ export async function drawNodes(
 
                     node.y,
 
-                    radius - 5,
+                    radius - 4,
 
                     0,
 
@@ -121,13 +164,13 @@ export async function drawNodes(
 
                     avatar,
 
-                    node.x - radius + 5,
+                    node.x - radius + 4,
 
-                    node.y - radius + 5,
+                    node.y - radius + 4,
 
-                    (radius - 5) * 2,
+                    (radius - 4) * 2,
 
-                    (radius - 5) * 2
+                    (radius - 4) * 2
 
                 );
 
@@ -139,72 +182,6 @@ export async function drawNodes(
 
             } catch {}
 
-
-
-            ctx.fillStyle =
-                '#000000';
-
-
-
-            ctx.font =
-                'bold 22px Arial';
-
-
-
-            ctx.textAlign =
-                'center';
-
-
-
-            ctx.textBaseline =
-                'top';
-
-
-
-            ctx.fillText(
-
-                user.globalName || user.username,
-
-                node.x,
-
-                node.y + radius - 30
-
-            );
-
-
-
-        } else {
-
-
-            ctx.fillStyle =
-                '#000000';
-
-
-
-            ctx.font =
-                'bold 20px Arial';
-
-
-
-            ctx.textAlign =
-                'center';
-
-
-
-            ctx.textBaseline =
-                'top';
-
-
-
-            ctx.fillText(
-
-                'Usuario',
-
-                node.x,
-
-                node.y + radius + 12
-
-            );
 
 
         }
