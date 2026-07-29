@@ -47,6 +47,72 @@ export async function drawNodes(
 
 
 
+    const totalPeople =
+
+        (layout.members?.length || 0) +
+
+        (layout.children?.length || 0) +
+
+        (layout.parents?.length || 0) +
+
+        (layout.siblings?.length || 0);
+
+
+
+
+
+    /*
+        TAMAÑO DINÁMICO
+
+        Poca familia:
+        cuadros grandes.
+
+        Mucha familia:
+        cuadros más pequeños.
+    */
+
+
+    const size =
+
+        Math.max(
+
+            85,
+
+            Math.min(
+
+                160,
+
+                160 -
+                (
+                    totalPeople * 7
+                )
+
+            )
+
+        );
+
+
+
+    const fontSize =
+
+        Math.max(
+
+            12,
+
+            Math.min(
+
+                24,
+
+                size / 7
+
+            )
+
+        );
+
+
+
+
+
     for (
         const node of layout.nodes
     ) {
@@ -72,6 +138,8 @@ export async function drawNodes(
 
 
 
+
+
         /*
             IGNORAR IDS INVALIDOS
         */
@@ -91,22 +159,26 @@ export async function drawNodes(
 
 
 
-        /*
-            EVITAR PERSONAS DUPLICADAS
 
-            Si la misma persona aparece
-            como member y child,
-            solo se dibuja una vez.
+
+        /*
+            EVITAR DUPLICADOS
+
+            Una persona no puede salir
+            dos veces si es hijo y miembro.
         */
 
 
         if (
+
             drawn.has(node.id)
+
         ) {
 
             continue;
 
         }
+
 
 
         drawn.add(
@@ -126,23 +198,19 @@ export async function drawNodes(
 
 
             const member =
+
                 await layout.guild.members.fetch(
                     node.id
                 );
 
 
             username =
+
                 member.user.username;
 
 
         } catch {}
 
-
-
-
-
-        const size =
-            120;
 
 
 
@@ -154,6 +222,7 @@ export async function drawNodes(
 
         ctx.fillStyle =
             '#ffffff';
+
 
 
         ctx.fillRect(
@@ -171,12 +240,15 @@ export async function drawNodes(
 
 
 
+
         ctx.strokeStyle =
             '#000000';
 
 
+
         ctx.lineWidth =
             3;
+
 
 
         ctx.strokeRect(
@@ -204,12 +276,16 @@ export async function drawNodes(
             '#000000';
 
 
+
         ctx.font =
-            'bold 18px DejaVuCustom';
+
+            `bold ${fontSize}px DejaVuCustom`;
+
 
 
         ctx.textAlign =
             'center';
+
 
 
         ctx.textBaseline =
