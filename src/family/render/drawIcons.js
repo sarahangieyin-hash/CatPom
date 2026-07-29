@@ -3,22 +3,9 @@ export async function drawIcons(
     layout
 ) {
 
-
     const members =
         layout.nodes.filter(
-
-            node =>
-                node.type === 'member'
-
-        );
-
-
-    const union =
-        layout.nodes.find(
-
-            node =>
-                node.type === 'union'
-
+            node => node.type === 'member'
         );
 
 
@@ -26,45 +13,43 @@ export async function drawIcons(
         layout.lovers || [];
 
 
-
-    ctx.font =
-        '35px Arial';
-
-
-
-    ctx.textAlign =
-        'center';
-
-
-    ctx.textBaseline =
-        'middle';
-
-
-
     /*
-        💍 ICONO DE MATRIMONIO
-
-        Usa el nodo invisible union_main
-        que está colocado en medio.
+        💍 ANILLO DE CASADOS
+        Usamos texto simple para evitar
+        el cuadrado roto de emojis de Canvas.
     */
 
+    if (members.length > 1) {
 
-    if (
-        union &&
-        members.length > 1
-    ) {
+        const centerX =
+            members.reduce(
+                (sum, node) =>
+                    sum + node.x,
+                0
+            ) / members.length;
+
+
+        const centerY =
+            members[0].y;
+
+
+        ctx.font =
+            '40px Arial';
+
+
+        ctx.textAlign =
+            'center';
+
+
+        ctx.textBaseline =
+            'middle';
 
 
         ctx.fillText(
-
-            '💍',
-
-            union.x,
-
-            union.y
-
+            '○',
+            centerX,
+            centerY
         );
-
 
     }
 
@@ -74,38 +59,26 @@ export async function drawIcons(
         🔥 AMANTES
     */
 
-
     members.forEach(
-
         member => {
 
-
             if (
-
-                lovers.includes(
-                    member.id
-                )
-
+                lovers.includes(member.id)
             ) {
+
+                ctx.font =
+                    '30px Arial';
 
 
                 ctx.fillText(
-
                     '🔥',
-
                     member.x + 45,
-
                     member.y - 45
-
                 );
-
 
             }
 
-
         }
-
     );
-
 
 }
