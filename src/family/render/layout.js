@@ -263,7 +263,7 @@ export async function calculateLayout(
 
 
     /*
-        PADRES
+        PADRES 👨‍👩‍👧
     */
 
 
@@ -307,7 +307,7 @@ export async function calculateLayout(
 
 
     /*
-        HERMANOS
+        HERMANOS 👥
     */
 
 
@@ -347,57 +347,131 @@ export async function calculateLayout(
 
 
     /*
-        TAMAÑO DINÁMICO DEL LIENZO
+        AJUSTE AUTOMÁTICO DEL LIENZO
 
-        Crece según la familia.
-        Sin espacio gigante vacío.
+        Usa la posición real de los nodos.
+        Evita espacios vacíos.
+        Centra el árbol.
     */
 
 
-    const totalPeople =
+    const padding =
+        250;
 
-        members.length +
-        children.length +
-        parents.length +
-        siblings.length;
+
+
+    const visibleNodes =
+
+        nodes.filter(
+
+            node =>
+                node.type !== 'union'
+
+        );
+
+
+
+    const minX =
+        Math.min(
+
+            ...visibleNodes.map(
+
+                node =>
+                    node.x
+
+            )
+
+        );
+
+
+
+    const maxX =
+        Math.max(
+
+            ...visibleNodes.map(
+
+                node =>
+                    node.x
+
+            )
+
+        );
+
+
+
+    const minY =
+        Math.min(
+
+            ...visibleNodes.map(
+
+                node =>
+                    node.y
+
+            )
+
+        );
+
+
+
+    const maxY =
+        Math.max(
+
+            ...visibleNodes.map(
+
+                node =>
+                    node.y
+
+            )
+
+        );
 
 
 
     const width =
 
-        Math.max(
-
-            700,
-
-            (
-                totalPeople *
-                180
-            )
-            +
-            250
-
-        );
+        (
+            maxX -
+            minX
+        )
+        +
+        padding * 2;
 
 
 
     const height =
 
-        Math.max(
+        (
+            maxY -
+            minY
+        )
+        +
+        padding * 2;
 
-            500,
 
-            450 +
-            (
-                children.length *
-                120
-            )
-            +
-            (
-                parents.length *
-                100
-            )
 
-        );
+    /*
+        CENTRAR TODOS LOS NODOS
+    */
+
+
+    nodes.forEach(
+
+        node => {
+
+
+            node.x -= minX;
+
+            node.x += padding;
+
+
+            node.y -= minY;
+
+            node.y += padding;
+
+
+        }
+
+    );
 
 
 
