@@ -65,6 +65,7 @@ export async function drawNodes(
 
             try {
 
+
                 const avatar =
                     await loadImage(
 
@@ -103,6 +104,7 @@ export async function drawNodes(
                 );
 
 
+
                 ctx.clip();
 
 
@@ -134,10 +136,34 @@ export async function drawNodes(
                 '#000000';
 
 
-
             ctx.font =
                 'bold 20px Arial';
 
+
+            ctx.textAlign =
+                'center';
+
+
+            ctx.fillText(
+
+                user.globalName || user.username,
+
+                node.x,
+
+                node.y + 90
+
+            );
+
+
+        } else {
+
+
+            ctx.fillStyle =
+                '#000000';
+
+
+            ctx.font =
+                'bold 18px Arial';
 
 
             ctx.textAlign =
@@ -147,7 +173,7 @@ export async function drawNodes(
 
             ctx.fillText(
 
-                user.displayName,
+                'Usuario',
 
                 node.x,
 
