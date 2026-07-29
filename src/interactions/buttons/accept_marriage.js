@@ -113,95 +113,87 @@ export default {
 
 
 
-        if (allAccepted) {
+if (allAccepted) {
 
+    await createFamily(
 
-            await createFamily(
+        interaction.guild.id,
 
-                interaction.guild.id,
+        updated.members
+
+    );
+
+    await deleteFamilyRequest(
+
+        interaction.guild.id,
+
+        requestId
+
+    );
+
+    const embed =
+        new EmbedBuilder()
+
+            .setTitle(
+                '💍 ¡Se han casado!'
+            )
+
+            .setDescription(
 
                 updated.members
+                    .map(id => `<@${id}>`)
+                    .join(' ❤️ ')
 
+            )
+
+            .setColor(
+                0xff69b4
             );
 
+    await interaction.message.edit({
+
+        content: '',
+
+        embeds: [
+            embed
+        ],
+
+        components: []
+
+    });
+
+    await interaction.deferUpdate();
+
+    return;
+
+}
 
 
-            await deleteFamilyRequest(
+/*
+    Aún faltan personas por aceptar
+*/
 
-                interaction.guild.id,
+const restantes =
+    updated.members.length -
+    updated.accepted.length;
 
-                requestId
+await interaction.reply({
 
-            );
+    content:
+        '✅ Has aceptado la unión.',
 
+    ephemeral: true
 
+});
 
-            const embed =
-                new EmbedBuilder()
+await interaction.channel.send({
 
-                    .setTitle(
-                        '🎉💍 ¡Felicidades! ¡Estáis casados!'
-                    )
+    content:
 
-                    .setDescription(
+        `💍 <@${interaction.user.id}> ha aceptado la unión.\n\n` +
 
-                        `❤️ ${updated.members
-                            .map(id => `<@${id}>`)
-                            .join(' y ')} ahora forman una unión.\n\n` +
+        `⏳ Esperando a **${restantes}** persona(s) más.`
 
-                        '✨ Que vuestro vínculo dure para siempre ✨'
+});
 
-                    )
-
-                    .setColor(
-                        0xff69b4
-                    );
-
-
-
-            await interaction.message.edit({
-
-                content:
-                    '',
-
-                embeds:
-                    [
-                        embed
-                    ],
-
-                components:
-                    []
-
-            });
-
-
-
-            await interaction.deferUpdate();
-
-
-
-            return;
-
-        }
-
-
-
-        await interaction.update({
-
-            content:
-                `💍 <@${interaction.user.id}> ha aceptado la unión.\n\n` +
-
-                '⏳ Esperando a que todas las personas acepten...',
-
-            embeds:
-                [],
-
-            components:
-                []
-
-        });
-
-
-    }
-
-};
+return;
