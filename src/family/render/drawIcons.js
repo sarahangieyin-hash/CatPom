@@ -1,43 +1,4 @@
-import {
-    registerFont
-} from 'canvas';
-
-import path from 'path';
-
-import {
-    fileURLToPath
-} from 'url';
-
-
-
-const __filename =
-    fileURLToPath(import.meta.url);
-
-
-const __dirname =
-    path.dirname(__filename);
-
-
-
-registerFont(
-
-    path.join(
-        __dirname,
-        '../../assets/fonts/DejaVuSans.ttf'
-    ),
-
-    {
-        family:
-            'DejaVuCustom'
-    }
-
-);
-
-
-
-
-
-export function drawMarriage(
+export async function drawIcons(
     ctx,
     layout
 ) {
@@ -53,106 +14,62 @@ export function drawMarriage(
         );
 
 
-
-
-
-    if (
-
-        members.length < 2
-
-    ) {
-
-        return;
-
-    }
-
-
-
-
-
-    ctx.textAlign =
-        'center';
-
-
-    ctx.textBaseline =
-        'middle';
-
-
-    ctx.font =
-        '32px DejaVuCustom';
+    const lovers =
+        layout.lovers || [];
 
 
 
 
 
     /*
-        MATRIMONIOS 💍
-
-        El anillo siempre aparece
-        entre dos personas.
-
-        Persona A 💍 Persona B
-
-        Persona B 💍 Persona C
-
+        AMANTES 🔥
     */
 
 
+    members.forEach(
 
-    for (
-
-        let i = 0;
-
-        i < members.length - 1;
-
-        i++
-
-    ) {
+        member => {
 
 
-        const left =
-            members[i];
+            if (
+
+                lovers.includes(
+                    member.id
+                )
+
+            ) {
 
 
-        const right =
-            members[i + 1];
+                ctx.font =
+                    "28px Arial";
 
 
+                ctx.textAlign =
+                    "center";
 
-        const x =
 
-            (
-                left.x +
-                right.x
-            )
-            /
-            2;
+                ctx.textBaseline =
+                    "middle";
 
 
 
-        const y =
+                ctx.fillText(
 
-            (
-                left.y +
-                right.y
-            )
-            /
-            2;
+                    "🔥",
 
+                    member.x + 45,
 
+                    member.y - 45
 
-        ctx.fillText(
-
-            '💍',
-
-            x,
-
-            y
-
-        );
+                );
 
 
-    }
+            }
+
+
+        }
+
+    );
 
 
 }
