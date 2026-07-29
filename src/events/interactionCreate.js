@@ -4,11 +4,9 @@ import { Events } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
 
-
 export default {
 
     name: Events.InteractionCreate,
-
 
     async execute(
         interaction,
@@ -17,71 +15,83 @@ export default {
 
         try {
 
+            /*
+                COMANDOS
+            */
 
             if (interaction.isChatInputCommand()) {
-
 
                 const command =
                     client.commands.get(
                         interaction.commandName
                     );
 
-
                 if (!command)
                     return;
-
-
 
                 await command.execute(
                     interaction,
                     client
                 );
 
-
                 return;
 
             }
 
 
-
+            /*
+                BOTONES
+            */
 
             if (interaction.isButton()) {
-
 
                 let customId =
                     interaction.customId;
 
-
                 let args = [];
 
 
+                /*
+                    IDs CON :
+                */
 
-                if (customId.includes(':')) {
-
+                if (customId.includes(":")) {
 
                     const parts =
-                        customId.split(':');
-
+                        customId.split(":");
 
                     customId =
                         parts[0];
 
-
-                    args = [
-
-                        parts.slice(1).join(':')
-
-                    ];
+                    args =
+                        parts.slice(1);
 
                 }
 
 
+                /*
+                    IDs CON _
+                    Ej:
+                    accept_adoption_PARENT_CHILD
+                */
 
-                const button =
-                    client.buttons.get(
-                        customId
-                    );
+                else if (customId.startsWith("accept_adoption_")) {
 
+                    const parts =
+                        customId.split("_");
+
+                    customId =
+                        "accept_adoption";
+
+                    args = [
+
+                        parts[2],
+
+                        parts[3]
+
+                    ];
+
+                }
 
 
                 console.log(
@@ -99,9 +109,13 @@ export default {
                 );
 
 
+                const button =
+                    client.buttons.get(
+                        customId
+                    );
+
 
                 if (!button) {
-
 
                     console.log(
 
@@ -111,11 +125,9 @@ export default {
 
                     );
 
-
                     return;
 
                 }
-
 
 
                 await button.execute(
@@ -128,36 +140,30 @@ export default {
 
                 );
 
-
                 return;
 
             }
 
 
-
+            /*
+                MENUS
+            */
 
             if (interaction.isStringSelectMenu()) {
-
 
                 const [
                     customId,
                     ...args
                 ] =
-                    interaction.customId.split(':');
-
-
+                    interaction.customId.split(":");
 
                 const menu =
                     client.selectMenus.get(
                         customId
                     );
 
-
-
                 if (!menu)
                     return;
-
-
 
                 await menu.execute(
 
@@ -169,28 +175,23 @@ export default {
 
                 );
 
-
                 return;
 
             }
 
+        }
 
-
-        } catch (error) {
-
+        catch (error) {
 
             logger.error(
 
-                'Interaction error:',
+                "Interaction error:",
 
                 error
 
             );
 
-
-
             if (!interaction.replied) {
-
 
                 await handleInteractionError(
 
@@ -202,9 +203,7 @@ export default {
 
             }
 
-
         }
-
 
     }
 
