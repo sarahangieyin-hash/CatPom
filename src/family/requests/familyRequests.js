@@ -6,7 +6,11 @@ import {
 } from '../../utils/database/wrapper.js';
 
 
-function requestKey(guildId, id) {
+
+function requestKey(
+    guildId,
+    id
+) {
 
     return `family_request:${guildId}:${id}`;
 
@@ -210,7 +214,9 @@ export async function getAllFamilyRequests(
 
     const requests =
         await listFromDb(
+
             `family_request:${guildId}:`
+
         );
 
 
@@ -241,18 +247,27 @@ export async function getAllFamilyRequests(
 
 }
 
+
+
 export async function getFamilyRequestByCreator(
     guildId,
     userId
 ) {
 
-    const key =
-        `familyRequest:${guildId}:${userId}`;
+    const requests =
+        await getAllFamilyRequests(
+            guildId
+        );
 
 
-    return await getFromDb(
-        key,
-        null
-    );
+    return requests.find(
+
+        request =>
+
+            request.creator === userId &&
+
+            request.type === 'marriage'
+
+    ) || null;
 
 }
