@@ -6,125 +6,138 @@ export async function drawLines(
 
     const members =
         layout.nodes.filter(
-            node => node.type === 'member'
+            node =>
+                node.type === 'member'
         );
 
 
     const children =
         layout.nodes.filter(
-            node => node.type === 'child'
+            node =>
+                node.type === 'child'
         );
 
 
     const parents =
         layout.nodes.filter(
-            node => node.type === 'parent'
+            node =>
+                node.type === 'parent'
         );
 
 
     const siblings =
         layout.nodes.filter(
-            node => node.type === 'sibling'
+            node =>
+                node.type === 'sibling'
         );
 
 
-    const union =
-        layout.nodes.find(
-            node => node.type === 'union'
+    const unions =
+        layout.nodes.filter(
+            node =>
+                node.type === 'union'
         );
 
 
 
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
+    ctx.strokeStyle =
+        "#000000";
 
 
-
-    /*
-        MATRIMONIO 💍
-
-        NO hay línea entre parejas.
-        El anillo se dibuja aparte.
-    */
-
-    let unionX = null;
-    let unionY = null;
+    ctx.lineWidth =
+        4;
 
 
-    if (union) {
+    ctx.lineCap =
+        "round";
 
-        unionX =
-            union.x;
 
-        unionY =
-            union.y;
-
-    }
 
 
 
     /*
         PADRES -> UNIÓN 💍
+
+        Se conectan al primer matrimonio.
     */
+
+
+    const mainUnion =
+        unions[0];
+
 
 
     if (
         parents.length &&
-        union
+        mainUnion
     ) {
 
 
-        parents.forEach(parent => {
+        parents.forEach(
+
+            parent => {
 
 
-            ctx.beginPath();
+                ctx.beginPath();
 
 
-            ctx.moveTo(
-                parent.x,
-                parent.y + 60
-            );
+                ctx.moveTo(
+
+                    parent.x,
+
+                    parent.y + 60
+
+                );
 
 
-            ctx.lineTo(
-                parent.x,
-                unionY - 120
-            );
+                ctx.lineTo(
+
+                    parent.x,
+
+                    mainUnion.y - 120
+
+                );
 
 
-            ctx.lineTo(
-                unionX,
-                unionY - 60
-            );
+                ctx.lineTo(
+
+                    mainUnion.x,
+
+                    mainUnion.y - 60
+
+                );
 
 
-            ctx.stroke();
+                ctx.stroke();
 
 
-        });
+            }
+
+        );
 
 
     }
+
+
 
 
 
     /*
         UNIÓN -> HIJOS 👶
 
-        Los hijos salen del matrimonio,
-        no de una sola persona.
+        Los hijos salen del centro
+        del matrimonio.
     */
 
 
     if (
         children.length &&
-        union
+        mainUnion
     ) {
 
 
         const branchY =
-            unionY + 170;
+            mainUnion.y + 170;
 
 
 
@@ -132,18 +145,25 @@ export async function drawLines(
 
 
         ctx.moveTo(
-            unionX,
-            unionY + 60
+
+            mainUnion.x,
+
+            mainUnion.y + 40
+
         );
 
 
         ctx.lineTo(
-            unionX,
+
+            mainUnion.x,
+
             branchY
+
         );
 
 
         ctx.stroke();
+
 
 
 
@@ -156,16 +176,22 @@ export async function drawLines(
 
 
             ctx.moveTo(
+
                 children[0].x,
+
                 branchY
+
             );
 
 
             ctx.lineTo(
+
                 children[
                     children.length - 1
                 ].x,
+
                 branchY
+
             );
 
 
@@ -176,33 +202,45 @@ export async function drawLines(
 
 
 
-        for (
-            const child of children
-        ) {
 
 
-            ctx.beginPath();
+        children.forEach(
+
+            child => {
 
 
-            ctx.moveTo(
-                child.x,
-                branchY
-            );
+                ctx.beginPath();
 
 
-            ctx.lineTo(
-                child.x,
-                child.y - 60
-            );
+                ctx.moveTo(
+
+                    child.x,
+
+                    branchY
+
+                );
 
 
-            ctx.stroke();
+                ctx.lineTo(
+
+                    child.x,
+
+                    child.y - 60
+
+                );
 
 
-        }
+                ctx.stroke();
+
+
+            }
+
+        );
 
 
     }
+
+
 
 
 
@@ -223,6 +261,7 @@ export async function drawLines(
 
 
         siblings.forEach(
+
             sibling => {
 
 
@@ -230,14 +269,20 @@ export async function drawLines(
 
 
                 ctx.moveTo(
+
                     sibling.x + 60,
+
                     sibling.y
+
                 );
 
 
                 ctx.lineTo(
+
                     main.x - 60,
+
                     main.y
+
                 );
 
 
@@ -245,7 +290,64 @@ export async function drawLines(
 
 
             }
+
         );
+
+
+    }
+
+
+
+
+
+    /*
+        POLIAMOR 💍
+
+        Une visualmente los matrimonios.
+        Ejemplo:
+
+        A 💍 B 💍 C
+
+    */
+
+
+    if (
+        unions.length > 1
+    ) {
+
+
+        for (
+            let i = 0;
+            i < unions.length - 1;
+            i++
+        ) {
+
+
+            ctx.beginPath();
+
+
+            ctx.moveTo(
+
+                unions[i].x,
+
+                unions[i].y
+
+            );
+
+
+            ctx.lineTo(
+
+                unions[i + 1].x,
+
+                unions[i + 1].y
+
+            );
+
+
+            ctx.stroke();
+
+
+        }
 
 
     }
