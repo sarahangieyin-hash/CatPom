@@ -20,6 +20,7 @@ export default {
         'accept_marriage',
 
 
+
     async execute(
         interaction,
         client,
@@ -124,6 +125,7 @@ export default {
             );
 
 
+
             await deleteFamilyRequest(
 
                 interaction.guild.id,
@@ -143,9 +145,9 @@ export default {
 
                     .setDescription(
 
-                        `❤️ La unión entre ${updated.members
+                        `❤️ ${updated.members
                             .map(id => `<@${id}>`)
-                            .join(' y ')} se ha creado correctamente.\n\n` +
+                            .join(' y ')} ahora forman una unión.\n\n` +
 
                         '✨ Que vuestro vínculo dure para siempre ✨'
 
@@ -156,10 +158,11 @@ export default {
                     );
 
 
+
             await interaction.message.edit({
 
                 content:
-                    ' ',
+                    '',
 
                 embeds:
                     [
@@ -172,6 +175,7 @@ export default {
             });
 
 
+
             return;
 
         }
@@ -182,7 +186,8 @@ export default {
 
             content:
                 `💍 <@${interaction.user.id}> ha aceptado la unión.\n\n` +
-                'Esperando a que todas las personas acepten...',
+
+                '⏳ Esperando a que todas las personas acepten...',
 
             embeds:
                 [],
