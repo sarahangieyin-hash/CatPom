@@ -4,17 +4,26 @@ import {
     updateFamily
 } from '../../utils/families.js';
 
+import {
+    setInDb
+} from '../../utils/database/wrapper.js';
+
+
 export default {
 
     customId: 'accept_adoption',
 
+
     async execute(interaction) {
+
 
         const [
             ,
             parentId,
             childId
         ] = interaction.customId.split('_');
+
+
 
         if (
             interaction.user.id !== childId
@@ -31,6 +40,8 @@ export default {
 
         }
 
+
+
         let family =
             await getFamilyByMember(
 
@@ -39,6 +50,8 @@ export default {
                 parentId
 
             );
+
+
 
         if (!family) {
 
@@ -55,6 +68,8 @@ export default {
 
         }
 
+
+
         if (
             !Array.isArray(
                 family.children
@@ -65,17 +80,17 @@ export default {
 
         }
 
-        /*
-            IMPORTANTE:
-            EL HIJO NO SE AÑADE A family.members
-            SOLO SE REGISTRA EN children.
-        */
+
 
         if (
             !family.children.some(
-                child => child.id === childId
+
+                child =>
+                    child.id === childId
+
             )
         ) {
+
 
             family.children.push({
 
@@ -90,7 +105,25 @@ export default {
 
             });
 
+
         }
+
+
+
+        /*
+            REGISTRAR AL HIJO COMO PARTE DE LA FAMILIA
+            PARA QUE PUEDA USAR /tree
+        */
+
+        await setInDb(
+
+            `familyMember:${interaction.guild.id}:${childId}`,
+
+            family.id
+
+        );
+
+
 
         await updateFamily(
 
@@ -102,6 +135,8 @@ export default {
 
         );
 
+
+
         await interaction.update({
 
             content:
@@ -110,6 +145,7 @@ export default {
             components: []
 
         });
+
 
     }
 
