@@ -3,129 +3,94 @@ export async function drawNodes(
     layout
 ) {
 
+    for (const node of layout.nodes) {
 
-    for (
-        const node of layout.nodes
-    ) {
+        const member =
+            await layout.guild.members.fetch(node.id).catch(() => null);
 
+        const user =
+            member?.user;
 
         const radius = 55;
 
-
-
         ctx.beginPath();
 
-
         ctx.arc(
-
             node.x,
-
             node.y,
-
             radius,
-
             0,
-
             Math.PI * 2
-
         );
 
-
-
-        switch(node.type) {
-
-
-            case 'child':
-
-                ctx.fillStyle =
-                    '#7ec8ff';
-
-                break;
-
-
-
-            case 'parent':
-
-                ctx.fillStyle =
-                    '#ff9f9f';
-
-                break;
-
-
-
-            case 'sibling':
-
-                ctx.fillStyle =
-                    '#b8ff9f';
-
-                break;
-
-
-
-            case 'lover':
-
-                ctx.fillStyle =
-                    '#ff6b6b';
-
-                break;
-
-
-
-            default:
-
-                ctx.fillStyle =
-                    '#ffd166';
-
-                break;
-
-
-        }
-
-
-
+        ctx.fillStyle = '#2b2d31';
         ctx.fill();
 
-
-
-        ctx.strokeStyle =
-            '#ffffff';
-
-
-        ctx.lineWidth =
-            4;
-
-
+        ctx.strokeStyle = '#5865F2';
+        ctx.lineWidth = 5;
         ctx.stroke();
 
+        if (user) {
 
+            try {
 
-        ctx.fillStyle =
-            '#ffffff';
+                const avatar =
+                    await loadImage(
+                        user.displayAvatarURL({
+                            extension: 'png',
+                            size: 128
+                        })
+                    );
 
+                ctx.save();
 
-        ctx.font =
-            '18px Arial';
+                ctx.beginPath();
 
+                ctx.arc(
+                    node.x,
+                    node.y,
+                    radius - 5,
+                    0,
+                    Math.PI * 2
+                );
 
-        ctx.textAlign =
-            'center';
+                ctx.clip();
 
+                ctx.drawImage(
+                    avatar,
+                    node.x - radius + 5,
+                    node.y - radius + 5,
+                    (radius - 5) * 2,
+                    (radius - 5) * 2
+                );
 
-        ctx.textBaseline =
-            'middle';
+                ctx.restore();
 
+            } catch {}
 
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 22px Arial";
+            ctx.textAlign = "center";
 
-        ctx.fillText(
+            ctx.fillText(
+                user.username,
+                node.x,
+                node.y + 85
+            );
 
-            node.id,
+        } else {
 
-            node.x,
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "18px Arial";
+            ctx.textAlign = "center";
 
-            node.y
+            ctx.fillText(
+                node.id,
+                node.x,
+                node.y
+            );
 
-        );
-
+        }
 
     }
 
