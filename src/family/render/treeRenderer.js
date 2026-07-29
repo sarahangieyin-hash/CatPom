@@ -23,75 +23,70 @@ export async function renderFamilyTree(
     family
 ) {
 
-    try {
-
-        const layout =
-            await calculateLayout(
-                guild,
-                family
-            );
-
-        const width =
-            Math.max(
-                1800,
-                layout.width || 1800
-            );
-
-        const height =
-            Math.max(
-                1200,
-                layout.height || 1200
-            );
-
-        const canvas =
-            createCanvas(
-                width,
-                height
-            );
-
-        const ctx =
-            canvas.getContext('2d');
-
-        ctx.fillStyle = '#111111';
-
-        ctx.fillRect(
-            0,
-            0,
-            width,
-            height
-        );
-
-        ctx.imageSmoothingEnabled = true;
-
-        await drawLines(
-            ctx,
-            layout
-        );
-
-        await drawNodes(
-            ctx,
+    const layout =
+        await calculateLayout(
             guild,
-            layout
+            family
         );
 
-        await drawIcons(
-            ctx,
-            layout
+    layout.guild = guild;
+
+    const scale = 2;
+
+    const width =
+        Math.max(
+            1600,
+            layout.width
         );
 
-        return canvas.toBuffer(
-            'image/png'
+    const height =
+        Math.max(
+            1000,
+            layout.height
         );
 
-    } catch (err) {
-
-        console.error(
-            "TREE ERROR:",
-            err
+    const canvas =
+        createCanvas(
+            width * scale,
+            height * scale
         );
 
-        throw err;
+    const ctx =
+        canvas.getContext('2d');
 
-    }
+    ctx.scale(
+        scale,
+        scale
+    );
+
+    ctx.fillStyle = '#111111';
+
+    ctx.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+    ctx.imageSmoothingEnabled = true;
+
+    await drawLines(
+        ctx,
+        layout
+    );
+
+    await drawNodes(
+        ctx,
+        layout
+    );
+
+    await drawIcons(
+        ctx,
+        layout
+    );
+
+    return canvas.toBuffer(
+        'image/png'
+    );
 
 }
