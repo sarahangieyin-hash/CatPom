@@ -44,10 +44,9 @@ export async function calculateLayout(
 
 
     /*
-        NODO CENTRAL DE UNIÓN 💍
-
-        No se dibuja.
-        Sirve para conectar pareja e hijos.
+        NODO DE UNIÓN 💍
+        Invisible.
+        Sirve para conectar padres e hijos.
     */
 
     nodes.push({
@@ -69,12 +68,15 @@ export async function calculateLayout(
 
 
     /*
-        MIEMBROS DE LA UNIÓN 💍
-
-        Siempre en línea horizontal.
+        PAREJA PRINCIPAL 💍
+        Siempre horizontal.
         Ej:
-        A - 💍 - B - 💍 - C
+        Madre - Padre
+        Madre - Padre - Pareja
     */
+
+    const memberSpacing = 220;
+
 
     members.forEach(
 
@@ -96,7 +98,7 @@ export async function calculateLayout(
                         (members.length - 1) / 2
                     )
                     *
-                    180,
+                    memberSpacing,
 
 
                 y:
@@ -113,9 +115,9 @@ export async function calculateLayout(
 
     /*
         HIJOS 👶
-
-        Siempre debajo del centro de la unión.
+        Siempre debajo de TODA la unión.
     */
+
 
     children.forEach(
 
@@ -156,9 +158,9 @@ export async function calculateLayout(
 
     /*
         PADRES 👨‍👩‍👧
-
-        Arriba del núcleo familiar.
+        Encima de la pareja.
     */
+
 
     parents.forEach(
 
@@ -186,7 +188,7 @@ export async function calculateLayout(
 
 
                 y:
-                    100
+                    80
 
             });
 
@@ -200,6 +202,7 @@ export async function calculateLayout(
     /*
         HERMANOS 👥
     */
+
 
     siblings.forEach(
 
