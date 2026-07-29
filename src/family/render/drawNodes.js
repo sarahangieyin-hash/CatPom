@@ -21,7 +21,7 @@ export async function drawNodes(
 
 
             username =
-                member.user.username;
+                member.displayName;
 
 
         } catch {}
@@ -81,7 +81,7 @@ export async function drawNodes(
 
 
         ctx.font =
-            'bold 18px Arial';
+            'bold 18px "Noto Sans", "DejaVu Sans", Arial, sans-serif';
 
 
 
@@ -95,9 +95,19 @@ export async function drawNodes(
 
 
 
+        const cleanName =
+            username
+                .replace(
+                    /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,
+                    ''
+                )
+                .trim();
+
+
+
         ctx.fillText(
 
-            username,
+            cleanName || username,
 
             node.x,
 
