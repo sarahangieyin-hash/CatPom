@@ -29,12 +29,10 @@ export default {
         ),
 
 
-
     async execute(interaction) {
 
 
         const user =
-
             interaction.options.getUser('usuario')
             ??
             interaction.user;
@@ -42,7 +40,6 @@ export default {
 
 
         const family =
-
             await getFamilyByMember(
 
                 interaction.guild.id,
@@ -55,7 +52,6 @@ export default {
 
         if (!family) {
 
-
             return interaction.reply({
 
                 content:
@@ -66,139 +62,132 @@ export default {
 
             });
 
+        }
+
+
+
+        const isChild =
+            family.children?.some(
+
+                child =>
+                    child.id === user.id
+
+            );
+
+
+
+        let members = [];
+        let children = [];
+        let parents = [];
+        let siblings = [];
+
+
+
+        if (isChild) {
+
+
+            // El hijo ve su propia relación familiar
+
+
+            members =
+                family.members
+                .filter(
+
+                    id =>
+                        id !== user.id
+
+                )
+                .map(
+
+                    id =>
+                        `<@${id}>`
+
+                );
+
+
+            parents =
+                family.members
+                .map(
+
+                    id =>
+                        `<@${id}>`
+
+                );
+
+
+            children = [
+
+                `<@${user.id}>`
+
+            ];
+
+
+            siblings =
+                family.children
+
+                .filter(
+
+                    child =>
+                        child.id !== user.id
+
+                )
+
+                .map(
+
+                    child =>
+                        `<@${child.id}>`
+
+                );
+
+
+
+        } else {
+
+
+            members =
+                family.members?.map(
+
+                    id =>
+                        `<@${id}>`
+
+                ) || [];
+
+
+
+            children =
+                family.children?.map(
+
+                    child =>
+                        `<@${child.id}>`
+
+                ) || [];
+
+
+
+            parents =
+                family.parents?.map(
+
+                    parent =>
+                        `<@${parent.id}>`
+
+                ) || [];
+
+
+
+            siblings =
+                family.siblings?.map(
+
+                    sibling =>
+                        `<@${sibling.id}>`
+
+                ) || [];
+
 
         }
 
 
 
-        const members =
-
-            Array.isArray(family.members)
-
-                ?
-
-                family.members
-
-                    .map(
-
-                        id =>
-                            `<@${id}>`
-
-                    )
-
-                    .join('\n')
-
-                :
-
-                'Ninguno';
-
-
-
-        const children =
-
-            Array.isArray(family.children) &&
-
-            family.children.length > 0
-
-                ?
-
-                family.children
-
-                    .map(
-
-                        child =>
-
-                            `<@${child.id}>`
-
-                    )
-
-                    .join('\n')
-
-                :
-
-                'Ninguno';
-
-
-
-        const lovers =
-
-            Array.isArray(family.lovers) &&
-
-            family.lovers.length > 0
-
-                ?
-
-                family.lovers
-
-                    .map(
-
-                        id =>
-                            `<@${id}>`
-
-                    )
-
-                    .join('\n')
-
-                :
-
-                'Ninguno';
-
-
-
-        const parents =
-
-            Array.isArray(family.parents) &&
-
-            family.parents.length > 0
-
-                ?
-
-                family.parents
-
-                    .map(
-
-                        parent =>
-
-                            `<@${parent.id}>`
-
-                    )
-
-                    .join('\n')
-
-                :
-
-                'Ninguno';
-
-
-
-        const siblings =
-
-            Array.isArray(family.siblings) &&
-
-            family.siblings.length > 0
-
-                ?
-
-                family.siblings
-
-                    .map(
-
-                        sibling =>
-
-                            `<@${sibling.id}>`
-
-                    )
-
-                    .join('\n')
-
-                :
-
-                'Ninguno';
-
-
-
         const embed =
-
             new EmbedBuilder()
 
                 .setTitle(
@@ -213,17 +202,15 @@ export default {
 
                 .addFields(
 
-
                     {
 
                         name:
                             '💍 Unión',
 
                         value:
-                            members,
-
-                        inline:
-                            false
+                            members.length
+                            ? members.join('\n')
+                            : 'Ninguno'
 
                     },
 
@@ -234,10 +221,9 @@ export default {
                             '👶 Hijos',
 
                         value:
-                            children,
-
-                        inline:
-                            true
+                            children.length
+                            ? children.join('\n')
+                            : 'Ninguno'
 
                     },
 
@@ -248,10 +234,9 @@ export default {
                             '👨‍👩‍👧 Padres',
 
                         value:
-                            parents,
-
-                        inline:
-                            true
+                            parents.length
+                            ? parents.join('\n')
+                            : 'Ninguno'
 
                     },
 
@@ -262,37 +247,19 @@ export default {
                             '👥 Hermanos',
 
                         value:
-                            siblings,
-
-                        inline:
-                            true
-
-                    },
-
-
-                    {
-
-                        name:
-                            '🔥 Amantes',
-
-                        value:
-                            lovers,
-
-                        inline:
-                            true
+                            siblings.length
+                            ? siblings.join('\n')
+                            : 'Ninguno'
 
                     }
-
 
                 );
 
 
-
         await interaction.reply({
 
-            embeds: [
-                embed
-            ]
+            embeds:
+                [embed]
 
         });
 
