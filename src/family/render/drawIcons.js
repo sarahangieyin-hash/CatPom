@@ -1,12 +1,13 @@
-console.log("DRAW ICONS EJECUTADO");
 export async function drawIcons(
     ctx,
     layout
 ) {
 
+
     const members =
         layout.nodes.filter(
-            node => node.type === 'member'
+            node =>
+                node.type === 'member'
         );
 
 
@@ -14,25 +15,35 @@ export async function drawIcons(
         layout.lovers || [];
 
 
-    /*
-        💍 ANILLO DE CASADOS
 
-        No usa emoji porque canvas no soporta emojis bien.
-        Dibuja un anillo real.
+    /*
+        💍 ANILLO DE MATRIMONIO
     */
+
 
     if (members.length > 1) {
 
+
         const centerX =
             members.reduce(
-                (sum, node) => sum + node.x,
+                (sum,node)=>
+                    sum + node.x,
                 0
-            ) / members.length;
+            )
+            /
+            members.length;
+
 
 
         const centerY =
-            members[0].y;
+            members[0].y - 90;
 
+
+
+
+        /*
+            ARO
+        */
 
 
         ctx.beginPath();
@@ -40,7 +51,7 @@ export async function drawIcons(
         ctx.arc(
             centerX,
             centerY,
-            22,
+            18,
             0,
             Math.PI * 2
         );
@@ -51,23 +62,42 @@ export async function drawIcons(
 
 
         ctx.lineWidth =
-            6;
+            5;
 
 
         ctx.stroke();
 
 
-        // pequeño brillo
+
+
+        /*
+            PIEDRA DEL ANILLO
+        */
+
 
         ctx.beginPath();
 
-        ctx.arc(
-            centerX - 7,
-            centerY - 7,
-            4,
-            0,
-            Math.PI * 2
+
+        ctx.moveTo(
+            centerX - 8,
+            centerY - 16
         );
+
+
+        ctx.lineTo(
+            centerX,
+            centerY - 28
+        );
+
+
+        ctx.lineTo(
+            centerX + 8,
+            centerY - 16
+        );
+
+
+        ctx.closePath();
+
 
 
         ctx.fillStyle =
@@ -76,7 +106,22 @@ export async function drawIcons(
 
         ctx.fill();
 
+
+
+        ctx.strokeStyle =
+            "#d4af37";
+
+
+        ctx.lineWidth =
+            2;
+
+
+        ctx.stroke();
+
     }
+
+
+
 
 
 
@@ -84,16 +129,21 @@ export async function drawIcons(
         🔥 AMANTES
     */
 
+
     members.forEach(
+
         member => {
 
+
             if (
-                lovers.includes(member.id)
+                lovers.includes(
+                    member.id
+                )
             ) {
 
 
                 ctx.font =
-                    "30px Arial";
+                    "28px Arial";
 
 
                 ctx.fillText(
@@ -104,7 +154,10 @@ export async function drawIcons(
 
             }
 
+
         }
+
     );
+
 
 }
