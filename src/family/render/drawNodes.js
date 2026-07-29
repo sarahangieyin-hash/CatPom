@@ -167,7 +167,7 @@ export async function drawNodes(
 
                 node.x,
 
-                node.y + radius + 12
+                node.y + radius - 30
 
             );
 
