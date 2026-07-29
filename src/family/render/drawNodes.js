@@ -31,11 +31,17 @@ export async function drawNodes(
 
 
         ctx.arc(
+
             node.x,
+
             node.y,
+
             radius,
+
             0,
+
             Math.PI * 2
+
         );
 
 
@@ -86,7 +92,9 @@ export async function drawNodes(
                 ctx.save();
 
 
+
                 ctx.beginPath();
+
 
 
                 ctx.arc(
@@ -128,6 +136,7 @@ export async function drawNodes(
                 ctx.restore();
 
 
+
             } catch {}
 
 
@@ -136,12 +145,20 @@ export async function drawNodes(
                 '#000000';
 
 
+
             ctx.font =
-                'bold 20px Arial';
+                'bold 22px Arial';
+
 
 
             ctx.textAlign =
                 'center';
+
+
+
+            ctx.textBaseline =
+                'top';
+
 
 
             ctx.fillText(
@@ -150,9 +167,10 @@ export async function drawNodes(
 
                 node.x,
 
-                node.y + 90
+                node.y + radius + 12
 
             );
+
 
 
         } else {
@@ -162,12 +180,19 @@ export async function drawNodes(
                 '#000000';
 
 
+
             ctx.font =
-                'bold 18px Arial';
+                'bold 20px Arial';
+
 
 
             ctx.textAlign =
                 'center';
+
+
+
+            ctx.textBaseline =
+                'top';
 
 
 
@@ -177,7 +202,7 @@ export async function drawNodes(
 
                 node.x,
 
-                node.y + 90
+                node.y + radius + 12
 
             );
 
