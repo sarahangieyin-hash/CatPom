@@ -39,9 +39,27 @@ export async function drawNodes(
     layout
 ) {
 
+
     for (
         const node of layout.nodes
     ) {
+
+
+        /*
+            NODO INVISIBLE DE UNIÓN 💍
+
+            No se dibuja.
+            Solo sirve para las líneas.
+        */
+
+        if (
+            node.type === 'union'
+        ) {
+
+            continue;
+
+        }
+
 
 
         let username =
@@ -52,7 +70,9 @@ export async function drawNodes(
         try {
 
             const member =
-                await layout.guild.members.fetch(node.id);
+                await layout.guild.members.fetch(
+                    node.id
+                );
 
 
             username =
@@ -63,12 +83,19 @@ export async function drawNodes(
 
 
 
-        const size = 120;
+        const size =
+            120;
 
+
+
+        /*
+            CAJA DEL USUARIO
+        */
 
 
         ctx.fillStyle =
             '#ffffff';
+
 
 
         ctx.fillRect(
@@ -89,8 +116,10 @@ export async function drawNodes(
             '#000000';
 
 
+
         ctx.lineWidth =
             3;
+
 
 
         ctx.strokeRect(
@@ -107,6 +136,11 @@ export async function drawNodes(
 
 
 
+        /*
+            NOMBRE
+        */
+
+
         ctx.fillStyle =
             '#000000';
 
@@ -121,6 +155,7 @@ export async function drawNodes(
             'center';
 
 
+
         ctx.textBaseline =
             'middle';
 
@@ -128,16 +163,23 @@ export async function drawNodes(
 
         const safeName =
             username
+
                 .normalize('NFD')
+
                 .replace(
                     /[\u0300-\u036f]/g,
                     ''
                 )
+
                 .replace(
                     /[^a-zA-Z0-9_-]/g,
                     ''
                 )
-                .slice(0, 12);
+
+                .slice(
+                    0,
+                    12
+                );
 
 
 
