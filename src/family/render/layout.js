@@ -47,6 +47,7 @@ export async function calculateLayout(
         UNIÓN PRINCIPAL 💍
     */
 
+
     const memberSpacing = 220;
 
 
@@ -121,7 +122,6 @@ export async function calculateLayout(
                 y:
                     650
 
-
             });
 
 
@@ -166,7 +166,6 @@ export async function calculateLayout(
                 y:
                     100
 
-
             });
 
 
@@ -206,7 +205,6 @@ export async function calculateLayout(
                 y:
                     350
 
-
             });
 
 
@@ -218,40 +216,11 @@ export async function calculateLayout(
 
     /*
         AMANTES 🔥
+        
+        NO SE AÑADEN A NODES.
+        Solo se pasan a drawIcons.js
+        para mostrar el fuego.
     */
-
-
-    lovers.forEach(
-
-        (id, index) => {
-
-
-            nodes.push({
-
-                id,
-
-                type:
-                    'lover',
-
-
-                x:
-
-                    centerX +
-
-                    index *
-                    180,
-
-
-                y:
-                    180
-
-
-            });
-
-
-        }
-
-    );
 
 
 
@@ -282,7 +251,6 @@ export async function calculateLayout(
 
 
         lovers
-
 
     };
 
