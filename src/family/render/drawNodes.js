@@ -1,3 +1,9 @@
+import {
+    loadAvatar
+} from './avatar.js';
+
+
+
 export async function drawNodes(
     ctx,
     layout
@@ -10,6 +16,51 @@ export async function drawNodes(
 
 
         const radius = 55;
+
+
+        let image = null;
+
+
+        const member =
+            await layout.guild.members.fetch(
+                node.id
+            )
+            .catch(
+                () => null
+            );
+
+
+        if (member) {
+
+            const avatar =
+                await loadAvatar(
+                    member.user
+                );
+
+
+            if (avatar) {
+
+                const img =
+                    await import(
+                        'canvas'
+                    )
+                    .then(
+                        module =>
+                            module.loadImage(
+                                avatar
+                            )
+                    );
+
+
+                image = img;
+
+            }
+
+        }
+
+
+
+        ctx.save();
 
 
 
@@ -31,14 +82,64 @@ export async function drawNodes(
         );
 
 
-        ctx.fillStyle =
-            node.type === 'child'
-                ? '#7ec8ff'
-                : '#ffd166';
+        ctx.clip();
 
 
-        ctx.fill();
 
+        if (image) {
+
+
+            ctx.drawImage(
+
+                image,
+
+                node.x - radius,
+
+                node.y - radius,
+
+                radius * 2,
+
+                radius * 2
+
+            );
+
+
+        } else {
+
+
+            ctx.fillStyle =
+                node.type === 'child'
+                    ? '#7ec8ff'
+                    : '#ffd166';
+
+
+            ctx.fill();
+
+
+        }
+
+
+
+        ctx.restore();
+
+
+
+        ctx.beginPath();
+
+
+        ctx.arc(
+
+            node.x,
+
+            node.y,
+
+            radius,
+
+            0,
+
+            Math.PI * 2
+
+        );
 
 
         ctx.strokeStyle =
@@ -61,28 +162,17 @@ export async function drawNodes(
             '20px Arial';
 
 
-
         ctx.textAlign =
             'center';
 
 
-        ctx.textBaseline =
-            'middle';
-
-
-
-        const name =
-            `<@${node.id}>`;
-
-
-
         ctx.fillText(
 
-            name,
+            node.id,
 
             node.x,
 
-            node.y
+            node.y + 85
 
         );
 
