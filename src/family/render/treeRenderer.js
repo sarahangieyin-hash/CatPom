@@ -79,10 +79,7 @@ export async function renderFamilyTree(
 
 
     /*
-        AJUSTE REAL AL CONTENIDO
-
-        El canvas se adapta a donde están
-        realmente las personas.
+        MEDIR CONTENIDO REAL
     */
 
 
@@ -111,7 +108,8 @@ export async function renderFamilyTree(
         Math.min(
 
             ...nodes.map(
-                n => n.x
+                node =>
+                    node.x
             )
 
         );
@@ -123,7 +121,8 @@ export async function renderFamilyTree(
         Math.max(
 
             ...nodes.map(
-                n => n.x
+                node =>
+                    node.x
             )
 
         );
@@ -135,7 +134,8 @@ export async function renderFamilyTree(
         Math.min(
 
             ...nodes.map(
-                n => n.y
+                node =>
+                    node.y
             )
 
         );
@@ -147,7 +147,8 @@ export async function renderFamilyTree(
         Math.max(
 
             ...nodes.map(
-                n => n.y
+                node =>
+                    node.y
             )
 
         );
@@ -156,28 +157,41 @@ export async function renderFamilyTree(
 
 
 
+    const contentWidth =
+
+        maxX -
+        minX;
+
+
+
+    const contentHeight =
+
+        maxY -
+        minY;
+
+
+
+
+
+    /*
+        TAMAÑO FINAL
+
+        Solo crece cuando hay familia.
+    */
+
+
     const width =
 
-        (
-            maxX -
-            minX
-        )
-        +
-        nodeSize
-        +
+        contentWidth +
+        nodeSize +
         padding * 2;
 
 
 
     const height =
 
-        (
-            maxY -
-            minY
-        )
-        +
-        nodeSize
-        +
+        contentHeight +
+        nodeSize +
         padding * 2;
 
 
@@ -185,16 +199,36 @@ export async function renderFamilyTree(
 
 
     /*
-        MOVER TODO AL CENTRO
+        CENTRAR CONTENIDO
+
+        Reparte el espacio sobrante
+        por ambos lados.
     */
 
 
     const offsetX =
-        padding - minX;
+
+        (
+            width -
+            contentWidth
+        )
+        /
+        2
+        -
+        minX;
+
 
 
     const offsetY =
-        padding - minY;
+
+        (
+            height -
+            contentHeight
+        )
+        /
+        2
+        -
+        minY;
 
 
 
@@ -202,9 +236,12 @@ export async function renderFamilyTree(
 
         node => {
 
+
             node.x += offsetX;
 
+
             node.y += offsetY;
+
 
         }
 
@@ -240,7 +277,7 @@ export async function renderFamilyTree(
 
 
     /*
-        FONDO ADAPTADO
+        FONDO
     */
 
 
@@ -249,6 +286,7 @@ export async function renderFamilyTree(
 
         const bg =
             new Image();
+
 
 
         bg.src =
@@ -272,6 +310,12 @@ export async function renderFamilyTree(
 
 
     } catch(error) {
+
+
+        console.log(
+            "No se pudo cargar fondo:",
+            error.message
+        );
 
 
         ctx.fillStyle =
