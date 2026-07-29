@@ -5,6 +5,7 @@ import {
 import path from 'path';
 
 import {
+    fileURLToFileURL,
     fileURLToPath
 } from 'url';
 
@@ -46,23 +47,34 @@ export async function drawNodes(
     ) {
 
 
-
         /*
-            NODO DE UNIÓN 💍
-
-            Invisible.
-            Solo sirve para colocar el anillo.
+            IGNORAR NODOS INTERNOS
         */
 
         if (
 
-            node.id === 'union_main' ||
+            node.type !== 'member' &&
+            node.type !== 'child' &&
+            node.type !== 'parent' &&
+            node.type !== 'sibling'
 
-            node.id === 'UNION' ||
+        ) {
 
-            node.type === 'union' ||
+            continue;
 
-            node.hidden === true
+        }
+
+
+
+        /*
+            IGNORAR IDS QUE NO SEAN DISCORD IDS
+        */
+
+        if (
+
+            typeof node.id !== 'string' ||
+
+            !/^\d+$/.test(node.id)
 
         ) {
 
@@ -96,20 +108,19 @@ export async function drawNodes(
 
 
 
+
         const size =
             120;
 
 
 
-
         /*
-            CAJA DEL USUARIO
+            CAJA
         */
 
 
         ctx.fillStyle =
             '#ffffff';
-
 
 
         ctx.fillRect(
@@ -133,7 +144,6 @@ export async function drawNodes(
 
         ctx.lineWidth =
             3;
-
 
 
         ctx.strokeRect(
@@ -161,15 +171,12 @@ export async function drawNodes(
             '#000000';
 
 
-
         ctx.font =
             'bold 18px DejaVuCustom';
 
 
-
         ctx.textAlign =
             'center';
-
 
 
         ctx.textBaseline =
