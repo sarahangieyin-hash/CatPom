@@ -39,19 +39,40 @@ export async function calculateLayout(
 
 
 
-    const memberSpacing = 170;
+    const memberSpacing =
+        Math.max(
+            160,
+            Math.min(
+                260,
+                150 + members.length * 25
+            )
+        );
 
-    const childSpacing = 170;
-
-    const parentSpacing = 190;
 
 
+    const childSpacing =
+        Math.max(
+            160,
+            Math.min(
+                240,
+                150 + children.length * 25
+            )
+        );
 
-    const memberY =
 
-        parents.length
-            ? 300
-            : 180;
+
+    const parentSpacing =
+        Math.max(
+            180,
+            Math.min(
+                280,
+                170 + parents.length * 25
+            )
+        );
+
+
+
+    const centerY = 300;
 
 
 
@@ -87,7 +108,7 @@ export async function calculateLayout(
 
                 y:
 
-                    memberY
+                    centerY
 
 
             });
@@ -108,7 +129,7 @@ export async function calculateLayout(
 
     if (
 
-        members.length > 1
+        members.length >= 2
 
     ) {
 
@@ -151,7 +172,7 @@ export async function calculateLayout(
 
                 y:
 
-                    memberY
+                    centerY
 
 
             });
@@ -198,7 +219,7 @@ export async function calculateLayout(
 
                 y:
 
-                    memberY +
+                    centerY +
                     380
 
 
@@ -287,7 +308,7 @@ export async function calculateLayout(
 
                 y:
 
-                    memberY
+                    centerY
 
 
             });
@@ -302,11 +323,9 @@ export async function calculateLayout(
 
 
     /*
-        AJUSTE AUTOMÁTICO
+        TAMAÑO DEL LIENZO
+        (ALTURA NO TOCADA)
     */
-
-
-    const boxSize = 120;
 
 
     const visibleNodes =
@@ -382,21 +401,56 @@ export async function calculateLayout(
 
 
 
-    const padding = 100;
+    const boxSize = 120;
+
+
+    const paddingX = 100;
+
+
+    const paddingY = 100;
+
+
+
+
+
+    /*
+        ANCHO CORREGIDO
+
+        Usa el lado más grande
+        para que ambos lados
+        sean iguales.
+    */
+
+
+    const sideSpace =
+
+        Math.max(
+
+            Math.abs(minX),
+
+            Math.abs(maxX)
+
+        );
 
 
 
     const width =
 
         (
-            maxX -
-            minX
+            sideSpace * 2
         )
         +
         boxSize
         +
-        padding * 2;
+        paddingX;
 
+
+
+
+
+    /*
+        ALTURA ORIGINAL
+    */
 
 
     const height =
@@ -408,28 +462,26 @@ export async function calculateLayout(
         +
         boxSize
         +
-        padding * 2;
+        paddingY * 2;
 
 
 
 
 
     /*
-        CENTRADO REAL
+        CENTRADO
     */
 
 
     const offsetX =
 
-        padding +
-        boxSize / 2 -
-        minX;
+        width / 2;
 
 
 
     const offsetY =
 
-        padding +
+        paddingY +
         boxSize / 2 -
         minY;
 
@@ -441,6 +493,7 @@ export async function calculateLayout(
 
 
             node.x += offsetX;
+
 
             node.y += offsetY;
 
