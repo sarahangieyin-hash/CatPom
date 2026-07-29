@@ -1,1 +1,111 @@
+import {
+    createCanvas
+} from 'canvas';
 
+import {
+    calculateLayout
+} from './layout.js';
+
+import {
+    drawNodes
+} from './drawNodes.js';
+
+import {
+    drawLines
+} from './drawLines.js';
+
+import {
+    drawIcons
+} from './drawIcons.js';
+
+
+
+export async function renderFamilyTree(
+    guild,
+    family
+) {
+
+
+    const layout =
+        await calculateLayout(
+            guild,
+            family
+        );
+
+
+
+    const width =
+        Math.max(
+            1200,
+            layout.width
+        );
+
+
+    const height =
+        Math.max(
+            800,
+            layout.height
+        );
+
+
+
+    const canvas =
+        createCanvas(
+            width,
+            height
+        );
+
+
+    const ctx =
+        canvas.getContext(
+            '2d'
+        );
+
+
+
+    ctx.fillStyle =
+        '#111111';
+
+
+    ctx.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+
+    await drawLines(
+
+        ctx,
+
+        layout
+
+    );
+
+
+
+    await drawNodes(
+
+        ctx,
+
+        layout
+
+    );
+
+
+
+    await drawIcons(
+
+        ctx,
+
+        layout
+
+    );
+
+
+
+    return canvas.toBuffer();
+
+}
