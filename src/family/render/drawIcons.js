@@ -1,5 +1,5 @@
 import {
-    Image
+    registerFont
 } from 'canvas';
 
 import path from 'path';
@@ -7,6 +7,7 @@ import path from 'path';
 import {
     fileURLToPath
 } from 'url';
+
 
 
 const __filename =
@@ -18,90 +19,50 @@ const __dirname =
 
 
 
-const ringPath =
+registerFont(
+
     path.join(
         __dirname,
-        '../../assets/icons/ring.png'
-    );
+        '../../assets/fonts/DejaVuSans.ttf'
+    ),
+
+    {
+        family:
+            'DejaVuCustom'
+    }
+
+);
 
 
 
-export async function drawIcons(
+
+
+export function drawMarriage(
     ctx,
     layout
 ) {
 
 
-    const unions =
-        layout.nodes.filter(
-            node =>
-                node.type === 'union'
-        );
-
-
     const members =
+
         layout.nodes.filter(
+
             node =>
                 node.type === 'member'
+
         );
 
 
-    const lovers =
-        layout.lovers || [];
 
-
-
-    /*
-        💍 ANILLOS
-
-        Persona - 💍 - Persona - 💍 - Persona
-
-        Usa los nodos union creados
-        por calculateLayout()
-    */
 
 
     if (
-        unions.length
+
+        members.length < 2
+
     ) {
 
-
-        const ring =
-            new Image();
-
-
-        ring.src =
-            ringPath;
-
-
-
-        for (
-            const union of unions
-        ) {
-
-
-            const size =
-                45;
-
-
-
-            ctx.drawImage(
-
-                ring,
-
-                union.x - size / 2,
-
-                union.y - size / 2,
-
-                size,
-
-                size
-
-            );
-
-
-        }
-
+        return;
 
     }
 
@@ -109,44 +70,89 @@ export async function drawIcons(
 
 
 
+    ctx.textAlign =
+        'center';
+
+
+    ctx.textBaseline =
+        'middle';
+
+
+    ctx.font =
+        '32px DejaVuCustom';
+
+
+
+
+
     /*
-        🔥 AMANTES
+        MATRIMONIOS 💍
+
+        El anillo siempre aparece
+        entre dos personas.
+
+        Persona A 💍 Persona B
+
+        Persona B 💍 Persona C
+
     */
 
 
-    members.forEach(
 
-        member => {
+    for (
 
+        let i = 0;
 
-            if (
-                lovers.includes(
-                    member.id
-                )
-            ) {
+        i < members.length - 1;
 
+        i++
 
-                ctx.font =
-                    "28px Arial";
+    ) {
 
 
-                ctx.fillText(
-
-                    "🔥",
-
-                    member.x + 45,
-
-                    member.y - 45
-
-                );
+        const left =
+            members[i];
 
 
-            }
+        const right =
+            members[i + 1];
 
 
-        }
 
-    );
+        const x =
+
+            (
+                left.x +
+                right.x
+            )
+            /
+            2;
+
+
+
+        const y =
+
+            (
+                left.y +
+                right.y
+            )
+            /
+            2;
+
+
+
+        ctx.fillText(
+
+            '💍',
+
+            x,
+
+            y
+
+        );
+
+
+    }
 
 
 }
