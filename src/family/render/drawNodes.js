@@ -5,7 +5,6 @@ import {
 import path from 'path';
 
 import {
-    fileURLToFileURL,
     fileURLToPath
 } from 'url';
 
