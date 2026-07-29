@@ -52,34 +52,15 @@ export default {
 
         if (!family) {
 
-            return interaction.editReply({
-
-                content:
-                    '❌ No perteneces a ninguna unión.'
-
-            });
+            return interaction.editReply(
+                '❌ No perteneces a ninguna familia.'
+            );
 
         }
 
 
 
-        if (
-            !family.members ||
-            family.members.length < 2
-        ) {
-
-            return interaction.editReply({
-
-                content:
-                    '❌ No tienes pareja.'
-
-            });
-
-        }
-
-
-
-        const childrenToKeep =
+        const myChildren =
             family.children?.filter(
 
                 child =>
@@ -100,12 +81,12 @@ export default {
 
 
         family.children =
-            family.children?.filter(
+            family.children.filter(
 
                 child =>
                     child.parent !== userId
 
-            ) || [];
+            );
 
 
 
@@ -121,74 +102,56 @@ export default {
 
 
 
-        if (
-            childrenToKeep.length > 0
-        ) {
-
-
-            const newFamily =
-                await createFamily(
-
-                    guildId,
-
-                    [
-                        userId
-                    ]
-
-                );
-
-
-
-            newFamily.children =
-                childrenToKeep;
-
-
-
-            await updateFamily(
+        const newFamily =
+            await createFamily(
 
                 guildId,
 
-                newFamily.id,
-
-                newFamily
+                [
+                    userId
+                ]
 
             );
 
 
 
+        newFamily.children =
+            myChildren;
+
+
+
+        await updateFamily(
+
+            guildId,
+
+            newFamily.id,
+
+            newFamily
+
+        );
+
+
+
+        await setInDb(
+
+            `familyMember:${guildId}:${userId}`,
+
+            newFamily.id
+
+        );
+
+
+
+        for (
+            const child of myChildren
+        ) {
+
+
             await setInDb(
 
-                `familyMember:${guildId}:${userId}`,
+                `familyMember:${guildId}:${child.id}`,
 
                 newFamily.id
-
-            );
-
-
-
-            for (
-                const child of childrenToKeep
-            ) {
-
-                await setInDb(
-
-                    `familyMember:${guildId}:${child.id}`,
-
-                    newFamily.id
-
-                );
-
-            }
-
-
-        } else {
-
-
-            await setInDb(
-
-                `familyMember:${guildId}:${userId}`,
-
-                null
 
             );
 
@@ -197,12 +160,11 @@ export default {
 
 
 
-        await interaction.editReply({
+        await interaction.editReply(
 
-            content:
-                '💔 Has terminado la unión correctamente.'
+            '💔 La unión se ha separado.'
 
-        });
+        );
 
 
     }
