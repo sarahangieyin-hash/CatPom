@@ -35,10 +35,16 @@ registerFont(
 
 
 
+
 export async function drawNodes(
     ctx,
     layout
 ) {
+
+
+    const drawn =
+        new Set();
+
 
 
     for (
@@ -49,6 +55,7 @@ export async function drawNodes(
         /*
             IGNORAR NODOS INTERNOS
         */
+
 
         if (
 
@@ -66,8 +73,9 @@ export async function drawNodes(
 
 
         /*
-            IGNORAR IDS QUE NO SEAN DISCORD IDS
+            IGNORAR IDS INVALIDOS
         */
+
 
         if (
 
@@ -80,6 +88,31 @@ export async function drawNodes(
             continue;
 
         }
+
+
+
+        /*
+            EVITAR PERSONAS DUPLICADAS
+
+            Si la misma persona aparece
+            como member y child,
+            solo se dibuja una vez.
+        */
+
+
+        if (
+            drawn.has(node.id)
+        ) {
+
+            continue;
+
+        }
+
+
+        drawn.add(
+            node.id
+        );
+
 
 
 
@@ -110,6 +143,7 @@ export async function drawNodes(
 
         const size =
             120;
+
 
 
 
@@ -184,6 +218,7 @@ export async function drawNodes(
 
 
 
+
         const safeName =
 
             username
@@ -208,6 +243,7 @@ export async function drawNodes(
 
 
 
+
         ctx.fillText(
 
             safeName || '???',
@@ -220,5 +256,6 @@ export async function drawNodes(
 
 
     }
+
 
 }
