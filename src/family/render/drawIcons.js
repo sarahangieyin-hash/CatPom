@@ -1,3 +1,4 @@
+console.log("DRAW ICONS EJECUTADO");
 export async function drawIcons(
     ctx,
     layout
