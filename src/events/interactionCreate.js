@@ -1,4 +1,4 @@
-
+console.log("USANDO ESTE interactionCreate");
 import { Events } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
