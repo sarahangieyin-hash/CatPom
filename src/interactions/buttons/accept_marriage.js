@@ -129,48 +129,55 @@ export default {
 
 
 
-            const embed =
-                new EmbedBuilder()
-
-                    .setTitle(
-                        '🎉💍 ¡Felicidades!'
-                    )
-
-                    .setDescription(
-
-                        `❤️ La unión entre ${updated.members
-                            .map(id => `<@${id}>`)
-                            .join(' y ')} ha sido creada correctamente.\n\n` +
-
-                        'Que vuestro vínculo dure para siempre ✨'
-
-                    )
-
-                    // Pon aquí tu GIF de boda
-                    .setImage(
-                        'URL_DEL_GIF_AQUI'
-                    )
-
-                    .setColor(
-                        '#ff69b4'
-                    );
-
-
-
             await interaction.update({
 
                 content:
-                    '',
+                    ' ',
 
                 embeds:
-                    [
-                        embed
-                    ],
+                    [],
 
                 components:
                     []
 
             });
+
+
+
+            const embed =
+                new EmbedBuilder()
+
+                    .setTitle(
+                        '🎉💍 ¡Felicidades! 💍🎉'
+                    )
+
+                    .setDescription(
+
+                        `❤️ La unión entre ${updated.members
+                            .map(
+                                id => `<@${id}>`
+                            )
+                            .join(' y ')} ha sido creada correctamente.\n\n` +
+
+                        '✨ ¡Que vuestra historia dure para siempre! ✨'
+
+                    )
+
+                    .setColor(
+                        0xff69b4
+                    );
+
+
+
+            await interaction.followUp({
+
+                embeds:
+                    [
+                        embed
+                    ]
+
+            });
+
 
 
             return;
@@ -183,7 +190,6 @@ export default {
 
             content:
                 `💍 <@${interaction.user.id}> ha aceptado la unión.\n\n` +
-
                 'Esperando a que todas las personas acepten...',
 
             embeds:
