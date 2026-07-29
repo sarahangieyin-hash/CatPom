@@ -39,75 +39,31 @@ export async function calculateLayout(
 
 
 
-
-
-    /*
-        ESPACIADO
-    */
-
-
     const memberSpacing =
-
-        Math.max(
-
-            160,
-
-            Math.min(
-
-                280,
-
-                160 +
-                members.length * 35
-
-            )
-
-        );
-
+        170;
 
 
     const childSpacing =
-
-        Math.max(
-
-            160,
-
-            Math.min(
-
-                260,
-
-                160 +
-                children.length * 30
-
-            )
-
-        );
-
+        170;
 
 
     const parentSpacing =
-
-        Math.max(
-
-            180,
-
-            Math.min(
-
-                280,
-
-                180 +
-                parents.length * 35
-
-            )
-
-        );
+        190;
 
 
 
 
 
     /*
-        MIEMBROS PRINCIPALES 💍
+        POSICIONES BASE
     */
+
+
+    const mainY =
+        parents.length
+            ? 260
+            : 180;
+
 
 
     members.forEach(
@@ -134,10 +90,7 @@ export async function calculateLayout(
 
 
                 y:
-
-                    parents.length
-                        ? 350
-                        : 250
+                    mainY
 
 
             });
@@ -152,13 +105,13 @@ export async function calculateLayout(
 
 
     /*
-        UNIONES 💍
+        UNIONES
     */
 
 
     if (
 
-        members.length >= 2
+        members.length > 1
 
     ) {
 
@@ -174,67 +127,36 @@ export async function calculateLayout(
         ) {
 
 
-            const left =
+            const a =
+                nodes[i];
 
-                nodes.find(
 
-                    node =>
-
-                        node.type === 'member' &&
-
-                        node.id === members[i]
-
-                );
+            const b =
+                nodes[i + 1];
 
 
 
-            const right =
+            nodes.push({
 
-                nodes.find(
-
-                    node =>
-
-                        node.type === 'member' &&
-
-                        node.id === members[i + 1]
-
-                );
+                type:
+                    'union',
 
 
+                x:
 
-            if (
-
-                left &&
-                right
-
-            ) {
-
-
-                nodes.push({
-
-                    type:
-                        'union',
+                    (
+                        a.x +
+                        b.x
+                    )
+                    /
+                    2,
 
 
-                    x:
-
-                        (
-                            left.x +
-                            right.x
-                        )
-                        /
-                        2,
+                y:
+                    mainY
 
 
-                    y:
-
-                        left.y
-
-
-                });
-
-
-            }
+            });
 
 
         }
@@ -247,9 +169,7 @@ export async function calculateLayout(
 
 
     /*
-        HIJOS 👶
-
-        Siempre crecen hacia abajo.
+        HIJOS
     */
 
 
@@ -280,10 +200,8 @@ export async function calculateLayout(
 
                 y:
 
-                    650 +
-                    Math.floor(index / 5)
-                    *
-                    120
+                    mainY +
+                    380
 
 
             });
@@ -298,7 +216,7 @@ export async function calculateLayout(
 
 
     /*
-        PADRES 👨‍👩‍👧
+        PADRES
     */
 
 
@@ -328,8 +246,7 @@ export async function calculateLayout(
 
 
                 y:
-
-                    120
+                    60
 
 
             });
@@ -344,7 +261,7 @@ export async function calculateLayout(
 
 
     /*
-        HERMANOS 👥
+        HERMANOS
     */
 
 
@@ -365,15 +282,12 @@ export async function calculateLayout(
 
                 x:
 
-                    -350 +
-                    index * 220,
+                    -260 -
+                    index * 200,
 
 
                 y:
-
-                    parents.length
-                        ? 350
-                        : 250
+                    mainY
 
 
             });
@@ -388,77 +302,32 @@ export async function calculateLayout(
 
 
     /*
-        TAMAÑO DEL LIENZO
-
-        Parejas -> ancho
-        Hijos -> abajo
-        Padres -> arriba
+        AJUSTE AUTOMÁTICO DEL LIENZO
     */
 
 
-    const memberWidth =
-
-        Math.max(
-
-            1,
-
-            members.length
-
-        )
-        *
-        memberSpacing;
+    const paddingX =
+        180;
 
 
+    const paddingTop =
 
-    const width =
+        parents.length
+            ? 120
+            : 80;
 
-        Math.max(
 
-            900,
-
-            memberWidth +
-            400
-
-        );
+    const paddingBottom =
+        120;
 
 
 
-    const height =
-
-        Math.max(
-
-            700,
-
-            (
-                parents.length
-                    ? 250
-                    : 0
-            )
-            +
-            700
-            +
-            (
-                children.length *
-                80
-            )
-
-        );
-
-
-
-
-
-    /*
-        CENTRADO HORIZONTAL REAL
-    */
-
-
-    const visibleNodes =
+    const realNodes =
 
         nodes.filter(
 
-            node =>
-                node.type !== 'union'
+            n =>
+                n.type !== 'union'
 
         );
 
@@ -468,10 +337,10 @@ export async function calculateLayout(
 
         Math.min(
 
-            ...visibleNodes.map(
+            ...realNodes.map(
 
-                node =>
-                    node.x
+                n =>
+                    n.x
 
             )
 
@@ -483,10 +352,10 @@ export async function calculateLayout(
 
         Math.max(
 
-            ...visibleNodes.map(
+            ...realNodes.map(
 
-                node =>
-                    node.x
+                n =>
+                    n.x
 
             )
 
@@ -494,25 +363,105 @@ export async function calculateLayout(
 
 
 
-    const contentCenter =
+    const minY =
 
-        (
-            minX +
-            maxX
-        )
-        /
-        2;
+        Math.min(
 
+            ...realNodes.map(
+
+                n =>
+                    n.y
+
+            )
+
+        );
+
+
+
+    const maxY =
+
+        Math.max(
+
+            ...realNodes.map(
+
+                n =>
+                    n.y
+
+            )
+
+        );
+
+
+
+
+
+    const contentWidth =
+
+        maxX -
+        minX;
+
+
+
+    const contentHeight =
+
+        maxY -
+        minY;
+
+
+
+
+
+    const width =
+
+        Math.max(
+
+            900,
+
+            contentWidth +
+            paddingX * 2
+
+        );
+
+
+
+    const height =
+
+        Math.max(
+
+            600,
+
+            contentHeight +
+            paddingTop +
+            paddingBottom
+
+        );
+
+
+
+
+
+    /*
+        CENTRAR CONTENIDO
+    */
 
 
     const offsetX =
 
         (
-            width /
-            2
+            width -
+            contentWidth
         )
+        /
+        2
         -
-        contentCenter;
+        minX;
+
+
+
+    const offsetY =
+
+        paddingTop -
+        minY;
 
 
 
@@ -522,6 +471,8 @@ export async function calculateLayout(
 
 
             node.x += offsetX;
+
+            node.y += offsetY;
 
 
         }
@@ -563,6 +514,5 @@ export async function calculateLayout(
 
 
     };
-
 
 }
