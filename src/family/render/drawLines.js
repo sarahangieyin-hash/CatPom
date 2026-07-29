@@ -58,7 +58,7 @@ export async function drawLines(
     /*
         PADRES -> UNIÓN 💍
 
-        Se conectan al primer matrimonio.
+        Padres conectados al matrimonio.
     */
 
 
@@ -82,29 +82,20 @@ export async function drawLines(
 
 
                 ctx.moveTo(
-
                     parent.x,
-
                     parent.y + 60
-
                 );
 
 
                 ctx.lineTo(
-
                     parent.x,
-
                     mainUnion.y - 120
-
                 );
 
 
                 ctx.lineTo(
-
                     mainUnion.x,
-
                     mainUnion.y - 60
-
                 );
 
 
@@ -123,110 +114,106 @@ export async function drawLines(
 
 
     /*
-        UNIÓN -> HIJOS 👶
+        MATRIMONIO / MIEMBRO PRINCIPAL -> HIJOS 👶
 
-        Los hijos salen del centro
-        del matrimonio.
+        Si hay matrimonio:
+            hijos salen del anillo.
+
+        Si no hay matrimonio:
+            hijos salen del miembro principal.
+
     */
 
 
     if (
-        children.length &&
-        mainUnion
+        children.length
     ) {
 
 
-        const branchY =
-            mainUnion.y + 170;
-
-
-
-        ctx.beginPath();
-
-
-        ctx.moveTo(
-
-            mainUnion.x,
-
-            mainUnion.y + 40
-
-        );
-
-
-        ctx.lineTo(
-
-            mainUnion.x,
-
-            branchY
-
-        );
-
-
-        ctx.stroke();
-
+        let originX = null;
+        let originY = null;
 
 
 
         if (
-            children.length > 1
+            mainUnion
         ) {
 
 
-            ctx.beginPath();
+            originX =
+                mainUnion.x;
 
 
-            ctx.moveTo(
-
-                children[0].x,
-
-                branchY
-
-            );
+            originY =
+                mainUnion.y;
 
 
-            ctx.lineTo(
-
-                children[
-                    children.length - 1
-                ].x,
-
-                branchY
-
-            );
+        } else if (
+            members.length
+        ) {
 
 
-            ctx.stroke();
+            originX =
+                members[0].x;
+
+
+            originY =
+                members[0].y;
 
 
         }
 
 
 
+        if (
+            originX !== null
+        ) {
 
 
-        children.forEach(
+            const branchY =
+                originY + 170;
 
-            child => {
+
+
+            ctx.beginPath();
+
+
+            ctx.moveTo(
+                originX,
+                originY + 40
+            );
+
+
+            ctx.lineTo(
+                originX,
+                branchY
+            );
+
+
+            ctx.stroke();
+
+
+
+
+            if (
+                children.length > 1
+            ) {
 
 
                 ctx.beginPath();
 
 
                 ctx.moveTo(
-
-                    child.x,
-
+                    children[0].x,
                     branchY
-
                 );
 
 
                 ctx.lineTo(
-
-                    child.x,
-
-                    child.y - 60
-
+                    children[
+                        children.length - 1
+                    ].x,
+                    branchY
                 );
 
 
@@ -235,7 +222,38 @@ export async function drawLines(
 
             }
 
-        );
+
+
+
+            children.forEach(
+
+                child => {
+
+
+                    ctx.beginPath();
+
+
+                    ctx.moveTo(
+                        child.x,
+                        branchY
+                    );
+
+
+                    ctx.lineTo(
+                        child.x,
+                        child.y - 60
+                    );
+
+
+                    ctx.stroke();
+
+
+                }
+
+            );
+
+
+        }
 
 
     }
@@ -269,20 +287,14 @@ export async function drawLines(
 
 
                 ctx.moveTo(
-
                     sibling.x + 60,
-
                     sibling.y
-
                 );
 
 
                 ctx.lineTo(
-
                     main.x - 60,
-
                     main.y
-
                 );
 
 
@@ -303,7 +315,8 @@ export async function drawLines(
     /*
         POLIAMOR 💍
 
-        Une visualmente los matrimonios.
+        Une los puntos de unión.
+
         Ejemplo:
 
         A 💍 B 💍 C
@@ -327,20 +340,14 @@ export async function drawLines(
 
 
             ctx.moveTo(
-
                 unions[i].x,
-
                 unions[i].y
-
             );
 
 
             ctx.lineTo(
-
                 unions[i + 1].x,
-
                 unions[i + 1].y
-
             );
 
 
