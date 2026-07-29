@@ -6,8 +6,7 @@ import {
 
 import {
     createFamily,
-    getFamilyByMember,
-    updateFamily
+    getFamilyByMember
 } from '../../utils/families.js';
 
 
@@ -19,12 +18,14 @@ export default {
     async execute(interaction, client, args) {
 
 
-        const id = args[0];
+        const requestId = args[0];
 
 
         const request =
-            getFamilyRequest(id);
-
+            await getFamilyRequest(
+                interaction.guild.id,
+                requestId
+            );
 
 
         if (!request) {
@@ -51,7 +52,7 @@ export default {
             return interaction.reply({
 
                 content:
-                    '❌ No formas parte de esta unión.',
+                    '❌ No formas parte de esta solicitud.',
 
                 ephemeral: true
 
@@ -61,19 +62,30 @@ export default {
 
 
 
-        acceptFamilyRequest(
-            id,
+        await acceptFamilyRequest(
+
+            interaction.guild.id,
+
+            requestId,
+
             interaction.user.id
+
         );
 
 
 
         const updated =
-            getFamilyRequest(id);
+            await getFamilyRequest(
+
+                interaction.guild.id,
+
+                requestId
+
+            );
 
 
 
-        const accepted =
+        const allAccepted =
             updated.members.every(
                 member =>
                     updated.accepted.includes(member)
@@ -81,18 +93,66 @@ export default {
 
 
 
-        if (!accepted) {
-
+        if (!allAccepted) {
 
             return interaction.reply({
 
                 content:
-                    '✅ Has aceptado la unión. Esperando al resto de personas.',
+                    '✅ Has aceptado. Esperando al resto de personas.',
 
                 ephemeral: true
 
             });
 
+        }
+
+
+
+        const alreadyInFamily =
+            await Promise.any(
+
+                updated.members.map(
+                    async member => {
+
+                        return await getFamilyByMember(
+
+                            interaction.guild.id,
+
+                            member
+
+                        );
+
+                    }
+
+                )
+
+            ).catch(
+                () => null
+            );
+
+
+
+        if (alreadyInFamily) {
+
+            await deleteFamilyRequest(
+
+                interaction.guild.id,
+
+                requestId
+
+            );
+
+
+            return interaction.update({
+
+                content:
+                    '❌ Alguien ya pertenece a una unión.',
+
+                embeds: [],
+
+                components: []
+
+            });
 
         }
 
@@ -127,44 +187,13 @@ export default {
 
 
 
-        for (
-            const member of updated.members
-        ) {
+        await deleteFamilyRequest(
 
+            interaction.guild.id,
 
-            const oldFamily =
-                await getFamilyByMember(
-                    interaction.guild.id,
-                    member
-                );
+            requestId
 
-
-            if (oldFamily) {
-
-                oldFamily.members =
-                    oldFamily.members.filter(
-                        id =>
-                            id !== member
-                    );
-
-
-                await updateFamily(
-
-                    interaction.guild.id,
-
-                    oldFamily.id,
-
-                    oldFamily
-
-                );
-
-            }
-
-        }
-
-
-
-        deleteFamilyRequest(id);
+        );
 
 
 
