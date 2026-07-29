@@ -1,3 +1,31 @@
+import {
+    Image
+} from 'canvas';
+
+import path from 'path';
+
+import {
+    fileURLToPath
+} from 'url';
+
+
+const __filename =
+    fileURLToPath(import.meta.url);
+
+
+const __dirname =
+    path.dirname(__filename);
+
+
+
+const ringPath =
+    path.join(
+        __dirname,
+        '../../assets/icons/ring.png'
+    );
+
+
+
 export async function drawIcons(
     ctx,
     layout
@@ -17,109 +45,79 @@ export async function drawIcons(
 
 
     /*
-        💍 ANILLO DE MATRIMONIO
+        💍 ANILLOS ENTRE PERSONAS
+
+        👤 💍 👤 💍 👤
     */
 
 
     if (members.length > 1) {
 
 
-        const centerX =
-            members.reduce(
-                (sum,node)=>
-                    sum + node.x,
-                0
-            )
-            /
-            members.length;
+        const ring =
+            new Image();
+
+
+        ring.src =
+            ringPath;
 
 
 
-        const centerY =
-            members[0].y - 90;
+        for (
+            let i = 0;
+            i < members.length - 1;
+            i++
+        ) {
+
+
+            const left =
+                members[i];
+
+
+            const right =
+                members[i + 1];
 
 
 
-
-        /*
-            ARO
-        */
-
-
-        ctx.beginPath();
-
-        ctx.arc(
-            centerX,
-            centerY,
-            18,
-            0,
-            Math.PI * 2
-        );
-
-
-        ctx.strokeStyle =
-            "#d4af37";
-
-
-        ctx.lineWidth =
-            5;
-
-
-        ctx.stroke();
+            const x =
+                (
+                    left.x +
+                    right.x
+                )
+                /
+                2;
 
 
 
-
-        /*
-            PIEDRA DEL ANILLO
-        */
-
-
-        ctx.beginPath();
-
-
-        ctx.moveTo(
-            centerX - 8,
-            centerY - 16
-        );
-
-
-        ctx.lineTo(
-            centerX,
-            centerY - 28
-        );
-
-
-        ctx.lineTo(
-            centerX + 8,
-            centerY - 16
-        );
-
-
-        ctx.closePath();
+            const y =
+                left.y;
 
 
 
-        ctx.fillStyle =
-            "#fff2a8";
-
-
-        ctx.fill();
+            const size =
+                45;
 
 
 
-        ctx.strokeStyle =
-            "#d4af37";
+            ctx.drawImage(
+
+                ring,
+
+                x - size / 2,
+
+                y - size / 2,
+
+                size,
+
+                size
+
+            );
 
 
-        ctx.lineWidth =
-            2;
+        }
 
-
-        ctx.stroke();
 
     }
-
 
 
 
@@ -147,10 +145,15 @@ export async function drawIcons(
 
 
                 ctx.fillText(
+
                     "🔥",
-                    member.x + 50,
-                    member.y - 50
+
+                    member.x + 45,
+
+                    member.y - 45
+
                 );
+
 
             }
 
