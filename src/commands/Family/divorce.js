@@ -15,7 +15,6 @@ import {
 
 export default {
 
-
     data: new SlashCommandBuilder()
 
         .setName('divorce')
@@ -25,6 +24,10 @@ export default {
 
 
     async execute(interaction) {
+
+
+        await interaction.deferReply();
+
 
 
         const guildId =
@@ -49,13 +52,10 @@ export default {
 
         if (!family) {
 
-            return interaction.reply({
+            return interaction.editReply({
 
                 content:
-                    '❌ No perteneces a ninguna unión.',
-
-                ephemeral:
-                    true
+                    '❌ No perteneces a ninguna unión.'
 
             });
 
@@ -64,16 +64,14 @@ export default {
 
 
         if (
-            family.members.length <= 1
+            !family.members ||
+            family.members.length < 2
         ) {
 
-            return interaction.reply({
+            return interaction.editReply({
 
                 content:
-                    '❌ No tienes pareja que abandonar.',
-
-                ephemeral:
-                    true
+                    '❌ No tienes pareja.'
 
             });
 
@@ -81,7 +79,17 @@ export default {
 
 
 
-        const remainingMembers =
+        const childrenToKeep =
+            family.children?.filter(
+
+                child =>
+                    child.parent === userId
+
+            ) || [];
+
+
+
+        family.members =
             family.members.filter(
 
                 id =>
@@ -91,33 +99,13 @@ export default {
 
 
 
-        const leavingChildren =
-            family.children.filter(
-
-                child =>
-                    child.parent === userId
-
-            );
-
-
-
-        const stayingChildren =
-            family.children.filter(
+        family.children =
+            family.children?.filter(
 
                 child =>
                     child.parent !== userId
 
-            );
-
-
-
-        family.members =
-            remainingMembers;
-
-
-
-        family.children =
-            stayingChildren;
+            ) || [];
 
 
 
@@ -133,14 +121,8 @@ export default {
 
 
 
-        /*
-            Crear familia nueva para quien se va
-            con sus hijos adoptados
-        */
-
-
         if (
-            leavingChildren.length > 0
+            childrenToKeep.length > 0
         ) {
 
 
@@ -158,7 +140,7 @@ export default {
 
 
             newFamily.children =
-                leavingChildren;
+                childrenToKeep;
 
 
 
@@ -183,10 +165,10 @@ export default {
             );
 
 
-            for (
-                const child of leavingChildren
-            ) {
 
+            for (
+                const child of childrenToKeep
+            ) {
 
                 await setInDb(
 
@@ -195,7 +177,6 @@ export default {
                     newFamily.id
 
                 );
-
 
             }
 
@@ -216,11 +197,12 @@ export default {
 
 
 
-        await interaction.reply(
+        await interaction.editReply({
 
-            '💔 Has terminado la unión y la familia se ha separado correctamente.'
+            content:
+                '💔 Has terminado la unión correctamente.'
 
-        );
+        });
 
 
     }
