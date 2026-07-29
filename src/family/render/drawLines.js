@@ -42,43 +42,32 @@ export async function drawLines(
 
 
     /*
-        PERSONAS CASADAS -> ANILLO 💍
+        MATRIMONIO 💍
+
+        NO hay línea entre parejas.
+        El anillo se dibuja aparte.
     */
 
-    if (
-        union &&
-        members.length >= 2
-    ) {
+    let unionX = null;
+    let unionY = null;
 
 
-        for (const member of members) {
+    if (union) {
 
+        unionX =
+            union.x;
 
-            ctx.beginPath();
-
-            ctx.moveTo(
-                member.x,
-                member.y + 60
-            );
-
-
-            ctx.lineTo(
-                union.x,
-                union.y
-            );
-
-
-            ctx.stroke();
-
-        }
+        unionY =
+            union.y;
 
     }
 
 
 
     /*
-        PADRES -> ANILLO/PAREJA
+        PADRES -> UNIÓN 💍
     */
+
 
     if (
         parents.length &&
@@ -91,6 +80,7 @@ export async function drawLines(
 
             ctx.beginPath();
 
+
             ctx.moveTo(
                 parent.x,
                 parent.y + 60
@@ -99,13 +89,13 @@ export async function drawLines(
 
             ctx.lineTo(
                 parent.x,
-                parent.y + 120
+                unionY - 120
             );
 
 
             ctx.lineTo(
-                union.x,
-                union.y
+                unionX,
+                unionY - 60
             );
 
 
@@ -120,9 +110,12 @@ export async function drawLines(
 
 
     /*
-        ANILLO -> HIJOS 👶
-        Los hijos siempre nacen de la pareja
+        UNIÓN -> HIJOS 👶
+
+        Los hijos salen del matrimonio,
+        no de una sola persona.
     */
+
 
     if (
         children.length &&
@@ -131,20 +124,21 @@ export async function drawLines(
 
 
         const branchY =
-            union.y + 200;
+            unionY + 170;
 
 
 
         ctx.beginPath();
 
+
         ctx.moveTo(
-            union.x,
-            union.y
+            unionX,
+            unionY + 60
         );
 
 
         ctx.lineTo(
-            union.x,
+            unionX,
             branchY
         );
 
@@ -153,10 +147,13 @@ export async function drawLines(
 
 
 
-        if (children.length > 1) {
+        if (
+            children.length > 1
+        ) {
 
 
             ctx.beginPath();
+
 
             ctx.moveTo(
                 children[0].x,
@@ -165,21 +162,27 @@ export async function drawLines(
 
 
             ctx.lineTo(
-                children[children.length - 1].x,
+                children[
+                    children.length - 1
+                ].x,
                 branchY
             );
 
 
             ctx.stroke();
 
+
         }
 
 
 
-        for (const child of children) {
+        for (
+            const child of children
+        ) {
 
 
             ctx.beginPath();
+
 
             ctx.moveTo(
                 child.x,
@@ -198,92 +201,6 @@ export async function drawLines(
 
         }
 
-    }
-
-
-
-    /*
-        CASO: MADRE/PADRE SOLTERO CON HIJOS
-    */
-
-    if (
-        children.length &&
-        !union &&
-        members.length === 1
-    ) {
-
-
-        const parent =
-            members[0];
-
-
-        const branchY =
-            parent.y + 180;
-
-
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            parent.x,
-            parent.y + 60
-        );
-
-
-        ctx.lineTo(
-            parent.x,
-            branchY
-        );
-
-
-        ctx.stroke();
-
-
-
-        if (children.length > 1) {
-
-
-            ctx.beginPath();
-
-            ctx.moveTo(
-                children[0].x,
-                branchY
-            );
-
-
-            ctx.lineTo(
-                children[children.length - 1].x,
-                branchY
-            );
-
-
-            ctx.stroke();
-
-        }
-
-
-
-        for (const child of children) {
-
-
-            ctx.beginPath();
-
-            ctx.moveTo(
-                child.x,
-                branchY
-            );
-
-
-            ctx.lineTo(
-                child.x,
-                child.y - 60
-            );
-
-
-            ctx.stroke();
-
-
-        }
 
     }
 
@@ -293,33 +210,42 @@ export async function drawLines(
         HERMANOS 👥
     */
 
+
     if (
         siblings.length &&
         members.length
     ) {
 
 
-        siblings.forEach(sibling => {
+        const main =
+            members[0];
 
 
-            ctx.beginPath();
 
-            ctx.moveTo(
-                sibling.x + 60,
-                sibling.y
-            );
+        siblings.forEach(
+            sibling => {
 
 
-            ctx.lineTo(
-                members[0].x - 60,
-                members[0].y
-            );
+                ctx.beginPath();
 
 
-            ctx.stroke();
+                ctx.moveTo(
+                    sibling.x + 60,
+                    sibling.y
+                );
 
 
-        });
+                ctx.lineTo(
+                    main.x - 60,
+                    main.y
+                );
+
+
+                ctx.stroke();
+
+
+            }
+        );
 
 
     }
