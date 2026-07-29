@@ -21,7 +21,7 @@ export async function drawNodes(
 
 
             username =
-                member.displayName;
+                member.user.username;
 
 
         } catch {}
@@ -98,7 +98,7 @@ export async function drawNodes(
         const cleanName =
             username
                 .replace(
-                    /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,
+                    /[^\p{L}\p{N}_-]/gu,
                     ''
                 )
                 .trim();
@@ -107,7 +107,7 @@ export async function drawNodes(
 
         ctx.fillText(
 
-            cleanName || username,
+            cleanName || 'Usuario',
 
             node.x,
 
