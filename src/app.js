@@ -23,7 +23,6 @@ const CLIENT_ID =
     process.env.CLIENT_ID;
 
 
-
 console.log(
     "TOKEN EXISTS:",
     Boolean(BOT_TOKEN)
@@ -58,13 +57,11 @@ class CatPom extends Client {
 
         this.config = config;
 
-
         this.commands = new Collection();
 
         this.buttons = new Collection();
 
         this.selectMenus = new Collection();
-
 
 
         this.family = {
@@ -76,9 +73,7 @@ class CatPom extends Client {
         };
 
 
-
         this.db = null;
-
 
 
         this.rest = new REST({
@@ -88,13 +83,11 @@ class CatPom extends Client {
         })
         .setToken(BOT_TOKEN);
 
-
     }
 
 
 
     async start() {
-
 
         try {
 
@@ -104,7 +97,6 @@ class CatPom extends Client {
             );
 
 
-
             startupLog(
                 'Initializing database...'
             );
@@ -112,7 +104,6 @@ class CatPom extends Client {
 
             const dbInstance =
                 await initializeDatabase();
-
 
 
             this.db =
@@ -128,7 +119,6 @@ class CatPom extends Client {
             await loadCommands(this);
 
 
-
             startupLog(
                 `Commands loaded: ${this.commands.size}`
             );
@@ -138,7 +128,6 @@ class CatPom extends Client {
             startupLog(
                 'Initializing family system...'
             );
-
 
 
             const { FamilyGraph } =
@@ -183,19 +172,16 @@ class CatPom extends Client {
                 );
 
 
-
             this.family.managers.marriage =
                 new MarriageManager(
                     this.family.graph
                 );
 
 
-
             this.family.managers.adoption =
                 new AdoptionManager(
                     this.family.graph
                 );
-
 
 
             this.family.managers.relationship =
@@ -274,7 +260,6 @@ class CatPom extends Client {
 
         }
 
-
     }
 
 
@@ -288,12 +273,10 @@ class CatPom extends Client {
             express();
 
 
-
         const port =
             Number(
                 process.env.PORT || 3000
             );
-
 
 
         app.get(
@@ -314,7 +297,6 @@ class CatPom extends Client {
         );
 
 
-
         app.get(
             '/health',
             (req,res)=>{
@@ -333,7 +315,6 @@ class CatPom extends Client {
         );
 
 
-
         this.webServer =
             app.listen(
                 port,
@@ -346,7 +327,6 @@ class CatPom extends Client {
                 }
             );
 
-
     }
 
 
@@ -358,8 +338,8 @@ class CatPom extends Client {
 
         const handlers = [
 
-            'events',
-            'interactions'
+            'loaders/events',
+            'loaders/interactions'
 
         ];
 
@@ -381,6 +361,7 @@ class CatPom extends Client {
                 typeof module.default === 'function'
             ){
 
+
                 await module.default(this);
 
 
@@ -391,7 +372,6 @@ class CatPom extends Client {
             }
 
         }
-
 
     }
 
@@ -452,7 +432,6 @@ class CatPom extends Client {
         );
 
 
-
         try{
 
 
@@ -463,13 +442,11 @@ class CatPom extends Client {
             }
 
 
-
             if(this.db?.db?.pool){
 
                 await this.db.db.pool.end();
 
             }
-
 
 
             this.destroy();
@@ -496,11 +473,11 @@ class CatPom extends Client {
 
         }
 
-
     }
 
 
 }
+
 
 
 
@@ -509,12 +486,10 @@ const bot =
 
 
 
-
 process.on(
     'SIGTERM',
     ()=>bot.shutdown('SIGTERM')
 );
-
 
 
 process.on(
@@ -553,7 +528,6 @@ process.on(
 
     }
 );
-
 
 
 
