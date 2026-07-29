@@ -14,22 +14,15 @@ export default {
     customId: 'accept_adoption',
 
 
-
-    async execute(interaction) {
-
-
-        const parts =
-            interaction.customId.split('_');
-
+    async execute(interaction, client, args) {
 
 
         const parentId =
-            parts[2];
-
+            args[0];
 
 
         const childId =
-            parts[3];
+            args[1];
 
 
 
@@ -91,31 +84,18 @@ export default {
 
 
 
-        if (
-            !family.children.some(
+        family.children.push({
 
-                child =>
-                    child.id === childId
+            id:
+                childId,
 
-            )
-        ) {
+            parent:
+                parentId,
 
+            adoptedAt:
+                Date.now()
 
-            family.children.push({
-
-                id:
-                    childId,
-
-                parent:
-                    parentId,
-
-                adoptedAt:
-                    Date.now()
-
-            });
-
-
-        }
+        });
 
 
 
