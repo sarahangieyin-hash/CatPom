@@ -22,7 +22,7 @@ import {
 import path from 'path';
 
 import {
-    fileURLToFilename
+    fileURLToPath
 } from 'url';
 
 
@@ -82,6 +82,7 @@ export async function renderFamilyTree(
         EL TAMAÑO VIENE DEL LAYOUT
 
         No añade espacio extra.
+        El layout decide el tamaño.
     */
 
 
@@ -129,7 +130,7 @@ export async function renderFamilyTree(
 
 
     /*
-        FONDO ADAPTADO
+        FONDO ADAPTADO AL LIENZO
     */
 
 
@@ -165,11 +166,8 @@ export async function renderFamilyTree(
 
 
         console.log(
-
             "No se pudo cargar fondo:",
-
             error.message
-
         );
 
 
