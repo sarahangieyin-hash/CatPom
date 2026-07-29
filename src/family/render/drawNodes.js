@@ -12,14 +12,18 @@ export async function drawNodes(
     ) {
 
 
-        const member =
-            await layout.guild.members.fetch(node.id)
-            .catch(() => null);
+        let user = null;
 
 
+        try {
 
-        const user =
-            member?.user;
+            const member =
+                await layout.guild.members.fetch(node.id);
+
+            user =
+                member.user;
+
+        } catch {}
 
 
 
@@ -28,23 +32,22 @@ export async function drawNodes(
 
 
         /*
-            NOMBRE ARRIBA
+            NOMBRE ENCIMA
         */
 
-        if (user) {
 
+        if (user) {
 
             ctx.fillStyle = '#000000';
 
             ctx.font =
-                'bold 20px DejaVu Sans';
+                'bold 18px Arial';
 
             ctx.textAlign =
                 'center';
 
             ctx.textBaseline =
-                'bottom';
-
+                'alphabetic';
 
 
             ctx.fillText(
@@ -53,22 +56,20 @@ export async function drawNodes(
 
                 node.x,
 
-                node.y - radius - 12
+                node.y - radius - 15
 
             );
-
 
         }
 
 
 
         /*
-            CIRCULO AVATAR
+            CIRCULO FOTO
         */
 
 
         ctx.beginPath();
-
 
         ctx.arc(
 
@@ -85,24 +86,19 @@ export async function drawNodes(
         );
 
 
-
         ctx.fillStyle =
             '#ffffff';
-
 
 
         ctx.fill();
 
 
-
         ctx.strokeStyle =
-            '#5865F2';
-
+            '#000000';
 
 
         ctx.lineWidth =
-            4;
-
+            3;
 
 
         ctx.stroke();
@@ -146,7 +142,7 @@ export async function drawNodes(
 
                     node.y,
 
-                    radius - 4,
+                    radius - 3,
 
                     0,
 
@@ -164,13 +160,13 @@ export async function drawNodes(
 
                     avatar,
 
-                    node.x - radius + 4,
+                    node.x - radius + 3,
 
-                    node.y - radius + 4,
+                    node.y - radius + 3,
 
-                    (radius - 4) * 2,
+                    (radius - 3) * 2,
 
-                    (radius - 4) * 2
+                    (radius - 3) * 2
 
                 );
 
@@ -181,8 +177,6 @@ export async function drawNodes(
 
 
             } catch {}
-
-
 
         }
 
