@@ -3,6 +3,7 @@ export async function calculateLayout(
     family
 ) {
 
+
     const members =
         Array.isArray(family.members)
             ? family.members
@@ -33,7 +34,9 @@ export async function calculateLayout(
             : [];
 
 
+
     const nodes = [];
+
 
 
     const centerX = 700;
@@ -41,18 +44,45 @@ export async function calculateLayout(
 
 
     /*
-        PAREJA PRINCIPAL 💍
+        UNIÓN PRINCIPAL 💍
     */
+
+
+    nodes.push({
+
+        id:
+            'union_main',
+
+        type:
+            'union',
+
+        x:
+            centerX,
+
+        y:
+            250
+
+    });
+
+
+
+    /*
+        PAREJA PRINCIPAL 👩 💍 👨
+    */
+
 
     members.forEach(
 
         (id, index) => {
 
+
             nodes.push({
 
                 id,
 
-                type: 'member',
+                type:
+                    'member',
+
 
                 x:
                     centerX +
@@ -63,9 +93,12 @@ export async function calculateLayout(
                     *
                     260,
 
-                y: 250
+
+                y:
+                    250
 
             });
+
 
         }
 
@@ -77,15 +110,21 @@ export async function calculateLayout(
         HIJOS 👶
     */
 
+
     children.forEach(
 
         (child, index) => {
 
+
             nodes.push({
 
-                id: child.id,
+                id:
+                    child.id,
 
-                type: 'child',
+
+                type:
+                    'child',
+
 
                 x:
                     centerX +
@@ -96,9 +135,12 @@ export async function calculateLayout(
                     *
                     220,
 
-                y: 600
+
+                y:
+                    600
 
             });
+
 
         }
 
@@ -110,15 +152,21 @@ export async function calculateLayout(
         PADRES 👨‍👩‍👧
     */
 
+
     parents.forEach(
 
         (parent, index) => {
 
+
             nodes.push({
 
-                id: parent.id,
+                id:
+                    parent.id,
 
-                type: 'parent',
+
+                type:
+                    'parent',
+
 
                 x:
                     centerX +
@@ -129,9 +177,12 @@ export async function calculateLayout(
                     *
                     260,
 
-                y: 80
+
+                y:
+                    80
 
             });
+
 
         }
 
@@ -143,23 +194,32 @@ export async function calculateLayout(
         HERMANOS 👥
     */
 
+
     siblings.forEach(
 
         (sibling, index) => {
 
+
             nodes.push({
 
-                id: sibling.id,
+                id:
+                    sibling.id,
 
-                type: 'sibling',
+
+                type:
+                    'sibling',
+
 
                 x:
                     150 +
                     index * 220,
 
-                y: 250
+
+                y:
+                    250
 
             });
+
 
         }
 
@@ -169,24 +229,37 @@ export async function calculateLayout(
 
     return {
 
-        width: 1600,
 
-        height: 900,
+        width:
+            1600,
+
+
+        height:
+            900,
+
 
         guild,
 
+
         nodes,
+
 
         members,
 
+
         children,
+
 
         parents,
 
+
         siblings,
+
 
         lovers
 
+
     };
+
 
 }
