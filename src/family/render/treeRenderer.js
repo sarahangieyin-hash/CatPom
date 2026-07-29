@@ -78,19 +78,19 @@ export async function renderFamilyTree(
 
 
 
+
+
     /*
-        MEDIR CONTENIDO REAL
+        MEDIR TODO EL CONTENIDO
+
+        IMPORTANTE:
+        Incluye unions 💍
+        para que no se desplacen.
     */
 
 
     const nodes =
-
-        layout.nodes.filter(
-
-            node =>
-                node.type !== 'union'
-
-        );
+        layout.nodes;
 
 
 
@@ -100,6 +100,8 @@ export async function renderFamilyTree(
 
     const padding =
         120;
+
+
 
 
 
@@ -173,36 +175,41 @@ export async function renderFamilyTree(
 
 
 
-    /*
-        TAMAÑO FINAL
-
-        Solo crece cuando hay familia.
-    */
-
-
     const width =
 
-        contentWidth +
-        nodeSize +
-        padding * 2;
+        Math.max(
+
+            900,
+
+            contentWidth +
+            nodeSize +
+            padding * 2
+
+        );
 
 
 
     const height =
 
-        contentHeight +
-        nodeSize +
-        padding * 2;
+        Math.max(
+
+            700,
+
+            contentHeight +
+            nodeSize +
+            padding * 2
+
+        );
 
 
 
 
 
     /*
-        CENTRAR CONTENIDO
+        CENTRADO REAL
 
-        Reparte el espacio sobrante
-        por ambos lados.
+        Mantiene personas y anillos
+        en el mismo sitio.
     */
 
 
@@ -211,6 +218,7 @@ export async function renderFamilyTree(
         (
             width -
             contentWidth
+
         )
         /
         2
@@ -224,11 +232,14 @@ export async function renderFamilyTree(
         (
             height -
             contentHeight
+
         )
         /
         2
         -
         minY;
+
+
 
 
 
@@ -313,8 +324,11 @@ export async function renderFamilyTree(
 
 
         console.log(
+
             "No se pudo cargar fondo:",
+
             error.message
+
         );
 
 
@@ -346,6 +360,15 @@ export async function renderFamilyTree(
 
 
 
+
+
+    /*
+        ORDEN:
+
+        1. Líneas detrás
+        2. Personas
+        3. Iconos/anillos encima
+    */
 
 
     await drawLines(
