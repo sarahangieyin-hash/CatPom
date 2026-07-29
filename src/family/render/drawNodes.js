@@ -3,7 +3,6 @@ export async function drawNodes(
     layout
 ) {
 
-
     for (
         const node of layout.nodes
     ) {
@@ -36,7 +35,6 @@ export async function drawNodes(
             '#ffffff';
 
 
-
         ctx.fillRect(
 
             node.x - size / 2,
@@ -55,10 +53,8 @@ export async function drawNodes(
             '#000000';
 
 
-
         ctx.lineWidth =
             3;
-
 
 
         ctx.strokeRect(
@@ -79,15 +75,12 @@ export async function drawNodes(
             '#000000';
 
 
-
         ctx.font =
-            'bold 18px "DejaVu Sans"';
-
+            'bold 18px DejaVu Sans';
 
 
         ctx.textAlign =
             'center';
-
 
 
         ctx.textBaseline =
@@ -95,9 +88,24 @@ export async function drawNodes(
 
 
 
+        const safeName =
+            username
+                .normalize('NFD')
+                .replace(
+                    /[\u0300-\u036f]/g,
+                    ''
+                )
+                .replace(
+                    /[^a-zA-Z0-9_-]/g,
+                    ''
+                )
+                .slice(0, 12);
+
+
+
         ctx.fillText(
 
-            username,
+            safeName || node.id,
 
             node.x,
 
