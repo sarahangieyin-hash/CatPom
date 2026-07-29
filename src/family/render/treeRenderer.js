@@ -59,7 +59,11 @@ export async function renderFamilyTree(
         scale
     );
 
-    ctx.fillStyle = '#111111';
+    /*
+        Fondo blanco
+    */
+
+    ctx.fillStyle = "#ffffff";
 
     ctx.fillRect(
         0,
