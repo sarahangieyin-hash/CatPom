@@ -1,224 +1,186 @@
 import {
-    SlashCommandBuilder,
-    EmbedBuilder,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle
-} from 'discord.js';
-
-import {
-    createFamilyRequest
-} from '../../family/requests/familyRequests.js';
+    getFromDb,
+    setInDb
+} from './database/wrapper.js';
 
 
-export default {
 
-    data: new SlashCommandBuilder()
+function familyKey(
+    guildId,
+    familyId
+) {
 
-        .setName('marry')
+    return `family:${guildId}:${familyId}`;
 
-        .setDescription('Solicita una unión.')
+}
 
-        .addUserOption(option =>
-            option
-                .setName('persona1')
-                .setDescription('Persona con la que casarte')
-                .setRequired(true)
-        )
 
-        .addUserOption(option =>
-            option
-                .setName('persona2')
-                .setDescription('Segunda persona (opcional)')
-                .setRequired(false)
-        )
 
-        .addUserOption(option =>
-            option
-                .setName('persona3')
-                .setDescription('Tercera persona (opcional)')
-                .setRequired(false)
+function memberFamilyKey(
+    guildId,
+    userId
+) {
+
+    return `familyMember:${guildId}:${userId}`;
+
+}
+
+
+
+
+export async function createFamily(
+    guildId,
+    members = []
+) {
+
+
+    const id =
+        Date.now().toString();
+
+
+
+    const family = {
+
+        id,
+
+        members,
+
+        children: [],
+
+        parents: [],
+
+        siblings: [],
+
+        lovers: [],
+
+        createdAt:
+            Date.now()
+
+    };
+
+
+
+    await setInDb(
+
+        familyKey(
+            guildId,
+            id
         ),
 
+        family
 
-
-    async execute(interaction) {
-
-
-        const users = [
-
-            interaction.user,
-
-            interaction.options.getUser('persona1'),
-
-            interaction.options.getUser('persona2'),
-
-            interaction.options.getUser('persona3')
-
-        ].filter(Boolean);
+    );
 
 
 
-        const ids =
-            users.map(
-                user => user.id
-            );
+    for (
+        const member of members
+    ) {
+
+        await setInDb(
+
+            memberFamilyKey(
+                guildId,
+                member
+            ),
+
+            id
+
+        );
+
+    }
 
 
 
-        if (
-            new Set(ids).size !== ids.length
-        ) {
+    return family;
 
-            return interaction.reply({
-
-                content:
-                    '❌ No puedes repetir personas.',
-
-                ephemeral:
-                    true
-
-            });
-
-        }
+}
 
 
 
-        if (
-            ids.includes(
-                interaction.user.id
-            ) === false
-        ) {
-
-            return interaction.reply({
-
-                content:
-                    '❌ Error creando solicitud.',
-
-                ephemeral:
-                    true
-
-            });
-
-        }
 
 
+export async function getFamilyByMember(
+    guildId,
+    userId
+) {
 
-        const requestId =
-            `marriage_${Date.now()}`;
 
+    const familyId =
 
+        await getFromDb(
 
-        await createFamilyRequest(
+            memberFamilyKey(
+                guildId,
+                userId
+            ),
 
-            interaction.guild.id,
-
-            requestId,
-
-            {
-
-                type:
-                    'marriage',
-
-                members:
-                    ids,
-
-                creator:
-                    interaction.user.id,
-
-                accepted:
-                    [
-                        interaction.user.id
-                    ]
-
-            }
+            null
 
         );
 
 
 
-        const embed =
-            new EmbedBuilder()
-
-                .setTitle(
-                    '💍 Solicitud de unión'
-                )
-
-                .setDescription(
-
-                    `${interaction.user} quiere formar una unión con:\n\n` +
-
-                    users
-
-                        .slice(1)
-
-                        .map(
-                            user =>
-                                `💍 ${user}`
-                        )
-
-                        .join('\n')
-
-                )
-
-                .setColor(
-                    0xffc0cb
-                );
+    if (!familyId)
+        return null;
 
 
 
-        const buttons =
-            new ActionRowBuilder()
+    return await getFromDb(
 
-                .addComponents(
+        familyKey(
+            guildId,
+            familyId
+        ),
 
-                    new ButtonBuilder()
+        null
 
-                        .setCustomId(
-                            `accept_marriage:${requestId}`
-                        )
+    );
 
-                        .setLabel(
-                            'Aceptar'
-                        )
-
-                        .setStyle(
-                            ButtonStyle.Success
-                        ),
-
-
-                    new ButtonBuilder()
-
-                        .setCustomId(
-                            `reject_marriage:${requestId}`
-                        )
-
-                        .setLabel(
-                            'Rechazar'
-                        )
-
-                        .setStyle(
-                            ButtonStyle.Danger
-                        )
-
-                );
+}
 
 
 
-        await interaction.reply({
 
-            embeds:
-                [
-                    embed
-                ],
 
-            components:
-                [
-                    buttons
-                ]
+export async function isUserInFamily(
+    guildId,
+    userId
+) {
 
-        });
+    const family =
+        await getFamilyByMember(
+            guildId,
+            userId
+        );
 
-    }
 
-};
+    return family !== null;
+
+}
+
+
+
+
+
+export async function updateFamily(
+    guildId,
+    familyId,
+    family
+) {
+
+    await setInDb(
+
+        familyKey(
+            guildId,
+            familyId
+        ),
+
+        family
+
+    );
+
+
+    return family;
+
+}
