@@ -1,91 +1,71 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import {
+    SlashCommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle
+} from 'discord.js';
 
+export default {
 
-const __dirname = path.dirname(
-    fileURLToPath(import.meta.url)
-);
+    data: new SlashCommandBuilder()
 
+        .setName('adopt')
 
-export default async function loadInteractions(client) {
+        .setDescription('Solicita adoptar a una persona.')
 
+        .addUserOption(option =>
+            option
+                .setName('persona')
+                .setDescription('Persona que quieres adoptar')
+                .setRequired(true)
+        ),
 
-    const interactionTypes = [
+    async execute(interaction) {
 
-        {
-            folder: 'buttons',
-            collection: client.buttons
-        },
+        const child =
+            interaction.options.getUser('persona');
 
-        {
-            folder: 'selectMenus',
-            collection: client.selectMenus
-        }
+        if (child.id === interaction.user.id) {
 
-    ];
+            return interaction.reply({
 
+                content: '❌ No puedes adoptarte a ti mismo.',
 
+                ephemeral: true
 
-    for (const type of interactionTypes) {
-
-
-        const folderPath =
-            path.join(
-                __dirname,
-                '../../interactions',
-                type.folder
-            );
-
-
-
-        if (!fs.existsSync(folderPath))
-            continue;
-
-
-
-        const files =
-            fs.readdirSync(folderPath)
-                .filter(
-                    file =>
-                        file.endsWith('.js')
-                );
-
-
-
-        for (const file of files) {
-
-
-            const interaction =
-                await import(
-                    `../../interactions/${type.folder}/${file}`
-                );
-
-
-
-            const data =
-                interaction.default;
-
-
-
-            if (
-                !data?.customId ||
-                !data.execute
-            )
-                continue;
-
-
-
-            type.collection.set(
-                data.customId,
-                data
-            );
-
+            });
 
         }
 
+        const row =
+            new ActionRowBuilder()
+                .addComponents(
+
+                    new ButtonBuilder()
+                        .setCustomId(
+                            `accept_adoption_${interaction.user.id}_${child.id}`
+                        )
+                        .setLabel('Aceptar')
+                        .setStyle(ButtonStyle.Success),
+
+                    new ButtonBuilder()
+                        .setCustomId(
+                            `reject_adoption_${interaction.user.id}_${child.id}`
+                        )
+                        .setLabel('Rechazar')
+                        .setStyle(ButtonStyle.Danger)
+
+                );
+
+        await interaction.reply({
+
+            content:
+                `👶 ${interaction.user} quiere adoptarte.\n\n${child}, ¿aceptas?`,
+
+            components: [row]
+
+        });
 
     }
 
-
-}
+};
