@@ -43,19 +43,23 @@ export function drawMarriage(
 ) {
 
 
-    const unions =
+    const members =
 
         layout.nodes.filter(
 
             node =>
-                node.type === 'union'
+                node.type === 'member'
 
         );
 
 
 
+
+
     if (
-        !unions.length
+
+        members.length < 2
+
     ) {
 
         return;
@@ -75,40 +79,80 @@ export function drawMarriage(
 
 
     ctx.font =
-        '30px DejaVuCustom';
+        '32px DejaVuCustom';
 
 
 
 
 
-    unions.forEach(
+    /*
+        MATRIMONIOS 💍
 
-        union => {
+        El anillo siempre aparece
+        entre dos personas.
 
+        Persona A 💍 Persona B
 
-            /*
-                El anillo se dibuja
-                EXACTAMENTE en el nodo unión.
+        Persona B 💍 Persona C
 
-                No usa miembros.
-                No usa posiciones antiguas.
-            */
-
-
-            ctx.fillText(
-
-                '💍',
-
-                union.x,
-
-                union.y
-
-            );
+    */
 
 
-        }
 
-    );
+    for (
+
+        let i = 0;
+
+        i < members.length - 1;
+
+        i++
+
+    ) {
+
+
+        const left =
+            members[i];
+
+
+        const right =
+            members[i + 1];
+
+
+
+        const x =
+
+            (
+                left.x +
+                right.x
+            )
+            /
+            2;
+
+
+
+        const y =
+
+            (
+                left.y +
+                right.y
+            )
+            /
+            2;
+
+
+
+        ctx.fillText(
+
+            '💍',
+
+            x,
+
+            y
+
+        );
+
+
+    }
 
 
 }
