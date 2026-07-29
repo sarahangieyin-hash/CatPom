@@ -129,16 +129,81 @@ export async function getFamilyByMember(
 
 
 
-    return await getFromDb(
+    const family =
 
-        familyKey(
-            guildId,
-            familyId
-        ),
+        await getFromDb(
 
-        null
+            familyKey(
+                guildId,
+                familyId
+            ),
 
-    );
+            null
+
+        );
+
+
+
+    if (!family)
+        return null;
+
+
+
+    /*
+        REPARACIÓN AUTOMÁTICA
+
+        Si una persona tiene una familia
+        asignada pero no aparece en members,
+        se vuelve a añadir.
+
+        Evita:
+        - hijos como único nodo del árbol
+        - padres desaparecidos
+        - members vacío
+    */
+
+
+    if (
+        !Array.isArray(
+            family.members
+        )
+    ) {
+
+        family.members = [];
+
+    }
+
+
+
+    if (
+        !family.members.includes(
+            userId
+        )
+    ) {
+
+
+        family.members.push(
+            userId
+        );
+
+
+        await setInDb(
+
+            familyKey(
+                guildId,
+                familyId
+            ),
+
+            family
+
+        );
+
+
+    }
+
+
+
+    return family;
 
 }
 
@@ -261,8 +326,9 @@ export async function cleanFamilyChildren(
     ❌ hijos propios
 
     Permite:
+
     ✅ personas externas
-    ✅ poliamor si está activado
+    ✅ poliamor
 */
 
 
