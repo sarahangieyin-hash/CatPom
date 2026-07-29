@@ -3,9 +3,11 @@ export async function drawIcons(
     layout
 ) {
 
+
     const members =
         layout.nodes.filter(
-            node => node.type === 'member'
+            node =>
+                node.type === 'member'
         );
 
 
@@ -13,72 +15,165 @@ export async function drawIcons(
         layout.lovers || [];
 
 
+
     /*
         💍 ANILLO DE CASADOS
-        Usamos texto simple para evitar
-        el cuadrado roto de emojis de Canvas.
+
+        Se dibuja en medio de las parejas.
+        No usa emojis para evitar cuadrados.
     */
 
-    if (members.length > 1) {
+
+    if (
+        members.length > 1
+    ) {
+
 
         const centerX =
+
             members.reduce(
+
                 (sum, node) =>
                     sum + node.x,
+
                 0
-            ) / members.length;
+
+            )
+            /
+            members.length;
+
 
 
         const centerY =
             members[0].y;
 
 
-        ctx.font =
-            '40px Arial';
+
+        /*
+            Aro del anillo
+        */
 
 
-        ctx.textAlign =
-            'center';
+        ctx.strokeStyle =
+            "#d4af37";
 
 
-        ctx.textBaseline =
-            'middle';
+        ctx.lineWidth =
+            5;
 
 
-        ctx.fillText(
-            '○',
+        ctx.beginPath();
+
+
+        ctx.arc(
+
             centerX,
-            centerY
+
+            centerY,
+
+            18,
+
+            0,
+
+            Math.PI * 2
+
         );
+
+
+        ctx.stroke();
+
+
+
+        /*
+            Diamante del anillo
+        */
+
+
+        ctx.fillStyle =
+            "#d4af37";
+
+
+        ctx.beginPath();
+
+
+        ctx.arc(
+
+            centerX + 12,
+
+            centerY - 14,
+
+            6,
+
+            0,
+
+            Math.PI * 2
+
+        );
+
+
+        ctx.fill();
+
 
     }
 
 
 
+
+
     /*
         🔥 AMANTES
+
+        También sin emoji para evitar cuadrados.
     */
 
+
     members.forEach(
+
         member => {
 
+
             if (
-                lovers.includes(member.id)
+
+                lovers.includes(
+                    member.id
+                )
+
             ) {
 
+
+                ctx.fillStyle =
+                    "#ff4500";
+
+
                 ctx.font =
-                    '30px Arial';
+                    "35px Arial";
+
+
+                ctx.textAlign =
+                    "center";
+
+
+                ctx.textBaseline =
+                    "middle";
 
 
                 ctx.fillText(
-                    '🔥',
-                    member.x + 45,
-                    member.y - 45
+
+                    "♥",
+
+                    member.x + 50,
+
+                    member.y - 50
+
                 );
+
 
             }
 
+
         }
+
     );
+
 
 }
