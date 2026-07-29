@@ -146,9 +146,88 @@ export async function calculateLayout(
 
 
     /*
+        NODOS DE UNIÓN 💍
+
+        Crea un punto invisible entre
+        cada pareja para conectar hijos,
+        padres y anillos.
+
+        Ejemplo:
+
+        A - 💍 - B - 💍 - C
+    */
+
+
+    if (
+        members.length >= 2
+    ) {
+
+
+        for (
+            let i = 0;
+            i < members.length - 1;
+            i++
+        ) {
+
+
+            const left =
+                nodes.find(
+
+                    node =>
+                        node.type === 'member' &&
+                        node.id === members[i]
+
+                );
+
+
+            const right =
+                nodes.find(
+
+                    node =>
+                        node.type === 'member' &&
+                        node.id === members[i + 1]
+
+                );
+
+
+            if (
+                left &&
+                right
+            ) {
+
+
+                nodes.push({
+
+                    type:
+                        'union',
+
+
+                    x:
+                        (
+                            left.x +
+                            right.x
+                        )
+                        /
+                        2,
+
+
+                    y:
+                        300
+
+                });
+
+
+            }
+
+
+        }
+
+
+    }
+        /*
         HIJOS 👶
 
-        Siempre debajo.
+        Siempre debajo de la unión.
     */
 
 
@@ -194,7 +273,7 @@ export async function calculateLayout(
     /*
         PADRES 👨‍👩‍👧
 
-        Encima.
+        Encima de la unión.
     */
 
 
@@ -279,23 +358,46 @@ export async function calculateLayout(
 
 
 
-    return {
+    /*
+        AJUSTE DE TAMAÑO
+
+        Se adapta al crecimiento
+        de la familia.
+    */
 
 
-        width:
-            Math.max(
-                1200,
-                members.length * memberSpacing + 500
-            ),
+    const width =
+        Math.max(
+
+            1200,
+
+            members.length *
+            memberSpacing
+            +
+            500
+
+        );
 
 
 
-        height:
-            Math.max(
-                900,
-                children.length * 80 + 900
-            ),
+    const height =
+        Math.max(
 
+            900,
+
+            children.length *
+            80
+            +
+            900
+
+        );
+        return {
+
+
+        width,
+
+
+        height,
 
 
         guild,
