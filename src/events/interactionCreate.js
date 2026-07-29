@@ -48,48 +48,39 @@ export default {
             if (interaction.isButton()) {
 
 
-                const customId =
+                let customId =
                     interaction.customId;
 
 
-                let button;
                 let args = [];
 
 
 
-                if (customId.includes('_')) {
+                if (customId.includes(':')) {
 
 
                     const parts =
-                        customId.split('_');
+                        customId.split(':');
 
 
-                    const baseId =
-                        parts.slice(0, 2).join('_');
-
-
-                    button =
-                        client.buttons.get(
-                            baseId
-                        );
+                    customId =
+                        parts[0];
 
 
                     args = [
 
-                        parts.slice(2).join('_')
+                        parts.slice(1).join(':')
 
                     ];
 
-
-                } else {
-
-
-                    button =
-                        client.buttons.get(
-                            customId
-                        );
-
                 }
+
+
+
+                const button =
+                    client.buttons.get(
+                        customId
+                    );
 
 
 
@@ -97,11 +88,11 @@ export default {
 
                     "BOTON:",
 
-                    customId,
+                    interaction.customId,
 
                     "BUSCANDO:",
 
-                    button?.customId,
+                    customId,
 
                     args
 
@@ -208,7 +199,6 @@ export default {
                     error
 
                 );
-
 
             }
 
