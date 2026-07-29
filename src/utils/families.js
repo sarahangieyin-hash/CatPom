@@ -1,140 +1,110 @@
 import {
     getFromDb,
-    setInDb,
-    listFromDb,
-    deleteFromDb
-} from './database/wrapper.js';
+    setInDb
+} from './database.js';
 
 
-function familyKey(guildId, id) {
 
-    return `family:${guildId}:${id}`;
+function familyKey(
+    guildId,
+    familyId
+) {
+
+    return `family:${guildId}:${familyId}`;
 
 }
+
+
+
+function memberFamilyKey(
+    guildId,
+    userId
+) {
+
+    return `familyMember:${guildId}:${userId}`;
+
+}
+
 
 
 
 export async function createFamily(
     guildId,
-    id,
-    data
+    members = []
 ) {
+
+
+    const id =
+        Date.now().toString();
+
+
+
+    const family = {
+
+        id,
+
+
+        members,
+
+
+        children: [],
+
+
+        parents: [],
+
+
+        siblings: [],
+
+
+        lovers: [],
+
+
+        createdAt:
+            Date.now()
+
+    };
+
+
 
     await setInDb(
 
-        familyKey(guildId, id),
+        familyKey(
+            guildId,
+            id
+        ),
 
-        {
-
-            id,
-
-            ...data,
-
-            active: true,
-
-            createdAt: Date.now()
-
-        }
+        family
 
     );
 
 
-    return data;
 
-}
-
-
-
-export async function getFamily(
-    guildId,
-    id
-) {
-
-    return await getFromDb(
-
-        familyKey(guildId, id),
-
-        null
-
-    );
-
-}
+    for (
+        const member of members
+    ) {
 
 
+        await setInDb(
 
-export async function updateFamily(
-    guildId,
-    id,
-    data
-) {
+            memberFamilyKey(
+                guildId,
+                member
+            ),
 
-    await setInDb(
+            id
 
-        familyKey(guildId, id),
-
-        {
-
-            ...data
-
-        }
-
-    );
-
-}
-
-
-
-export async function deleteFamily(
-    guildId,
-    id
-) {
-
-    await deleteFromDb(
-
-        familyKey(guildId, id)
-
-    );
-
-}
-
-
-
-export async function getAllFamilies(
-    guildId
-) {
-
-    const families =
-        await listFromDb(
-            `family:${guildId}:`
         );
 
 
-    return families.map(family => {
+    }
 
 
-        if (family.value) {
 
-
-            return {
-
-                id:
-                    family.key.split(':').pop(),
-
-                ...family.value
-
-            };
-
-
-        }
-
-
-        return family;
-
-
-    });
-
+    return family;
 
 }
+
+
 
 
 
@@ -143,143 +113,60 @@ export async function getFamilyByMember(
     userId
 ) {
 
-    const families =
-        await getAllFamilies(guildId);
 
+    const familyId =
 
+        await getFromDb(
 
-    return families.find(
-        family =>
-
-            family.active !== false &&
-
-            Array.isArray(
-                family.members
-            ) &&
-
-            family.members.includes(
+            memberFamilyKey(
+                guildId,
                 userId
             )
 
-    ) || null;
-
-
-}
-
-
-
-export async function isUserInFamily(
-    guildId,
-    userId
-) {
-
-    const family =
-        await getFamilyByMember(
-            guildId,
-            userId
         );
 
 
-    return Boolean(family);
 
-}
+    if (!familyId)
+        return null;
 
 
 
-export async function addMemberToFamily(
-    guildId,
-    familyId,
-    userId
-) {
+    return await getFromDb(
 
-    const family =
-        await getFamily(
+        familyKey(
             guildId,
             familyId
-        );
-
-
-    if (!family)
-        return false;
-
-
-
-    if (!Array.isArray(family.members)) {
-
-        family.members = [];
-
-    }
-
-
-
-    if (
-        !family.members.includes(
-            userId
         )
-    ) {
-
-        family.members.push(
-            userId
-        );
-
-    }
-
-
-
-    await updateFamily(
-
-        guildId,
-
-        familyId,
-
-        family
 
     );
-
-
-    return true;
 
 }
 
 
 
-export async function removeMemberFromFamily(
+
+
+export async function updateFamily(
     guildId,
     familyId,
-    userId
+    family
 ) {
 
-    const family =
-        await getFamily(
+
+    await setInDb(
+
+        familyKey(
             guildId,
             familyId
-        );
-
-
-    if (!family)
-        return false;
-
-
-
-    family.members =
-        family.members.filter(
-            id =>
-                id !== userId
-        );
-
-
-
-    await updateFamily(
-
-        guildId,
-
-        familyId,
+        ),
 
         family
 
     );
 
 
-    return true;
+
+    return family;
 
 }
