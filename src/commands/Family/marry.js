@@ -1,186 +1,175 @@
 import {
-    getFromDb,
-    setInDb
-} from './database/wrapper.js';
+    SlashCommandBuilder,
+    EmbedBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle
+} from 'discord.js';
+
+import {
+    createFamilyRequest
+} from '../../family/requests/familyRequests.js';
 
 
+export default {
 
-function familyKey(
-    guildId,
-    familyId
-) {
+    data: new SlashCommandBuilder()
 
-    return `family:${guildId}:${familyId}`;
+        .setName('marry')
+        .setDescription('Solicita un matrimonio o unión.')
 
-}
+        .addUserOption(option =>
+            option
+                .setName('persona1')
+                .setDescription('Primera persona')
+                .setRequired(true)
+        )
 
+        .addUserOption(option =>
+            option
+                .setName('persona2')
+                .setDescription('Segunda persona')
+                .setRequired(false)
+        )
 
-
-function memberFamilyKey(
-    guildId,
-    userId
-) {
-
-    return `familyMember:${guildId}:${userId}`;
-
-}
-
-
-
-
-export async function createFamily(
-    guildId,
-    members = []
-) {
-
-
-    const id =
-        Date.now().toString();
-
-
-
-    const family = {
-
-        id,
-
-        members,
-
-        children: [],
-
-        parents: [],
-
-        siblings: [],
-
-        lovers: [],
-
-        createdAt:
-            Date.now()
-
-    };
-
-
-
-    await setInDb(
-
-        familyKey(
-            guildId,
-            id
+        .addUserOption(option =>
+            option
+                .setName('persona3')
+                .setDescription('Tercera persona')
+                .setRequired(false)
         ),
 
-        family
 
-    );
-
+    async execute(interaction) {
 
 
-    for (
-        const member of members
-    ) {
+        const personas = [
 
-        await setInDb(
+            interaction.options.getUser('persona1'),
+            interaction.options.getUser('persona2'),
+            interaction.options.getUser('persona3')
 
-            memberFamilyKey(
-                guildId,
-                member
-            ),
+        ].filter(Boolean);
 
-            id
+
+
+        const miembros = [
+
+            interaction.user,
+            ...personas
+
+        ];
+
+
+
+        const ids =
+            miembros.map(
+                user => user.id
+            );
+
+
+
+        const requestId =
+            `marriage_${Date.now()}`;
+
+
+
+        await createFamilyRequest(
+
+            interaction.guild.id,
+
+            requestId,
+
+            {
+
+                type: 'marriage',
+
+                members: ids,
+
+                creator: interaction.user.id,
+
+                accepted: [
+                    interaction.user.id
+                ]
+
+            }
 
         );
+
+
+
+        const embed =
+            new EmbedBuilder()
+
+                .setTitle(
+                    '💍 Solicitud de unión'
+                )
+
+                .setDescription(
+
+                    `${interaction.user} quiere formar una unión con:\n\n` +
+
+                    personas
+                        .map(
+                            user => `💍 ${user}`
+                        )
+                        .join('\n')
+
+                );
+
+
+
+        const row =
+            new ActionRowBuilder()
+
+                .addComponents(
+
+                    new ButtonBuilder()
+
+                        .setCustomId(
+                            `accept_marriage:${requestId}`
+                        )
+
+                        .setLabel(
+                            'Aceptar'
+                        )
+
+                        .setStyle(
+                            ButtonStyle.Success
+                        ),
+
+
+                    new ButtonBuilder()
+
+                        .setCustomId(
+                            `reject_marriage:${requestId}`
+                        )
+
+                        .setLabel(
+                            'Rechazar'
+                        )
+
+                        .setStyle(
+                            ButtonStyle.Danger
+                        )
+
+                );
+
+
+
+        await interaction.reply({
+
+            embeds: [
+                embed
+            ],
+
+            components: [
+                row
+            ]
+
+        });
+
 
     }
 
-
-
-    return family;
-
-}
-
-
-
-
-
-export async function getFamilyByMember(
-    guildId,
-    userId
-) {
-
-
-    const familyId =
-
-        await getFromDb(
-
-            memberFamilyKey(
-                guildId,
-                userId
-            ),
-
-            null
-
-        );
-
-
-
-    if (!familyId)
-        return null;
-
-
-
-    return await getFromDb(
-
-        familyKey(
-            guildId,
-            familyId
-        ),
-
-        null
-
-    );
-
-}
-
-
-
-
-
-export async function isUserInFamily(
-    guildId,
-    userId
-) {
-
-    const family =
-        await getFamilyByMember(
-            guildId,
-            userId
-        );
-
-
-    return family !== null;
-
-}
-
-
-
-
-
-export async function updateFamily(
-    guildId,
-    familyId,
-    family
-) {
-
-    await setInDb(
-
-        familyKey(
-            guildId,
-            familyId
-        ),
-
-        family
-
-    );
-
-
-    return family;
-
-}
+};
