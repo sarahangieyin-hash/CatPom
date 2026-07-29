@@ -44,20 +44,35 @@ export async function createFamily(
 
         id,
 
+        /*
+            SOLO ADULTOS / PAREJAS
+        */
+
         members,
+
+
+        /*
+            HIJOS INDEPENDIENTES
+        */
 
         children: [],
 
+
         parents: [],
+
 
         siblings: [],
 
+
         lovers: [],
+
 
         createdAt:
             Date.now()
 
     };
+
+
 
 
 
@@ -71,6 +86,8 @@ export async function createFamily(
         family
 
     );
+
+
 
 
 
@@ -95,9 +112,13 @@ export async function createFamily(
 
 
 
+
+
     return family;
 
 }
+
+
 
 
 
@@ -129,6 +150,8 @@ export async function getFamilyByMember(
 
 
 
+
+
     const family =
 
         await getFromDb(
@@ -149,16 +172,10 @@ export async function getFamilyByMember(
 
 
 
+
+
     /*
-        REPARACIÓN
-
-        Solo añade miembros principales.
-
-        NO mete hijos,
-        NO mete padres,
-        NO mete hermanos.
-
-        Los hijos son independientes.
+        REPARACIÓN DE ESTRUCTURA
     */
 
 
@@ -176,7 +193,9 @@ export async function getFamilyByMember(
 
 
     if (
-        !family.children
+        !Array.isArray(
+            family.children
+        )
     ) {
 
         family.children = [];
@@ -186,7 +205,9 @@ export async function getFamilyByMember(
 
 
     if (
-        !family.parents
+        !Array.isArray(
+            family.parents
+        )
     ) {
 
         family.parents = [];
@@ -196,7 +217,9 @@ export async function getFamilyByMember(
 
 
     if (
-        !family.siblings
+        !Array.isArray(
+            family.siblings
+        )
     ) {
 
         family.siblings = [];
@@ -206,7 +229,9 @@ export async function getFamilyByMember(
 
 
     if (
-        !family.lovers
+        !Array.isArray(
+            family.lovers
+        )
     ) {
 
         family.lovers = [];
@@ -217,47 +242,49 @@ export async function getFamilyByMember(
 
 
 
-    /*
-        Solo reparar si el usuario
-        ya era miembro de la familia.
 
-        NO añadir hijos automáticamente.
+
+    /*
+        NO METER HIJOS COMO MIEMBROS
+
+        Un hijo adoptado sigue siendo hijo,
+        aunque la familia tenga nuevos matrimonios.
     */
 
 
-    const isChild =
+
+    const child =
 
         family.children.some(
 
-            child =>
-
-                child.id === userId
+            c =>
+                c.id === userId
 
         );
 
 
 
-    const isParent =
+    const parent =
 
         family.parents.some(
 
-            parent =>
-
-                parent.id === userId
+            p =>
+                p.id === userId
 
         );
 
 
 
-    const isSibling =
+    const sibling =
 
         family.siblings.some(
 
-            sibling =>
-
-                sibling.id === userId
+            s =>
+                s.id === userId
 
         );
+
+
 
 
 
@@ -269,15 +296,15 @@ export async function getFamilyByMember(
 
         &&
 
-        !isChild
+        !child
 
         &&
 
-        !isParent
+        !parent
 
         &&
 
-        !isSibling
+        !sibling
 
     ) {
 
@@ -285,6 +312,7 @@ export async function getFamilyByMember(
         family.members.push(
             userId
         );
+
 
 
         await setInDb(
@@ -305,9 +333,13 @@ export async function getFamilyByMember(
 
 
 
+
+
     return family;
 
 }
+
+
 
 
 
@@ -339,6 +371,8 @@ export async function isUserInFamily(
 
 
 
+
+
 export async function updateFamily(
     guildId,
     familyId,
@@ -362,6 +396,8 @@ export async function updateFamily(
     return family;
 
 }
+
+
 
 
 
@@ -418,9 +454,21 @@ export async function cleanFamilyChildren(
 
 
 
+
+
 /*
     COMPROBACIÓN DE UNIONES 💍
+
+    Bloquea:
+    - hijos
+    - padres
+    - hermanos
+
+    Permite:
+    - personas externas
+    - poliamor
 */
+
 
 
 export function canMarry(
@@ -434,12 +482,13 @@ export function canMarry(
 
 
 
+
+
     if (
 
         family.children?.some(
 
             child =>
-
                 child.id === userId
 
         )
@@ -452,12 +501,13 @@ export function canMarry(
 
 
 
+
+
     if (
 
         family.parents?.some(
 
             parent =>
-
                 parent.id === userId
 
         )
@@ -470,12 +520,13 @@ export function canMarry(
 
 
 
+
+
     if (
 
         family.siblings?.some(
 
             sibling =>
-
                 sibling.id === userId
 
         )
@@ -485,6 +536,8 @@ export function canMarry(
         return false;
 
     }
+
+
 
 
 
