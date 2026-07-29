@@ -39,31 +39,27 @@ export async function calculateLayout(
 
 
 
-    const memberSpacing =
-        170;
+    const memberSpacing = 170;
+
+    const childSpacing = 170;
+
+    const parentSpacing = 190;
 
 
-    const childSpacing =
-        170;
 
+    const memberY =
 
-    const parentSpacing =
-        190;
+        parents.length
+            ? 300
+            : 180;
 
 
 
 
 
     /*
-        POSICIONES BASE
+        MIEMBROS PRINCIPALES
     */
-
-
-    const mainY =
-        parents.length
-            ? 260
-            : 180;
-
 
 
     members.forEach(
@@ -90,7 +86,8 @@ export async function calculateLayout(
 
 
                 y:
-                    mainY
+
+                    memberY
 
 
             });
@@ -127,11 +124,11 @@ export async function calculateLayout(
         ) {
 
 
-            const a =
+            const left =
                 nodes[i];
 
 
-            const b =
+            const right =
                 nodes[i + 1];
 
 
@@ -145,15 +142,16 @@ export async function calculateLayout(
                 x:
 
                     (
-                        a.x +
-                        b.x
+                        left.x +
+                        right.x
                     )
                     /
                     2,
 
 
                 y:
-                    mainY
+
+                    memberY
 
 
             });
@@ -200,7 +198,7 @@ export async function calculateLayout(
 
                 y:
 
-                    mainY +
+                    memberY +
                     380
 
 
@@ -246,7 +244,8 @@ export async function calculateLayout(
 
 
                 y:
-                    60
+
+                    80
 
 
             });
@@ -282,12 +281,13 @@ export async function calculateLayout(
 
                 x:
 
-                    -260 -
+                    -250 -
                     index * 200,
 
 
                 y:
-                    mainY
+
+                    memberY
 
 
             });
@@ -302,32 +302,19 @@ export async function calculateLayout(
 
 
     /*
-        AJUSTE AUTOMÁTICO DEL LIENZO
+        AJUSTE AUTOMÁTICO
     */
 
 
-    const paddingX =
-        180;
+    const boxSize = 120;
 
 
-    const paddingTop =
-
-        parents.length
-            ? 120
-            : 80;
-
-
-    const paddingBottom =
-        120;
-
-
-
-    const realNodes =
+    const visibleNodes =
 
         nodes.filter(
 
-            n =>
-                n.type !== 'union'
+            node =>
+                node.type !== 'union'
 
         );
 
@@ -337,10 +324,10 @@ export async function calculateLayout(
 
         Math.min(
 
-            ...realNodes.map(
+            ...visibleNodes.map(
 
-                n =>
-                    n.x
+                node =>
+                    node.x
 
             )
 
@@ -352,10 +339,10 @@ export async function calculateLayout(
 
         Math.max(
 
-            ...realNodes.map(
+            ...visibleNodes.map(
 
-                n =>
-                    n.x
+                node =>
+                    node.x
 
             )
 
@@ -367,10 +354,10 @@ export async function calculateLayout(
 
         Math.min(
 
-            ...realNodes.map(
+            ...visibleNodes.map(
 
-                n =>
-                    n.y
+                node =>
+                    node.y
 
             )
 
@@ -382,10 +369,10 @@ export async function calculateLayout(
 
         Math.max(
 
-            ...realNodes.map(
+            ...visibleNodes.map(
 
-                n =>
-                    n.y
+                node =>
+                    node.y
 
             )
 
@@ -395,72 +382,55 @@ export async function calculateLayout(
 
 
 
-    const contentWidth =
-
-        maxX -
-        minX;
-
-
-
-    const contentHeight =
-
-        maxY -
-        minY;
-
-
+    const padding = 100;
 
 
 
     const width =
 
-        Math.max(
-
-            900,
-
-            contentWidth +
-            paddingX * 2
-
-        );
+        (
+            maxX -
+            minX
+        )
+        +
+        boxSize
+        +
+        padding * 2;
 
 
 
     const height =
 
-        Math.max(
-
-            600,
-
-            contentHeight +
-            paddingTop +
-            paddingBottom
-
-        );
+        (
+            maxY -
+            minY
+        )
+        +
+        boxSize
+        +
+        padding * 2;
 
 
 
 
 
     /*
-        CENTRAR CONTENIDO
+        CENTRADO REAL
     */
 
 
     const offsetX =
 
-        (
-            width -
-            contentWidth
-        )
-        /
-        2
-        -
+        padding +
+        boxSize / 2 -
         minX;
 
 
 
     const offsetY =
 
-        paddingTop -
+        padding +
+        boxSize / 2 -
         minY;
 
 
@@ -514,5 +484,6 @@ export async function calculateLayout(
 
 
     };
+
 
 }
