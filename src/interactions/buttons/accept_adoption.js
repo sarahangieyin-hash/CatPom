@@ -27,10 +27,6 @@ export default {
         try {
 
 
-            console.log("1 - Inicio accept adoption");
-
-
-
             const parentId =
                 args[0];
 
@@ -40,19 +36,12 @@ export default {
 
 
 
-            console.log(
-                "2 - IDs:",
-                {
-                    parentId,
-                    childId
-                }
-            );
-
-
-
             if (
+
                 interaction.user.id !== childId
+
             ) {
+
 
                 return interaction.reply({
 
@@ -64,17 +53,15 @@ export default {
 
                 });
 
+
             }
 
 
 
-            console.log(
-                "3 - Usuario correcto"
-            );
-
 
 
             let family =
+
                 await getFamilyByMember(
 
                     interaction.guild.id,
@@ -85,17 +72,13 @@ export default {
 
 
 
-            console.log(
-                "4 - Familia encontrada:",
-                family
-            );
-
 
 
             if (!family) {
 
 
                 family =
+
                     await createFamily(
 
                         interaction.guild.id,
@@ -107,27 +90,23 @@ export default {
                     );
 
 
-                console.log(
-                    "5 - Familia creada"
-                );
-
-
             }
 
 
 
-            /*
-                ASEGURAR MIEMBROS PRINCIPALES
 
-                El padre siempre debe estar
-                en members.
+
+            /*
+                ASEGURAR ESTRUCTURA
             */
 
 
             if (
+
                 !Array.isArray(
                     family.members
                 )
+
             ) {
 
                 family.members = [];
@@ -135,31 +114,12 @@ export default {
             }
 
 
-
             if (
-                !family.members.includes(
-                    parentId
-                )
-            ) {
 
-                family.members.push(
-                    parentId
-                );
-
-            }
-
-
-
-
-            /*
-                ASEGURAR HIJOS
-            */
-
-
-            if (
                 !Array.isArray(
                     family.children
                 )
+
             ) {
 
                 family.children = [];
@@ -168,7 +128,43 @@ export default {
 
 
 
-            const alreadyChild =
+
+
+            /*
+                EL PADRE SIEMPRE ES MIEMBRO PRINCIPAL
+            */
+
+
+            if (
+
+                !family.members.includes(
+                    parentId
+                )
+
+            ) {
+
+
+                family.members.push(
+                    parentId
+                );
+
+
+            }
+
+
+
+
+
+            /*
+                AÑADIR HIJO INDIVIDUAL
+
+                Los hijos NO son members.
+                Los hijos NO desaparecen
+                al casarse.
+            */
+
+
+            const exists =
 
                 family.children.some(
 
@@ -180,7 +176,9 @@ export default {
 
 
 
-            if (!alreadyChild) {
+
+
+            if (!exists) {
 
 
                 family.children.push({
@@ -188,11 +186,14 @@ export default {
                     id:
                         childId,
 
+
                     parent:
                         parentId,
 
+
                     adoptedAt:
                         Date.now()
+
 
                 });
 
@@ -202,12 +203,11 @@ export default {
 
 
 
-            /*
-                SI EL HIJO ESTABA COMO MIEMBRO
-                LO QUITAMOS
 
-                Un hijo no aparece arriba
-                como pareja.
+            /*
+                LIMPIAR HIJO DE MEMBERS
+
+                Evita que salga como pareja.
             */
 
 
@@ -216,9 +216,11 @@ export default {
                 family.members.filter(
 
                     id =>
+
                         id !== childId
 
                 );
+
 
 
 
@@ -240,16 +242,13 @@ export default {
 
 
 
-            console.log(
-                "6 - Familia guardada:",
-                family
-            );
-
-
 
 
             /*
-                RELACIONAR HIJO CON FAMILIA
+                RELACIONAR AL HIJO
+
+                Esto NO convierte al hijo
+                en miembro principal.
             */
 
 
@@ -261,11 +260,6 @@ export default {
 
             );
 
-
-
-            console.log(
-                "7 - familyMember actualizado"
-            );
 
 
 
@@ -284,10 +278,6 @@ export default {
 
 
 
-            console.log(
-                "8 - Fin accept adoption"
-            );
-
 
 
         } catch(error) {
@@ -301,13 +291,14 @@ export default {
             console.error(error);
 
 
-            console.error(error.stack);
-
 
 
             if (
+
                 !interaction.replied &&
+
                 !interaction.deferred
+
             ) {
 
 
@@ -318,7 +309,6 @@ export default {
                         `❌ Error: ${error.message}`,
 
                     ephemeral:
-
                         true
 
                 }).catch(() => {});
@@ -335,7 +325,6 @@ export default {
                         `❌ Error: ${error.message}`,
 
                     ephemeral:
-
                         true
 
                 }).catch(() => {});
