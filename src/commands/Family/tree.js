@@ -3,8 +3,7 @@ import {
 } from 'discord.js';
 
 import {
-    getFamilyByMember,
-    updateFamily
+    getFamilyByMember
 } from '../../utils/families.js';
 
 import {
@@ -25,7 +24,7 @@ export default {
     async execute(interaction) {
 
 
-        let family =
+        const family =
             await getFamilyByMember(
 
                 interaction.guild.id,
@@ -41,9 +40,10 @@ export default {
             return interaction.reply({
 
                 content:
-                    '❌ No perteneces a ninguna familia.',
+                    '❌ No tienes familia.',
 
-                ephemeral: true
+                ephemeral:
+                    true
 
             });
 
@@ -51,70 +51,33 @@ export default {
 
 
 
-        /*
-            LIMPIEZA AUTOMÁTICA
+        const hasFamily =
 
-            - Quita hijos duplicados
-            - Quita hijos que también estén como miembros
-        */
+            (family.members?.length > 1) ||
 
+            (family.children?.length > 0) ||
 
-        if (
-            Array.isArray(family.children)
-        ) {
+            (family.parents?.length > 0) ||
 
-            family.children =
-                Array.from(
+            (family.siblings?.length > 0) ||
 
-                    new Map(
-
-                        family.children.map(
-
-                            child => [
-
-                                child.id,
-
-                                child
-
-                            ]
-
-                        )
-
-                    ).values()
-
-                );
+            (family.lovers?.length > 0);
 
 
 
-            const childIds =
-                family.children.map(
-                    child =>
-                        child.id
-                );
+        if (!hasFamily) {
 
+            return interaction.reply({
 
+                content:
+                    '❌ No tienes familia.',
 
-            family.members =
-                family.members.filter(
+                ephemeral:
+                    true
 
-                    id =>
-                        !childIds.includes(id)
-
-                );
+            });
 
         }
-
-
-
-        await updateFamily(
-
-            interaction.guild.id,
-
-            family.id,
-
-            family
-
-        );
 
 
 
