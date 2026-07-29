@@ -23,6 +23,18 @@ export async function renderFamilyTree(
     family
 ) {
 
+
+    console.log(
+        "TREE FAMILY:",
+        JSON.stringify(
+            family,
+            null,
+            2
+        )
+    );
+
+
+
     const layout =
         await calculateLayout(
             guild,
@@ -59,11 +71,16 @@ export async function renderFamilyTree(
         scale
     );
 
+
+
     /*
         Fondo blanco
     */
 
-    ctx.fillStyle = "#ffffff";
+
+    ctx.fillStyle =
+        "#ffffff";
+
 
     ctx.fillRect(
         0,
@@ -72,22 +89,33 @@ export async function renderFamilyTree(
         height
     );
 
-    ctx.imageSmoothingEnabled = true;
+
+
+    ctx.imageSmoothingEnabled =
+        true;
+
+
 
     await drawLines(
         ctx,
         layout
     );
 
+
+
     await drawNodes(
         ctx,
         layout
     );
 
+
+
     await drawIcons(
         ctx,
         layout
     );
+
+
 
     return canvas.toBuffer(
         'image/png'
