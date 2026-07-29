@@ -1,15 +1,18 @@
 import {
-    getFamilyRequest,
-    deleteFamilyRequest
+    acceptFamilyRequest,
+    getFamilyRequest
 } from '../../family/requests/familyRequests.js';
+
+import {
+    createFamily
+} from '../../utils/families.js';
 
 
 
 export default {
 
-
     customId:
-        'reject_marriage',
+        'accept_marriage',
 
 
 
@@ -20,14 +23,12 @@ export default {
     ) {
 
 
-
         const requestId =
             args[0];
 
 
 
         const request =
-
             await getFamilyRequest(
 
                 interaction.guild.id,
@@ -40,72 +41,114 @@ export default {
 
         if (!request) {
 
-
             return interaction.reply({
 
                 content:
-                    '❌ Esta solicitud ya no existe.',
+                    '❌ La solicitud de unión ya no existe.',
 
                 ephemeral:
                     true
 
             });
-
 
         }
 
 
 
         if (
-
             !request.members.includes(
-
                 interaction.user.id
-
             )
-
         ) {
-
 
             return interaction.reply({
 
                 content:
-                    '❌ No formas parte de esta solicitud.',
+                    '❌ Esta solicitud no es para ti.',
 
                 ephemeral:
                     true
 
             });
 
-
         }
 
 
 
-        await deleteFamilyRequest(
+        await acceptFamilyRequest(
 
             interaction.guild.id,
 
-            requestId
+            requestId,
+
+            interaction.user.id
 
         );
+
+
+
+        const updated =
+            await getFamilyRequest(
+
+                interaction.guild.id,
+
+                requestId
+
+            );
+
+
+
+        const allAccepted =
+            updated.members.every(
+
+                id =>
+                    updated.accepted.includes(
+                        id
+                    )
+
+            );
+
+
+
+        if (allAccepted) {
+
+
+            await createFamily(
+
+                interaction.guild.id,
+
+                updated.members
+
+            );
+
+
+
+            await interaction.update({
+
+                content:
+                    '💍 Unión creada correctamente.',
+
+                components:
+                    []
+
+            });
+
+
+            return;
+
+        }
 
 
 
         await interaction.update({
 
             content:
-
-                `❌ <@${interaction.user.id}> ha rechazado la unión. No se ha creado el matrimonio.`,
-
-            embeds:
-                [],
+                `💍 <@${interaction.user.id}> ha aceptado la unión.`,
 
             components:
                 []
 
         });
-
 
 
     }
