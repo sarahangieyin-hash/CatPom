@@ -12,7 +12,7 @@ import {
 export default {
 
     customId:
-        'accept_marriage:marriage',
+        'accept_marriage',
 
 
 
@@ -113,28 +113,27 @@ export default {
         if (allAccepted) {
 
 
-            const family =
-                await createFamily(
+            await createFamily(
 
-                    interaction.guild.id,
+                interaction.guild.id,
 
-                    {
+                {
 
-                        members:
-                            updated.members,
+                    members:
+                        updated.members,
 
-                        lovers:
-                            [],
+                    lovers:
+                        [],
 
-                        parents:
-                            [],
+                    parents:
+                        [],
 
-                        children:
-                            []
+                    children:
+                        []
 
-                    }
+                }
 
-                );
+            );
 
 
 
