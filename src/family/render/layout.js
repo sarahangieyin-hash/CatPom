@@ -41,20 +41,13 @@ export async function calculateLayout(
 
 
 
-    /*
-        ESPACIADO DINÁMICO
-
-        Crece solo cuando hay más personas.
-    */
-
-
     const memberSpacing =
 
         Math.max(
-            150,
+            160,
             Math.min(
-                260,
-                150 + members.length * 25
+                300,
+                170 + members.length * 35
             )
         );
 
@@ -65,8 +58,8 @@ export async function calculateLayout(
         Math.max(
             150,
             Math.min(
-                240,
-                150 + children.length * 25
+                260,
+                160 + children.length * 25
             )
         );
 
@@ -92,7 +85,7 @@ export async function calculateLayout(
 
 
     /*
-        MIEMBROS PRINCIPALES
+        MIEMBROS PRINCIPALES 💍
     */
 
 
@@ -120,7 +113,6 @@ export async function calculateLayout(
 
 
                 y:
-
                     centerY
 
 
@@ -136,12 +128,14 @@ export async function calculateLayout(
 
 
     /*
-        UNIONES
+        UNIONES 💍
     */
 
 
     if (
+
         members.length >= 2
+
     ) {
 
 
@@ -182,7 +176,6 @@ export async function calculateLayout(
 
 
                 y:
-
                     centerY
 
 
@@ -199,11 +192,148 @@ export async function calculateLayout(
 
 
     /*
-        HIJOS
+        HIJOS 👶
+
+        Hijos adoptados:
+        permanecen ligados a su padre.
+
+        Hijos sin padre:
+        pertenecen a la unión.
+
     */
 
 
-    children.forEach(
+    const individualChildren =
+
+        children.filter(
+
+            child =>
+                child.parent
+
+        );
+
+
+
+    const sharedChildren =
+
+        children.filter(
+
+            child =>
+                !child.parent
+
+        );
+
+
+
+
+
+    /*
+        HIJOS INDIVIDUALES
+    */
+
+
+    individualChildren.forEach(
+
+        (child,index)=>{
+
+
+            const parentNode =
+
+                nodes.find(
+
+                    node =>
+
+                        node.type === 'member' &&
+
+                        node.id === child.parent
+
+                );
+
+
+
+            if (parentNode) {
+
+
+                nodes.push({
+
+                    id:
+                        child.id,
+
+
+                    type:
+                        'child',
+
+
+                    parent:
+                        child.parent,
+
+
+                    x:
+
+                        parentNode.x +
+                        (
+                            index * 140
+                        ),
+
+
+                    y:
+
+                        centerY + 350
+
+
+                });
+
+
+            } else {
+
+
+                nodes.push({
+
+                    id:
+                        child.id,
+
+
+                    type:
+                        'child',
+
+
+                    x:
+
+                        (
+                            index -
+                            (
+                                individualChildren.length - 1
+                            ) / 2
+                        )
+                        *
+                        childSpacing,
+
+
+                    y:
+
+                        centerY + 350
+
+
+                });
+
+
+            }
+
+
+        }
+
+    );
+
+
+
+
+
+    /*
+        HIJOS DE LA UNIÓN
+    */
+
+
+    sharedChildren.forEach(
 
         (child,index)=>{
 
@@ -222,7 +352,9 @@ export async function calculateLayout(
 
                     (
                         index -
-                        (children.length - 1) / 2
+                        (
+                            sharedChildren.length - 1
+                        ) / 2
                     )
                     *
                     childSpacing,
@@ -246,9 +378,6 @@ export async function calculateLayout(
 
     /*
         PADRES
-
-        Solo ocupan espacio arriba
-        si realmente existen.
     */
 
 
@@ -271,7 +400,9 @@ export async function calculateLayout(
 
                     (
                         index -
-                        (parents.length - 1) / 2
+                        (
+                            parents.length - 1
+                        ) / 2
                     )
                     *
                     parentSpacing,
@@ -316,7 +447,9 @@ export async function calculateLayout(
                 x:
 
                     -250 -
-                    index * 180,
+                    (
+                        index * 180
+                    ),
 
 
                 y:
@@ -419,21 +552,14 @@ export async function calculateLayout(
 
 
     const marginX =
-        200;
+        180;
 
 
     const marginY =
-        150;
+        120;
 
 
 
-
-
-    /*
-        TAMAÑO FINAL
-
-        Solo crece según familia.
-    */
 
 
     const width =
@@ -478,6 +604,8 @@ export async function calculateLayout(
 
     /*
         CENTRADO REAL
+
+        Mismo espacio izquierda/derecha.
     */
 
 
@@ -486,8 +614,7 @@ export async function calculateLayout(
         (
             width -
             (
-                maxX -
-                minX
+                maxX - minX
             )
 
         )
@@ -500,17 +627,7 @@ export async function calculateLayout(
 
     const offsetY =
 
-        (
-            height -
-            (
-                maxY -
-                minY
-            )
-
-        )
-        /
-        2
-        -
+        80 -
         minY;
 
 
