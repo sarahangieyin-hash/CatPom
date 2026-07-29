@@ -17,16 +17,11 @@ export default {
     async execute(interaction) {
 
 
-        const parts =
-            interaction.customId.split('_');
-
-
-        const parentId =
-            parts[2];
-
-
-        const childId =
-            parts[3];
+        const [
+            ,
+            parentId,
+            childId
+        ] = interaction.customId.split('_');
 
 
 
@@ -76,9 +71,7 @@ export default {
 
 
         if (
-            !Array.isArray(
-                family.children
-            )
+            !Array.isArray(family.children)
         ) {
 
             family.children = [];
@@ -87,14 +80,40 @@ export default {
 
 
 
+        /*
+            LIMPIAR DUPLICADOS
+        */
+
+        family.children =
+            family.children.filter(
+
+                (child, index, array) =>
+
+                    array.findIndex(
+
+                        c => c.id === child.id
+
+                    ) === index
+
+            );
+
+
+
+        /*
+            AÑADIR HIJO
+        */
+
         if (
+
             !family.children.some(
 
                 child =>
                     child.id === childId
 
             )
+
         ) {
+
 
             family.children.push({
 
@@ -109,7 +128,23 @@ export default {
 
             });
 
+
         }
+
+
+
+        /*
+            EL HIJO NO ES MIEMBRO PRINCIPAL
+        */
+
+        family.members =
+            family.members.filter(
+
+                id =>
+
+                    id !== childId
+
+            );
 
 
 
