@@ -10,64 +10,57 @@ import {
     createFamilyRequest
 } from '../../family/requests/familyRequests.js';
 
-import {
-    isUserInFamily
-} from '../../utils/families.js';
-
 
 export default {
 
     data: new SlashCommandBuilder()
 
         .setName('marry')
-        .setDescription('Solicita una unión matrimonial.')
+
+        .setDescription('Solicita una unión.')
 
         .addUserOption(option =>
             option
                 .setName('persona1')
-                .setDescription('Primera persona')
+                .setDescription('Persona con la que casarte')
                 .setRequired(true)
         )
 
         .addUserOption(option =>
             option
                 .setName('persona2')
-                .setDescription('Segunda persona')
+                .setDescription('Segunda persona (opcional)')
                 .setRequired(false)
         )
 
         .addUserOption(option =>
             option
                 .setName('persona3')
-                .setDescription('Tercera persona')
+                .setDescription('Tercera persona (opcional)')
                 .setRequired(false)
         ),
+
 
 
     async execute(interaction) {
 
 
-        const personas = [
+        const users = [
+
+            interaction.user,
 
             interaction.options.getUser('persona1'),
+
             interaction.options.getUser('persona2'),
+
             interaction.options.getUser('persona3')
 
         ].filter(Boolean);
 
 
 
-        const usuarios = [
-
-            interaction.user,
-            ...personas
-
-        ];
-
-
-
         const ids =
-            usuarios.map(
+            users.map(
                 user => user.id
             );
 
@@ -80,9 +73,10 @@ export default {
             return interaction.reply({
 
                 content:
-                    '❌ No puedes añadir a la misma persona varias veces.',
+                    '❌ No puedes repetir personas.',
 
-                ephemeral: true
+                ephemeral:
+                    true
 
             });
 
@@ -90,29 +84,21 @@ export default {
 
 
 
-        for (
-            const user of usuarios
+        if (
+            ids.includes(
+                interaction.user.id
+            ) === false
         ) {
 
-            const family =
-                await isUserInFamily(
-                    interaction.guild.id,
-                    user.id
-                );
+            return interaction.reply({
 
+                content:
+                    '❌ Error creando solicitud.',
 
-            if (family) {
+                ephemeral:
+                    true
 
-                return interaction.reply({
-
-                    content:
-                        `❌ ${user} ya pertenece a una unión.`,
-
-                    ephemeral: true
-
-                });
-
-            }
+            });
 
         }
 
@@ -131,12 +117,19 @@ export default {
 
             {
 
-                type: 'marriage',
+                type:
+                    'marriage',
 
-                members: ids,
+                members:
+                    ids,
 
                 creator:
-                    interaction.user.id
+                    interaction.user.id,
+
+                accepted:
+                    [
+                        interaction.user.id
+                    ]
 
             }
 
@@ -148,32 +141,33 @@ export default {
             new EmbedBuilder()
 
                 .setTitle(
-                    '💍 Nueva solicitud de unión'
+                    '💍 Solicitud de unión'
                 )
 
                 .setDescription(
 
                     `${interaction.user} quiere formar una unión con:\n\n` +
 
-                    personas
+                    users
+
+                        .slice(1)
+
                         .map(
                             user =>
                                 `💍 ${user}`
                         )
+
                         .join('\n')
 
                 )
 
-                .setFooter({
-
-                    text:
-                        `Solicitud: ${requestId}`
-
-                });
+                .setColor(
+                    0xffc0cb
+                );
 
 
 
-        const row =
+        const buttons =
             new ActionRowBuilder()
 
                 .addComponents(
@@ -213,16 +207,17 @@ export default {
 
         await interaction.reply({
 
-            embeds: [
-                embed
-            ],
+            embeds:
+                [
+                    embed
+                ],
 
-            components: [
-                row
-            ]
+            components:
+                [
+                    buttons
+                ]
 
         });
-
 
     }
 
