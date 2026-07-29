@@ -58,29 +58,38 @@ export async function drawLines(
 
 
     /*
-        UNIONES 💍
+        MATRIMONIOS 💍
 
-        Une parejas entre sí.
+        Une cada pareja,
+        pero no conecta hijos.
 
-        A 💍 B 💍 C
-
-        No conecta hijos aquí.
     */
 
 
-    if (
-        unions.length > 1
+    for (
+
+        const union of unions
+
     ) {
 
 
-        for (
+        const index =
+            unions.indexOf(union);
 
-            let i = 0;
 
-            i < unions.length - 1;
 
-            i++
+        const left =
+            members[index];
 
+
+        const right =
+            members[index + 1];
+
+
+
+        if (
+            left &&
+            right
         ) {
 
 
@@ -89,18 +98,27 @@ export async function drawLines(
 
             ctx.moveTo(
 
-                unions[i].x,
+                left.x,
 
-                unions[i].y
+                left.y
 
             );
 
 
             ctx.lineTo(
 
-                unions[i + 1].x,
+                union.x,
 
-                unions[i + 1].y
+                union.y
+
+            );
+
+
+            ctx.lineTo(
+
+                right.x,
+
+                right.y
 
             );
 
@@ -118,22 +136,27 @@ export async function drawLines(
 
 
     /*
-        PADRES -> PRIMERA UNIÓN
+        PADRES 👨‍👩‍👧
+
+        Van hacia la persona
+        principal, no hacia
+        una pareja aleatoria.
+
     */
-
-
-    const mainUnion =
-        unions[0];
-
 
 
     if (
 
         parents.length &&
 
-        mainUnion
+        members.length
 
     ) {
+
+
+        const main =
+            members[0];
+
 
 
         parents.forEach(
@@ -155,18 +178,9 @@ export async function drawLines(
 
                 ctx.lineTo(
 
-                    parent.x,
+                    main.x,
 
-                    mainUnion.y - 80
-
-                );
-
-
-                ctx.lineTo(
-
-                    mainUnion.x,
-
-                    mainUnion.y - 40
+                    main.y - 60
 
                 );
 
@@ -188,11 +202,11 @@ export async function drawLines(
     /*
         HIJOS 👶
 
-        Los hijos pertenecen a la unión
-        principal solamente.
+        Salen de la unión si existe.
 
-        No importa cuántas parejas haya.
-        No desaparecen.
+        Si no existe matrimonio,
+        salen del miembro principal.
+
     */
 
 
@@ -203,28 +217,20 @@ export async function drawLines(
     ) {
 
 
-        let originX =
-            null;
-
-
-        let originY =
+        let origin =
             null;
 
 
 
         if (
 
-            mainUnion
+            unions.length
 
         ) {
 
 
-            originX =
-                mainUnion.x;
-
-
-            originY =
-                mainUnion.y;
+            origin =
+                unions[0];
 
 
         } else if (
@@ -234,12 +240,8 @@ export async function drawLines(
         ) {
 
 
-            originX =
-                members[0].x;
-
-
-            originY =
-                members[0].y;
+            origin =
+                members[0];
 
 
         }
@@ -248,17 +250,12 @@ export async function drawLines(
 
 
 
-        if (
+        if (origin) {
 
-            originX !== null
-
-        ) {
 
 
             const branchY =
-                originY + 160;
-
-
+                origin.y + 170;
 
 
 
@@ -267,16 +264,16 @@ export async function drawLines(
 
             ctx.moveTo(
 
-                originX,
+                origin.x,
 
-                originY + 40
+                origin.y + 40
 
             );
 
 
             ctx.lineTo(
 
-                originX,
+                origin.x,
 
                 branchY
 
@@ -401,7 +398,7 @@ export async function drawLines(
 
                 ctx.moveTo(
 
-                    sibling.x + 60,
+                    sibling.x,
 
                     sibling.y
 
@@ -410,7 +407,7 @@ export async function drawLines(
 
                 ctx.lineTo(
 
-                    main.x - 60,
+                    main.x,
 
                     main.y
 
