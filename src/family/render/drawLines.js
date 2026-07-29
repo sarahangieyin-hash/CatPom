@@ -18,6 +18,20 @@ export async function drawLines(
         );
 
 
+    const parents =
+        layout.nodes.filter(
+            node =>
+                node.type === 'parent'
+        );
+
+
+    const siblings =
+        layout.nodes.filter(
+            node =>
+                node.type === 'sibling'
+        );
+
+
 
     ctx.strokeStyle =
         '#ffffff';
@@ -28,33 +42,34 @@ export async function drawLines(
 
 
 
-    // Línea de unión 💍
+    /*
+        UNIÓN 💍
+    */
+
 
     if (
         members.length > 1
     ) {
-
-        const first =
-            members[0];
-
-
-        const last =
-            members[members.length - 1];
-
 
 
         ctx.beginPath();
 
 
         ctx.moveTo(
-            first.x,
-            first.y
+
+            members[0].x,
+
+            members[0].y
+
         );
 
 
         ctx.lineTo(
-            last.x,
-            last.y
+
+            members[members.length - 1].x,
+
+            members[members.length - 1].y
+
         );
 
 
@@ -65,11 +80,14 @@ export async function drawLines(
 
 
 
-    // Línea hacia hijos 👶
+    /*
+        HIJOS 👶
+    */
+
 
     if (
-        children.length > 0 &&
-        members.length > 0
+        members.length > 0 &&
+        children.length > 0
     ) {
 
 
@@ -77,7 +95,7 @@ export async function drawLines(
 
             members.reduce(
 
-                (sum, node) =>
+                (sum,node) =>
                     sum + node.x,
 
                 0
@@ -104,7 +122,7 @@ export async function drawLines(
 
             centerX,
 
-            children[0].y - 80
+            children[0].y - 70
 
         );
 
@@ -125,7 +143,7 @@ export async function drawLines(
 
                     centerX,
 
-                    children[0].y - 80
+                    children[0].y - 70
 
                 );
 
@@ -135,6 +153,102 @@ export async function drawLines(
                     child.x,
 
                     child.y
+
+                );
+
+
+                ctx.stroke();
+
+
+            }
+
+        );
+
+    }
+
+
+
+    /*
+        PADRES 👨‍👩‍👧
+    */
+
+
+    if (
+        parents.length > 0 &&
+        members.length > 0
+    ) {
+
+
+        parents.forEach(
+
+            parent => {
+
+
+                ctx.beginPath();
+
+
+                ctx.moveTo(
+
+                    parent.x,
+
+                    parent.y
+
+                );
+
+
+                ctx.lineTo(
+
+                    members[0].x,
+
+                    members[0].y - 60
+
+                );
+
+
+                ctx.stroke();
+
+
+            }
+
+        );
+
+    }
+
+
+
+    /*
+        HERMANOS 👥
+    */
+
+
+    if (
+        siblings.length > 0 &&
+        members.length > 0
+    ) {
+
+
+        siblings.forEach(
+
+            sibling => {
+
+
+                ctx.beginPath();
+
+
+                ctx.moveTo(
+
+                    sibling.x,
+
+                    sibling.y
+
+                );
+
+
+                ctx.lineTo(
+
+                    members[0].x,
+
+                    members[0].y
 
                 );
 
