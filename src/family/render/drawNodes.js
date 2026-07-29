@@ -1,3 +1,39 @@
+import {
+    registerFont
+} from 'canvas';
+
+import path from 'path';
+
+import {
+    fileURLToPath
+} from 'url';
+
+
+const __filename =
+    fileURLToPath(import.meta.url);
+
+
+const __dirname =
+    path.dirname(__filename);
+
+
+
+registerFont(
+
+    path.join(
+        __dirname,
+        '../../assets/fonts/DejaVuSans.ttf'
+    ),
+
+    {
+        family:
+            'DejaVuCustom'
+    }
+
+);
+
+
+
 export async function drawNodes(
     ctx,
     layout
@@ -75,8 +111,10 @@ export async function drawNodes(
             '#000000';
 
 
+
         ctx.font =
-            'bold 18px DejaVu Sans';
+            'bold 18px DejaVuCustom';
+
 
 
         ctx.textAlign =
