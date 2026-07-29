@@ -1,3 +1,5 @@
+import { loadImage } from 'canvas';
+
 export async function drawNodes(
     ctx,
     layout
