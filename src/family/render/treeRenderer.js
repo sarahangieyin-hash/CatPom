@@ -79,28 +79,136 @@ export async function renderFamilyTree(
 
 
     /*
-        TAMAÑO DINÁMICO
+        AJUSTE REAL AL CONTENIDO
 
-        El layout decide el tamaño,
-        pero se añade margen para
-        que los nodos no queden pegados
-        al borde.
+        El canvas se adapta a donde están
+        realmente las personas.
     */
+
+
+    const nodes =
+
+        layout.nodes.filter(
+
+            node =>
+                node.type !== 'union'
+
+        );
+
+
+
+    const nodeSize =
+        120;
+
+
+    const padding =
+        120;
+
+
+
+    const minX =
+
+        Math.min(
+
+            ...nodes.map(
+                n => n.x
+            )
+
+        );
+
+
+
+    const maxX =
+
+        Math.max(
+
+            ...nodes.map(
+                n => n.x
+            )
+
+        );
+
+
+
+    const minY =
+
+        Math.min(
+
+            ...nodes.map(
+                n => n.y
+            )
+
+        );
+
+
+
+    const maxY =
+
+        Math.max(
+
+            ...nodes.map(
+                n => n.y
+            )
+
+        );
+
+
+
 
 
     const width =
 
-        Math.ceil(
-            layout.width + 300
-        );
+        (
+            maxX -
+            minX
+        )
+        +
+        nodeSize
+        +
+        padding * 2;
 
 
 
     const height =
 
-        Math.ceil(
-            layout.height + 200
-        );
+        (
+            maxY -
+            minY
+        )
+        +
+        nodeSize
+        +
+        padding * 2;
+
+
+
+
+
+    /*
+        MOVER TODO AL CENTRO
+    */
+
+
+    const offsetX =
+        padding - minX;
+
+
+    const offsetY =
+        padding - minY;
+
+
+
+    layout.nodes.forEach(
+
+        node => {
+
+            node.x += offsetX;
+
+            node.y += offsetY;
+
+        }
+
+    );
 
 
 
@@ -132,7 +240,7 @@ export async function renderFamilyTree(
 
 
     /*
-        FONDO
+        FONDO ADAPTADO
     */
 
 
@@ -141,7 +249,6 @@ export async function renderFamilyTree(
 
         const bg =
             new Image();
-
 
 
         bg.src =
@@ -165,12 +272,6 @@ export async function renderFamilyTree(
 
 
     } catch(error) {
-
-
-        console.log(
-            "No se pudo cargar fondo:",
-            error.message
-        );
 
 
         ctx.fillStyle =
