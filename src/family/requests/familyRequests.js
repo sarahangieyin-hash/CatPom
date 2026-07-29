@@ -230,7 +230,9 @@ export async function getAllFamilyRequests(
                 return {
 
                     id:
-                        request.key.split(':').pop(),
+                        request.key
+                            .split(':')
+                            .pop(),
 
                     ...request.value
 
@@ -260,14 +262,23 @@ export async function getFamilyRequestByCreator(
         );
 
 
-    return requests.find(
+    const request =
+        requests.find(
 
-        request =>
+            request =>
 
-            request.creator === userId &&
+                request.creator === userId &&
 
-            request.type === 'marriage'
+                request.type === 'marriage' &&
 
-    ) || null;
+                !request.rejected?.includes(
+                    userId
+                )
+
+        );
+
+
+
+    return request || null;
 
 }
