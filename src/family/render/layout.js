@@ -146,9 +146,6 @@ export async function calculateLayout(
     */
 
 
-    const unionNodes = [];
-
-
     if (
         members.length >= 2
     ) {
@@ -188,8 +185,7 @@ export async function calculateLayout(
             ) {
 
 
-                const union = {
-
+                nodes.push({
 
                     type:
                         'union',
@@ -207,14 +203,7 @@ export async function calculateLayout(
                     y:
                         350
 
-
-                };
-
-
-                unionNodes.push(union);
-
-
-                nodes.push(union);
+                });
 
 
             }
@@ -360,7 +349,8 @@ export async function calculateLayout(
     /*
         TAMAÑO DINÁMICO DEL LIENZO
 
-        Aumenta SOLO si hay más familia.
+        Crece según la familia.
+        Sin espacio gigante vacío.
     */
 
 
@@ -377,14 +367,14 @@ export async function calculateLayout(
 
         Math.max(
 
-            1600,
+            700,
 
             (
                 totalPeople *
-                220
+                180
             )
             +
-            700
+            250
 
         );
 
@@ -394,12 +384,17 @@ export async function calculateLayout(
 
         Math.max(
 
-            1000,
+            500,
 
-            900 +
+            450 +
             (
                 children.length *
                 120
+            )
+            +
+            (
+                parents.length *
+                100
             )
 
         );
