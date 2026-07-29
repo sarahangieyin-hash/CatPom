@@ -1,8 +1,3 @@
-import {
-    request
-} from 'undici';
-
-
 export async function drawNodes(
     ctx,
     layout
