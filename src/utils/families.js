@@ -150,17 +150,17 @@ export async function getFamilyByMember(
 
 
     /*
-        REPARACIÓN AUTOMÁTICA
+        REPARACIÓN
 
-        Si una persona tiene una familia
-        asignada pero no aparece en members,
-        se vuelve a añadir.
+        Solo añade miembros principales.
 
-        Evita:
-        - hijos como único nodo del árbol
-        - padres desaparecidos
-        - members vacío
+        NO mete hijos,
+        NO mete padres,
+        NO mete hermanos.
+
+        Los hijos son independientes.
     */
+
 
 
     if (
@@ -176,9 +176,109 @@ export async function getFamilyByMember(
 
 
     if (
-        !family.members.includes(
-            userId
-        )
+        !family.children
+    ) {
+
+        family.children = [];
+
+    }
+
+
+
+    if (
+        !family.parents
+    ) {
+
+        family.parents = [];
+
+    }
+
+
+
+    if (
+        !family.siblings
+    ) {
+
+        family.siblings = [];
+
+    }
+
+
+
+    if (
+        !family.lovers
+    ) {
+
+        family.lovers = [];
+
+    }
+
+
+
+
+
+    /*
+        Solo reparar si el usuario
+        ya era miembro de la familia.
+
+        NO añadir hijos automáticamente.
+    */
+
+
+    const isChild =
+
+        family.children.some(
+
+            child =>
+
+                child.id === userId
+
+        );
+
+
+
+    const isParent =
+
+        family.parents.some(
+
+            parent =>
+
+                parent.id === userId
+
+        );
+
+
+
+    const isSibling =
+
+        family.siblings.some(
+
+            sibling =>
+
+                sibling.id === userId
+
+        );
+
+
+
+
+
+    if (
+
+        !family.members.includes(userId)
+
+        &&
+
+        !isChild
+
+        &&
+
+        !isParent
+
+        &&
+
+        !isSibling
+
     ) {
 
 
@@ -200,6 +300,8 @@ export async function getFamilyByMember(
 
 
     }
+
+
 
 
 
@@ -272,6 +374,7 @@ export async function cleanFamilyChildren(
 
 
     const family =
+
         await getFromDb(
 
             familyKey(
@@ -317,18 +420,6 @@ export async function cleanFamilyChildren(
 
 /*
     COMPROBACIÓN DE UNIONES 💍
-
-    Evita matrimonios incorrectos:
-
-    ❌ padre con hijo
-    ❌ madre con hijo
-    ❌ hermanos
-    ❌ hijos propios
-
-    Permite:
-
-    ✅ personas externas
-    ✅ poliamor
 */
 
 
@@ -348,6 +439,7 @@ export function canMarry(
         family.children?.some(
 
             child =>
+
                 child.id === userId
 
         )
@@ -365,6 +457,7 @@ export function canMarry(
         family.parents?.some(
 
             parent =>
+
                 parent.id === userId
 
         )
@@ -382,6 +475,7 @@ export function canMarry(
         family.siblings?.some(
 
             sibling =>
+
                 sibling.id === userId
 
         )
