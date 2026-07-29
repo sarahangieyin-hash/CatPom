@@ -39,21 +39,73 @@ export async function calculateLayout(
 
 
 
-    const centerX = 900;
+    /*
+        ESPACIADO DINÁMICO
+
+        Pocas personas = compacto.
+        Muchas personas = se separa.
+    */
+
+
+    const memberSpacing =
+        Math.max(
+            150,
+            Math.min(
+                280,
+                120 + members.length * 35
+            )
+        );
+
+
+
+    const childSpacing =
+        Math.max(
+            150,
+            Math.min(
+                250,
+                120 + children.length * 20
+            )
+        );
+
+
+
+    const parentSpacing =
+        Math.max(
+            180,
+            Math.min(
+                300,
+                150 + parents.length * 30
+            )
+        );
+
+
+
+    const centerX =
+        Math.max(
+            600,
+            (
+                Math.max(
+                    members.length,
+                    2
+                )
+                *
+                memberSpacing
+            ) / 2
+            +
+            200
+        );
+
+
 
 
 
     /*
-        MATRIMONIOS 💍
+        PERSONAS PRINCIPALES 💍
 
-        Persona - anillo - persona - anillo - persona
+        Siempre horizontal:
 
-        El espacio del anillo se reserva aquí.
+        Persona - anillo - Persona - anillo - Persona
     */
-
-
-    const memberSpacing = 260;
-
 
 
     members.forEach(
@@ -82,7 +134,6 @@ export async function calculateLayout(
                 y:
                     300
 
-
             });
 
 
@@ -97,7 +148,7 @@ export async function calculateLayout(
     /*
         HIJOS 👶
 
-        Siempre debajo de la unión familiar.
+        Siempre debajo.
     */
 
 
@@ -123,12 +174,11 @@ export async function calculateLayout(
                         (children.length - 1) / 2
                     )
                     *
-                    220,
+                    childSpacing,
 
 
                 y:
                     650
-
 
             });
 
@@ -144,7 +194,7 @@ export async function calculateLayout(
     /*
         PADRES 👨‍👩‍👧
 
-        Encima de la pareja.
+        Encima.
     */
 
 
@@ -170,12 +220,11 @@ export async function calculateLayout(
                         (parents.length - 1) / 2
                     )
                     *
-                    260,
+                    parentSpacing,
 
 
                 y:
                     80
-
 
             });
 
@@ -191,7 +240,7 @@ export async function calculateLayout(
     /*
         HERMANOS 👥
 
-        A un lado.
+        Lateral.
     */
 
 
@@ -211,13 +260,13 @@ export async function calculateLayout(
 
 
                 x:
-                    200 +
-                    index * 240,
+                    150 +
+                    index *
+                    220,
 
 
                 y:
                     300
-
 
             });
 
@@ -234,11 +283,19 @@ export async function calculateLayout(
 
 
         width:
-            1800,
+            Math.max(
+                1200,
+                members.length * memberSpacing + 500
+            ),
+
 
 
         height:
-            1100,
+            Math.max(
+                900,
+                children.length * 80 + 900
+            ),
+
 
 
         guild,
