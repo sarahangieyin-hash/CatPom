@@ -42,8 +42,7 @@ export default {
                 content:
                     '❌ La solicitud de unión ya no existe.',
 
-                ephemeral:
-                    true
+                ephemeral: true
 
             });
 
@@ -60,8 +59,7 @@ export default {
                 content:
                     '❌ Esta solicitud no es para ti.',
 
-                ephemeral:
-                    true
+                ephemeral: true
 
             });
 
@@ -116,18 +114,41 @@ export default {
 
             );
 
+            const miembros =
+                updated.members.map(
+                    id => `<@${id}>`
+                );
+
+            let lista;
+
+            if (miembros.length === 2) {
+
+                lista =
+                    `${miembros[0]} y ${miembros[1]}`;
+
+            } else {
+
+                lista =
+                    miembros
+                        .slice(0, -1)
+                        .join(', ') +
+                    ' y ' +
+                    miembros.at(-1);
+
+            }
+
             const embed =
                 new EmbedBuilder()
 
                     .setTitle(
-                        '💍 ¡Se han casado!'
+                        '🎉💍 ¡Felicidades! ¡Estáis casados!'
                     )
 
                     .setDescription(
 
-                        updated.members
-                            .map(id => `<@${id}>`)
-                            .join(' ❤️ ')
+                        `❤️ ${lista} ahora forman una unión.\n\n` +
+
+                        '✨ Que vuestro vínculo dure para siempre ✨'
 
                     )
 
@@ -154,7 +175,7 @@ export default {
         }
 
         /*
-            AÚN FALTA GENTE
+            TODAVÍA FALTA GENTE
         */
 
         const restantes =
@@ -162,15 +183,6 @@ export default {
             updated.accepted.length;
 
         await interaction.deferUpdate();
-
-        await interaction.followUp({
-
-            content:
-                '✅ Has aceptado la unión.',
-
-            ephemeral: true
-
-        });
 
         await interaction.channel.send({
 
@@ -181,8 +193,6 @@ export default {
                 `⏳ Esperando a **${restantes}** persona(s) más.`
 
         });
-
-        return;
 
     }
 
