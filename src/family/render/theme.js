@@ -1,34 +1,127 @@
 export const familyTheme = {
 
-    background: '#111111',
+
+    /*
+        FONDO DEL ÁRBOL 🌳
+
+        El renderer usará este color
+        cuando no haya imagen.
+    */
+
+    background:
+        '#111111',
 
 
-    marriageLine: '#ffffff',
+
+    /*
+        TAMAÑO BASE DEL FONDO
+
+        Se usa como referencia.
+        El tamaño real aumenta según
+        los miembros del árbol.
+    */
 
 
-    childLine: '#ffffff',
+    backgroundSize: {
+
+        minWidth:
+            1600,
 
 
-    memberNode: '#ffd166',
+        minHeight:
+            1000,
 
 
-    childNode: '#7ec8ff',
+        memberGrowth:
+            180,
 
 
-    border: '#ffffff',
+        childGrowth:
+            120
+
+    },
 
 
-    text: '#ffffff',
+
+
+
+    /*
+        LÍNEAS
+    */
+
+
+    marriageLine:
+        '#ffffff',
+
+
+    childLine:
+        '#ffffff',
+
+
+
+
+
+    /*
+        NODOS
+    */
+
+
+    memberNode:
+        '#ffd166',
+
+
+    childNode:
+        '#7ec8ff',
+
+
+    parentNode:
+        '#ff9f9f',
+
+
+    siblingNode:
+        '#c77dff',
+
+
+
+
+
+    /*
+        BORDE Y TEXTO
+    */
+
+
+    border:
+        '#ffffff',
+
+
+    text:
+        '#ffffff',
+
+
+
+
+
+    /*
+        ICONOS
+    */
 
 
     icons: {
 
-        marriage: '💍',
 
-        lover: '🔥',
+        marriage:
+            '💍',
 
-        child: '👶'
+
+        lover:
+            '🔥',
+
+
+        child:
+            '👶'
+
 
     }
+
 
 };
