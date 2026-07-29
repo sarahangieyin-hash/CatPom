@@ -5,58 +5,81 @@ import {
 } from '../../family/requests/familyRequests.js';
 
 import {
-    createFamily,
-    getFamilyByMember
+    createFamily
 } from '../../utils/families.js';
+
 
 
 export default {
 
+
     customId: 'accept_marriage',
 
 
-    async execute(interaction, client, args) {
+
+    async execute(
+        interaction,
+        client,
+        args
+    ) {
 
 
-        const requestId = args[0];
+        const requestId =
+            args[0];
+
 
 
         const request =
+
             await getFamilyRequest(
+
                 interaction.guild.id,
+
                 requestId
+
             );
 
 
+
         if (!request) {
+
 
             return interaction.reply({
 
                 content:
                     '❌ Esta solicitud ya no existe.',
 
-                ephemeral: true
+                ephemeral:
+                    true
 
             });
+
 
         }
 
 
 
         if (
+
             !request.members.includes(
+
                 interaction.user.id
+
             )
+
         ) {
+
 
             return interaction.reply({
 
                 content:
                     '❌ No formas parte de esta solicitud.',
 
-                ephemeral: true
+                ephemeral:
+                    true
 
             });
+
 
         }
 
@@ -75,6 +98,7 @@ export default {
 
 
         const updated =
+
             await getFamilyRequest(
 
                 interaction.guild.id,
@@ -85,105 +109,46 @@ export default {
 
 
 
-        const allAccepted =
+        const acceptedAll =
+
             updated.members.every(
-                member =>
-                    updated.accepted.includes(member)
+
+                id =>
+
+                    updated.accepted.includes(id)
+
             );
 
 
 
-        if (!allAccepted) {
+        if (!acceptedAll) {
+
 
             return interaction.reply({
 
                 content:
+
                     '✅ Has aceptado. Esperando al resto de personas.',
 
-                ephemeral: true
+                ephemeral:
+                    true
 
             });
+
 
         }
 
 
 
-        const alreadyInFamily =
-            await Promise.any(
+        const family =
 
-                updated.members.map(
-                    async member => {
-
-                        return await getFamilyByMember(
-
-                            interaction.guild.id,
-
-                            member
-
-                        );
-
-                    }
-
-                )
-
-            ).catch(
-                () => null
-            );
-
-
-
-        if (alreadyInFamily) {
-
-            await deleteFamilyRequest(
+            await createFamily(
 
                 interaction.guild.id,
 
-                requestId
+                updated.members
 
             );
-
-
-            return interaction.update({
-
-                content:
-                    '❌ Alguien ya pertenece a una unión.',
-
-                embeds: [],
-
-                components: []
-
-            });
-
-        }
-
-
-
-        const unionId =
-            `union_${Date.now()}`;
-
-
-
-        await createFamily(
-
-            interaction.guild.id,
-
-            unionId,
-
-            {
-
-                members:
-                    updated.members,
-
-                children: [],
-
-                lovers: [],
-
-                createdBy:
-                    updated.creator
-
-            }
-
-        );
 
 
 
@@ -201,11 +166,13 @@ export default {
 
             content:
 
-                `💍 Unión creada entre ${updated.members.map(id => `<@${id}>`).join(', ')}.`,
+                `💍 Unión creada entre ${family.members.map(id => `<@${id}>`).join(', ')}.`,
 
-            embeds: [],
+            embeds:
+                [],
 
-            components: []
+            components:
+                []
 
         });
 
