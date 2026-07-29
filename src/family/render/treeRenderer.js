@@ -25,7 +25,6 @@ export async function renderFamilyTree(
     family
 ) {
 
-
     const layout =
         await calculateLayout(
             guild,
@@ -33,9 +32,7 @@ export async function renderFamilyTree(
         );
 
 
-
     const scale = 2;
-
 
 
     const width =
@@ -52,7 +49,6 @@ export async function renderFamilyTree(
         );
 
 
-
     const canvas =
         createCanvas(
             width * scale,
@@ -60,12 +56,8 @@ export async function renderFamilyTree(
         );
 
 
-
     const ctx =
-        canvas.getContext(
-            '2d'
-        );
-
+        canvas.getContext('2d');
 
 
     ctx.scale(
@@ -74,10 +66,7 @@ export async function renderFamilyTree(
     );
 
 
-
-    ctx.fillStyle =
-        '#111111';
-
+    ctx.fillStyle = '#111111';
 
 
     ctx.fillRect(
@@ -86,18 +75,15 @@ export async function renderFamilyTree(
         width,
         height
     );
-
 
 
     ctx.imageSmoothingEnabled = true;
 
 
-
     await drawLines(
         ctx,
         layout
     );
-
 
 
     await drawNodes(
@@ -106,126 +92,14 @@ export async function renderFamilyTree(
     );
 
 
-
     await drawIcons(
         ctx,
         layout
     );
-
 
 
     return canvas.toBuffer(
         'image/png'
     );
-
-}import {
-    createCanvas
-} from 'canvas';
-
-import {
-    calculateLayout
-} from './layout.js';
-
-import {
-    drawNodes
-} from './drawNodes.js';
-
-import {
-    drawLines
-} from './drawLines.js';
-
-import {
-    drawIcons
-} from './drawIcons.js';
-
-
-
-export async function renderFamilyTree(
-    guild,
-    family
-) {
-
-
-    const layout =
-        await calculateLayout(
-            guild,
-            family
-        );
-
-
-
-    const width =
-        Math.max(
-            1200,
-            layout.width
-        );
-
-
-    const height =
-        Math.max(
-            800,
-            layout.height
-        );
-
-
-
-    const canvas =
-        createCanvas(
-            width,
-            height
-        );
-
-
-    const ctx =
-        canvas.getContext(
-            '2d'
-        );
-
-
-
-    ctx.fillStyle =
-        '#111111';
-
-
-    ctx.fillRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-
-
-    await drawLines(
-
-        ctx,
-
-        layout
-
-    );
-
-
-
-    await drawNodes(
-
-        ctx,
-
-        layout
-
-    );
-
-
-
-    await drawIcons(
-
-        ctx,
-
-        layout
-
-    );
-
-
-
-    return canvas.toBuffer();
 
 }
