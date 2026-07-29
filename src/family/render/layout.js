@@ -39,9 +39,19 @@ export async function calculateLayout(
 
 
 
+
+
+    /*
+        ESPACIADO DINÁMICO
+
+        Crece solo cuando hay más personas.
+    */
+
+
     const memberSpacing =
+
         Math.max(
-            160,
+            150,
             Math.min(
                 260,
                 150 + members.length * 25
@@ -51,8 +61,9 @@ export async function calculateLayout(
 
 
     const childSpacing =
+
         Math.max(
-            160,
+            150,
             Math.min(
                 240,
                 150 + children.length * 25
@@ -62,8 +73,9 @@ export async function calculateLayout(
 
 
     const parentSpacing =
+
         Math.max(
-            180,
+            170,
             Math.min(
                 280,
                 170 + parents.length * 25
@@ -72,7 +84,8 @@ export async function calculateLayout(
 
 
 
-    const centerY = 300;
+    const centerY =
+        250;
 
 
 
@@ -128,9 +141,7 @@ export async function calculateLayout(
 
 
     if (
-
         members.length >= 2
-
     ) {
 
 
@@ -219,8 +230,7 @@ export async function calculateLayout(
 
                 y:
 
-                    centerY +
-                    380
+                    centerY + 350
 
 
             });
@@ -236,6 +246,9 @@ export async function calculateLayout(
 
     /*
         PADRES
+
+        Solo ocupan espacio arriba
+        si realmente existen.
     */
 
 
@@ -266,7 +279,7 @@ export async function calculateLayout(
 
                 y:
 
-                    80
+                    centerY - 220
 
 
             });
@@ -303,7 +316,7 @@ export async function calculateLayout(
                 x:
 
                     -250 -
-                    index * 200,
+                    index * 180,
 
 
                 y:
@@ -323,7 +336,7 @@ export async function calculateLayout(
 
 
     /*
-        CALCULAR LIMITES REALES
+        LIMITES REALES
     */
 
 
@@ -400,57 +413,71 @@ export async function calculateLayout(
 
 
 
-    const boxSize = 120;
-
-
-
-    /*
-        ANCHO ESTRECHO
-
-        Usa solamente el tamaño real
-        del contenido.
-    */
-
-
-    const contentWidth =
-
-        maxX -
-        minX;
-
-
-
-    const width =
-
-        contentWidth +
-        boxSize +
+    const boxSize =
         120;
 
 
 
+    const marginX =
+        200;
+
+
+    const marginY =
+        150;
+
+
+
 
 
     /*
-        ALTURA SIN CAMBIAR
+        TAMAÑO FINAL
+
+        Solo crece según familia.
     */
+
+
+    const width =
+
+        Math.max(
+
+            900,
+
+            (
+                maxX -
+                minX
+            )
+            +
+            boxSize
+            +
+            marginX
+
+        );
+
 
 
     const height =
 
-        (
-            maxY -
-            minY
-        )
-        +
-        boxSize
-        +
-        1000;
+        Math.max(
+
+            700,
+
+            (
+                maxY -
+                minY
+            )
+            +
+            boxSize
+            +
+            marginY
+
+        );
 
 
 
 
 
     /*
-        CENTRADO HORIZONTAL
+        CENTRADO REAL
     */
 
 
@@ -458,7 +485,11 @@ export async function calculateLayout(
 
         (
             width -
-            contentWidth
+            (
+                maxX -
+                minX
+            )
+
         )
         /
         2
@@ -469,8 +500,20 @@ export async function calculateLayout(
 
     const offsetY =
 
-        100 -
+        (
+            height -
+            (
+                maxY -
+                minY
+            )
+
+        )
+        /
+        2
+        -
         minY;
+
+
 
 
 
