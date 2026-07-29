@@ -3,6 +3,7 @@ import { logger } from '../utils/logger.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
 
 export default {
+
     name: Events.InteractionCreate,
 
     async execute(interaction, client) {
@@ -11,11 +12,13 @@ export default {
 
             if (interaction.isChatInputCommand()) {
 
-                const command = client.commands.get(
-                    interaction.commandName
-                );
+                const command =
+                    client.commands.get(
+                        interaction.commandName
+                    );
 
-                if (!command) return;
+                if (!command)
+                    return;
 
                 await command.execute(
                     interaction,
@@ -23,34 +26,90 @@ export default {
                 );
 
                 return;
+
             }
 
 
             if (interaction.isButton()) {
 
-                const [customId, ...args] =
-                    interaction.customId.split(':');
+                let customId =
+                    interaction.customId;
+
+                let args = [];
+
+
+                if (
+                    customId.startsWith(
+                        'accept_adoption_'
+                    )
+                ) {
+
+                    customId =
+                        'accept_adoption';
+
+                    args =
+                        interaction.customId
+                            .replace(
+                                'accept_adoption_',
+                                ''
+                            )
+                            .split('_');
+
+                }
+
+                else if (
+                    customId.startsWith(
+                        'reject_adoption_'
+                    )
+                ) {
+
+                    customId =
+                        'reject_adoption';
+
+                    args =
+                        interaction.customId
+                            .replace(
+                                'reject_adoption_',
+                                ''
+                            )
+                            .split('_');
+
+                }
+
+                else {
+
+                    [
+                        customId,
+                        ...args
+                    ] =
+                        interaction.customId
+                            .split(':');
+
+                }
 
 
                 console.log(
-                    "BOTON:",
+                    'BOTON:',
                     customId,
                     args
                 );
 
 
                 const button =
-                    client.buttons.get(customId);
+                    client.buttons.get(
+                        customId
+                    );
 
 
                 if (!button) {
 
                     console.log(
-                        "BOTON NO ENCONTRADO:",
+                        'BOTON NO ENCONTRADO:',
                         customId
                     );
 
                     return;
+
                 }
 
 
@@ -61,20 +120,30 @@ export default {
                 );
 
                 return;
+
             }
 
 
-            if (interaction.isStringSelectMenu()) {
+            if (
+                interaction.isStringSelectMenu()
+            ) {
 
-                const [customId, ...args] =
-                    interaction.customId.split(':');
+                const [
+                    customId,
+                    ...args
+                ] =
+                    interaction.customId
+                        .split(':');
 
 
                 const menu =
-                    client.selectMenus.get(customId);
+                    client.selectMenus.get(
+                        customId
+                    );
 
 
-                if (!menu) return;
+                if (!menu)
+                    return;
 
 
                 await menu.execute(
@@ -84,10 +153,12 @@ export default {
                 );
 
                 return;
+
             }
 
+        }
 
-        } catch (error) {
+        catch (error) {
 
             logger.error(
                 'Interaction error:',
@@ -95,7 +166,9 @@ export default {
             );
 
 
-            if (!interaction.replied) {
+            if (
+                !interaction.replied
+            ) {
 
                 await handleInteractionError(
                     interaction,
@@ -107,4 +180,5 @@ export default {
         }
 
     }
+
 };
