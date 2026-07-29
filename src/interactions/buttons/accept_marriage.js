@@ -1,38 +1,39 @@
 import {
-    getFromDb,
-    setInDb
-} from '../../utils/database/wrapper.js';
+    acceptFamilyRequest,
+    getFamilyRequest
+} from '../../family/requests/familyRequests.js';
 
 import {
-    updateFamily
+    createFamily
 } from '../../utils/families.js';
+
 
 
 export default {
 
-    customId: 'accept_marriage:marriage',
+    customId: 'accept_marriage',
 
 
     async execute(interaction, client, args) {
 
 
-        const familyId =
+        const requestId =
             args[0];
 
 
 
-        const family =
-            await getFromDb(
+        const request =
+            await getFamilyRequest(
 
-                `family:${interaction.guild.id}:${familyId}`,
+                interaction.guild.id,
 
-                null
+                requestId
 
             );
 
 
 
-        if (!family) {
+        if (!request) {
 
             return interaction.reply({
 
@@ -48,41 +49,80 @@ export default {
 
 
 
-        if (
-            !family.members.includes(
-                interaction.user.id
-            )
-        ) {
-
-            family.members.push(
-
-                interaction.user.id
-
-            );
-
-        }
-
-
-
-        await updateFamily(
+        await acceptFamilyRequest(
 
             interaction.guild.id,
 
-            family.id,
+            requestId,
 
-            family
-
-        );
-
-
-
-        await setInDb(
-
-            `familyMember:${interaction.guild.id}:${interaction.user.id}`,
-
-            family.id
+            interaction.user.id
 
         );
+
+
+
+        const updated =
+            await getFamilyRequest(
+
+                interaction.guild.id,
+
+                requestId
+
+            );
+
+
+
+        const allAccepted =
+            updated.members.every(
+
+                id =>
+                    updated.accepted.includes(id)
+
+            );
+
+
+
+        if (allAccepted) {
+
+
+            const family =
+                await createFamily(
+
+                    interaction.guild.id,
+
+                    {
+
+                        members:
+                            updated.members,
+
+                        lovers:
+                            [],
+
+                        parents:
+                            [],
+
+                        children:
+                            []
+
+                    }
+
+                );
+
+
+
+            await interaction.update({
+
+                content:
+                    '💍 Unión aceptada correctamente.',
+
+                components: []
+
+            });
+
+
+            return;
+
+        }
 
 
 
