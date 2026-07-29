@@ -1,11 +1,12 @@
 import {
-    SlashCommandBuilder
+    SlashCommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle
 } from 'discord.js';
 
 import {
-    getFamilyByMember,
-    createFamily,
-    updateFamily
+    getFamilyByMember
 } from '../../utils/families.js';
 
 
@@ -15,12 +16,12 @@ export default {
 
         .setName('adopt')
 
-        .setDescription('Adopta una persona.')
+        .setDescription('Solicita adoptar a una persona.')
 
         .addUserOption(option =>
             option
                 .setName('persona')
-                .setDescription('Persona que será adoptada')
+                .setDescription('Persona que quieres adoptar')
                 .setRequired(true)
         ),
 
@@ -42,7 +43,7 @@ export default {
                 content:
                     '❌ No puedes adoptarte a ti mismo.',
 
-                ephemeral: true
+                ephemeral:true
 
             });
 
@@ -50,170 +51,49 @@ export default {
 
 
 
-        let family =
-            await getFamilyByMember(
+        const buttons =
+            new ActionRowBuilder()
+                .addComponents(
 
-                interaction.guild.id,
+                    new ButtonBuilder()
 
-                interaction.user.id
+                        .setCustomId(
+                            `accept_adoption_${interaction.user.id}_${child.id}`
+                        )
 
-            );
+                        .setLabel('Aceptar')
+
+                        .setStyle(
+                            ButtonStyle.Success
+                        ),
 
 
+                    new ButtonBuilder()
 
-        let individualFamily = false;
+                        .setCustomId(
+                            `reject_adoption_${interaction.user.id}_${child.id}`
+                        )
 
+                        .setLabel('Rechazar')
 
-
-        if (!family) {
-
-            family =
-                await createFamily(
-
-                    interaction.guild.id,
-
-                    [
-                        interaction.user.id
-                    ]
+                        .setStyle(
+                            ButtonStyle.Danger
+                        )
 
                 );
 
-            individualFamily = true;
-
-        }
 
 
+        await interaction.reply({
 
-        if (
-            family.members.includes(
-                child.id
-            )
-        ) {
+            content:
+                `👶 ${interaction.user} quiere adoptarte como hijo/a, ${child}.\n\n¿Aceptas la adopción?`,
 
-            return interaction.reply({
-
-                content:
-                    '❌ Esa persona ya pertenece a la familia.',
-
-                ephemeral: true
-
-            });
-
-        }
-
-
-
-        if (
-            !Array.isArray(
-                family.children
-            )
-        ) {
-
-            family.children = [];
-
-        }
-
-
-
-        const adoptedByUser =
-            family.children.filter(
-
-                childData =>
-                    childData.parent === interaction.user.id
-
-            );
-
-
-
-        if (
-            adoptedByUser.length >= 5
-        ) {
-
-            return interaction.reply({
-
-                content:
-                    '❌ Solo puedes adoptar hasta 5 hijos.',
-
-                ephemeral: true
-
-            });
-
-        }
-
-
-
-        if (
-            family.children.some(
-
-                childData =>
-                    childData.id === child.id
-
-            )
-        ) {
-
-            return interaction.reply({
-
-                content:
-                    '❌ Esa persona ya es hija de esta familia.',
-
-                ephemeral: true
-
-            });
-
-        }
-
-
-
-        family.children.push({
-
-            id:
-                child.id,
-
-            parent:
-                interaction.user.id,
-
-            adoptedAt:
-                Date.now()
+            components:[
+                buttons
+            ]
 
         });
-
-
-
-        if (
-            !family.members.includes(
-                child.id
-            )
-        ) {
-
-            family.members.push(
-                child.id
-            );
-
-        }
-
-
-
-        await updateFamily(
-
-            interaction.guild.id,
-
-            family.id,
-
-            family
-
-        );
-
-
-
-        await interaction.reply(
-
-            individualFamily
-
-                ? `👶 ${child} ha sido adoptado/a por ti.`
-
-                : `👶 ${child} ha sido adoptado/a por la familia.`
-
-        );
 
 
     }
