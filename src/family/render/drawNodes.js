@@ -81,7 +81,7 @@ export async function drawNodes(
 
 
         ctx.font =
-            'bold 18px "Noto Sans", "DejaVu Sans", Arial, sans-serif';
+            'bold 18px "DejaVu Sans"';
 
 
 
@@ -95,19 +95,9 @@ export async function drawNodes(
 
 
 
-        const cleanName =
-            username
-                .replace(
-                    /[^\p{L}\p{N}_-]/gu,
-                    ''
-                )
-                .trim();
-
-
-
         ctx.fillText(
 
-            cleanName || 'Usuario',
+            username,
 
             node.x,
 
