@@ -11,7 +11,9 @@ import {
 } from '../../family/render/treeRenderer.js';
 
 
+
 export default {
+
 
     data: new SlashCommandBuilder()
 
@@ -24,97 +26,154 @@ export default {
     async execute(interaction) {
 
 
-        const family =
-            await getFamilyByMember(
+        try {
 
-                interaction.guild.id,
 
-                interaction.user.id
+            const family =
+                await getFamilyByMember(
 
+                    interaction.guild.id,
+
+                    interaction.user.id
+
+                );
+
+
+
+            if (!family) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ No tienes familia.',
+
+                    ephemeral:
+                        true
+
+                });
+
+            }
+
+
+
+            const hasFamily =
+
+                (family.members?.length > 1) ||
+
+                (family.children?.length > 0) ||
+
+                (family.parents?.length > 0) ||
+
+                (family.siblings?.length > 0) ||
+
+                (family.lovers?.length > 0);
+
+
+
+            if (!hasFamily) {
+
+                return interaction.reply({
+
+                    content:
+                        '❌ No tienes familia.',
+
+                    ephemeral:
+                        true
+
+                });
+
+            }
+
+
+
+            await interaction.deferReply();
+
+
+
+            console.log(
+                "GENERANDO TREE:",
+                JSON.stringify(family, null, 2)
             );
 
 
 
-        if (!family) {
+            const image =
+                await renderFamilyTree(
 
-            return interaction.reply({
+                    interaction.guild,
 
-                content:
-                    '❌ No tienes familia.',
+                    family
 
-                ephemeral:
-                    true
-
-            });
-
-        }
+                );
 
 
 
-        const hasFamily =
+            await interaction.editReply({
 
-            (family.members?.length > 1) ||
+                files: [
 
-            (family.children?.length > 0) ||
+                    {
 
-            (family.parents?.length > 0) ||
+                        attachment:
+                            image,
 
-            (family.siblings?.length > 0) ||
+                        name:
+                            'arbol-familiar.png'
 
-            (family.lovers?.length > 0);
+                    }
 
-
-
-        if (!hasFamily) {
-
-            return interaction.reply({
-
-                content:
-                    '❌ No tienes familia.',
-
-                ephemeral:
-                    true
+                ]
 
             });
 
-        }
 
 
-
-        await interaction.deferReply();
-
+        } catch(error) {
 
 
-        const image =
-            await renderFamilyTree(
-
-                interaction.guild,
-
-                family
-
+            console.error(
+                "ERROR GENERANDO TREE:",
+                error
             );
 
 
 
-        await interaction.editReply({
+            if (
+                interaction.deferred
+            ) {
 
-            files: [
 
-                {
+                await interaction.editReply({
 
-                    attachment:
-                        image,
+                    content:
+                        "❌ Error generando árbol: " +
+                        error.message
 
-                    name:
-                        'arbol-familiar.png'
+                });
 
-                }
 
-            ]
+            } else {
 
-        });
+
+                await interaction.reply({
+
+                    content:
+                        "❌ Error generando árbol: " +
+                        error.message,
+
+                    ephemeral:
+                        true
+
+                });
+
+
+            }
+
+
+        }
 
 
     }
+
 
 };
