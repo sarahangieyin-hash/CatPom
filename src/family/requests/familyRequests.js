@@ -20,6 +20,24 @@ export async function createFamilyRequest(
     data
 ) {
 
+    const request = {
+
+        id,
+
+        ...data,
+
+        accepted:
+            data.accepted || [],
+
+        rejected:
+            data.rejected || [],
+
+        createdAt:
+            Date.now()
+
+    };
+
+
     await setInDb(
 
         requestKey(
@@ -27,34 +45,12 @@ export async function createFamilyRequest(
             id
         ),
 
-        {
-
-            id,
-
-            ...data,
-
-            accepted: [],
-
-            rejected: [],
-
-            createdAt: Date.now()
-
-        }
+        request
 
     );
 
 
-    return {
-
-        id,
-
-        ...data,
-
-        accepted: [],
-
-        rejected: []
-
-    };
+    return request;
 
 }
 
@@ -114,8 +110,10 @@ export async function acceptFamilyRequest(
 
     request.rejected =
         request.rejected.filter(
+
             id =>
                 id !== userId
+
         );
 
 
@@ -217,7 +215,9 @@ export async function getAllFamilyRequests(
 
 
     return requests.map(
+
         request => {
+
 
             if (request.value) {
 
