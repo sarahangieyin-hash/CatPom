@@ -1,18 +1,14 @@
 import {
-    acceptFamilyRequest,
-    getFamilyRequest
+    getFamilyRequest,
+    deleteFamilyRequest
 } from '../../family/requests/familyRequests.js';
-
-import {
-    createFamily
-} from '../../utils/families.js';
 
 
 
 export default {
 
     customId:
-        'accept_marriage',
+        'reject_marriage',
 
 
 
@@ -75,75 +71,23 @@ export default {
 
 
 
-        await acceptFamilyRequest(
+        await deleteFamilyRequest(
 
             interaction.guild.id,
 
-            requestId,
-
-            interaction.user.id
+            requestId
 
         );
-
-
-
-        const updated =
-            await getFamilyRequest(
-
-                interaction.guild.id,
-
-                requestId
-
-            );
-
-
-
-        const allAccepted =
-            updated.members.every(
-
-                id =>
-                    updated.accepted.includes(
-                        id
-                    )
-
-            );
-
-
-
-        if (allAccepted) {
-
-
-            await createFamily(
-
-                interaction.guild.id,
-
-                updated.members
-
-            );
-
-
-
-            await interaction.update({
-
-                content:
-                    '💍 Unión creada correctamente.',
-
-                components:
-                    []
-
-            });
-
-
-            return;
-
-        }
 
 
 
         await interaction.update({
 
             content:
-                `💍 <@${interaction.user.id}> ha aceptado la unión.`,
+                `❌ <@${interaction.user.id}> ha rechazado la unión.`,
+
+            embeds:
+                [],
 
             components:
                 []
