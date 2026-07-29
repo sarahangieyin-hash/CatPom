@@ -1,17 +1,16 @@
 import {
-    getFamilyByMember,
-    createFamily,
-    updateFamily
-} from '../../utils/families.js';
-
-import {
+    getFromDb,
     setInDb
 } from '../../utils/database/wrapper.js';
+
+import {
+    updateFamily
+} from '../../utils/families.js';
 
 
 export default {
 
-    customId: 'accept_marriage',
+    customId: 'accept_marriage:marriage',
 
 
     async execute(interaction, client, args) {
@@ -23,33 +22,6 @@ export default {
 
 
         const family =
-            await getFamilyByMember(
-
-                interaction.guild.id,
-
-                interaction.user.id
-
-            );
-
-
-
-        if (family) {
-
-            return interaction.reply({
-
-                content:
-                    '❌ Ya perteneces a una familia.',
-
-                ephemeral:
-                    true
-
-            });
-
-        }
-
-
-
-        const requestFamily =
             await getFromDb(
 
                 `family:${interaction.guild.id}:${familyId}`,
@@ -60,7 +32,7 @@ export default {
 
 
 
-        if (!requestFamily) {
+        if (!family) {
 
             return interaction.reply({
 
@@ -77,12 +49,12 @@ export default {
 
 
         if (
-            !requestFamily.members.includes(
+            !family.members.includes(
                 interaction.user.id
             )
         ) {
 
-            requestFamily.members.push(
+            family.members.push(
 
                 interaction.user.id
 
@@ -96,9 +68,9 @@ export default {
 
             interaction.guild.id,
 
-            requestFamily.id,
+            family.id,
 
-            requestFamily
+            family
 
         );
 
@@ -108,7 +80,7 @@ export default {
 
             `familyMember:${interaction.guild.id}:${interaction.user.id}`,
 
-            requestFamily.id
+            family.id
 
         );
 
