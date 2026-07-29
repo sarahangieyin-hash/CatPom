@@ -13,11 +13,17 @@ export default {
     async execute(interaction, client, args) {
 
 
-        const id = args[0];
+        const requestId = args[0];
 
 
         const request =
-            getFamilyRequest(id);
+            await getFamilyRequest(
+
+                interaction.guild.id,
+
+                requestId
+
+            );
 
 
 
@@ -45,7 +51,7 @@ export default {
             return interaction.reply({
 
                 content:
-                    '❌ No formas parte de esta unión.',
+                    '❌ No formas parte de esta solicitud.',
 
                 ephemeral: true
 
@@ -55,13 +61,25 @@ export default {
 
 
 
-        rejectFamilyRequest(
-            id,
+        await rejectFamilyRequest(
+
+            interaction.guild.id,
+
+            requestId,
+
             interaction.user.id
+
         );
 
 
-        deleteFamilyRequest(id);
+
+        await deleteFamilyRequest(
+
+            interaction.guild.id,
+
+            requestId
+
+        );
 
 
 
