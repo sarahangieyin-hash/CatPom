@@ -10,379 +10,304 @@ import { loadCommands, registerCommands as registerSlashCommands } from './handl
 import { handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import pkg from '../package.json' with { type: 'json' };
 
-
 console.log("APP STARTED");
 
 const BOT_TOKEN =
-  process.env.DISCORD_TOKEN ||
-  process.env.TOKEN;
+process.env.DISCORD_TOKEN ||
+process.env.TOKEN;
 
 const CLIENT_ID =
-  process.env.CLIENT_ID;
-
+process.env.CLIENT_ID;
 
 console.log(
-  "TOKEN EXISTS:",
-  Boolean(BOT_TOKEN)
+"TOKEN EXISTS:",
+Boolean(BOT_TOKEN)
 );
 
 console.log(
-  "CLIENT ID EXISTS:",
-  Boolean(CLIENT_ID)
+"CLIENT ID EXISTS:",
+Boolean(CLIENT_ID)
 );
-
-
 
 class CatPom extends Client {
 
-  constructor() {
+constructor() {
 
-    super({
+```
+super({
 
-      intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-      ],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
 
-    });
+});
 
+this.config = config;
 
-    this.config = config;
+this.commands = new Collection();
+this.buttons = new Collection();
+this.selectMenus = new Collection();
 
+// 🔥 SISTEMA DE FAMILIAS
+this.family = {
+  graph: null,
+  managers: {}
+};
 
-    this.commands = new Collection();
-    this.buttons = new Collection();
-    this.selectMenus = new Collection();
+this.db = null;
 
+this.rest = new REST({
+  version: '10'
+})
+.setToken(BOT_TOKEN);
+```
 
-    this.db = null;
+}
 
+async start() {
 
-    this.rest = new REST({
-      version: '10'
-    })
-    .setToken(BOT_TOKEN);
+```
+try {
 
-  }
+  startupLog('Starting CatPom...');
 
+  startupLog('Initializing database...');
+  const dbInstance = await initializeDatabase();
+  this.db = dbInstance.db;
 
+  startupLog('Loading commands...');
+  await loadCommands(this);
+  startupLog(`Commands loaded: ${this.commands.size}`);
 
-  async start() {
+  // 🔥 INICIALIZAR SISTEMA DE FAMILIAS
+  startupLog('Initializing family system...');
 
-    try {
+  const { FamilyGraph } = await import('./family/utils/graph.js');
+  const { FamilyManager } = await import('./family/managers/familyManager.js');
+  const { MarriageManager } = await import('./family/managers/marriageManager.js');
+  const { AdoptionManager } = await import('./family/managers/adoptionManager.js');
+  const { RelationshipManager } = await import('./family/managers/relationshipManager.js');
 
-      startupLog('Starting CatPom...');
+  this.family.graph = new FamilyGraph();
 
+  this.family.managers.family =
+    new FamilyManager(this.family.graph);
 
-      startupLog('Initializing database...');
+  this.family.managers.marriage =
+    new MarriageManager(this.family.graph);
 
-      const dbInstance =
-        await initializeDatabase();
+  this.family.managers.adoption =
+    new AdoptionManager(this.family.graph);
 
-      this.db = dbInstance.db;
+  this.family.managers.relationship =
+    new RelationshipManager(this.family.graph);
 
+  startupLog('Family system ready');
 
+  startupLog('Loading handlers...');
+  await this.loadHandlers();
 
-      startupLog('Loading commands...');
+  startupLog('Starting web server...');
+  this.startWebServer();
 
-      await loadCommands(this);
+  startupLog('Logging into Discord...');
+  await this.login(BOT_TOKEN);
 
-      startupLog(
-        `Commands loaded: ${this.commands.size}`
-      );
+  startupLog('Registering slash commands...');
+  await this.registerCommands();
 
+  startupLog(
+    `ONLINE ✅ | ${this.commands.size} commands | ${this.buttons.size} buttons | ${this.selectMenus.size} menus`
+  );
 
+} catch(error) {
 
-      startupLog('Loading handlers...');
+  logger.error('Failed to start bot:', error);
+  console.error(error);
+  process.exit(1);
 
-      await this.loadHandlers();
+}
+```
 
+}
 
+startWebServer() {
 
-      startupLog('Starting web server...');
+```
+const app = express();
 
-      this.startWebServer();
+const port =
+  Number(process.env.PORT || 3000);
 
+app.get('/', (req,res)=>{
+  res.json({
+    message:'CatPom online',
+    version:pkg.version,
+  });
+});
 
+app.get('/health',(req,res)=>{
+  res.json({
+    status:'healthy',
+    uptime:process.uptime(),
+  });
+});
 
-      startupLog('Logging into Discord...');
+this.webServer =
+  app.listen(port,()=>{
+    startupLog(
+      `Web server running on port ${port}`
+    );
+  });
+```
 
+}
 
-      await this.login(BOT_TOKEN);
+async loadHandlers(){
 
+```
+const handlers=[
+  'events',
+  'interactions'
+];
 
+for(const handler of handlers){
 
-      startupLog('Registering slash commands...');
-
-      await this.registerCommands();
-
-
-
-      startupLog(
-        `ONLINE ✅ | ${this.commands.size} commands loaded | ${this.buttons.size} buttons | ${this.selectMenus.size} menus`
-      );
-
-
-    } catch(error) {
-
-
-      logger.error(
-        'Failed to start bot:',
-        error
-      );
-
-
-      console.error(error);
-
-
-      process.exit(1);
-
-    }
-
-  }
-
-
-
-
-  startWebServer() {
-
-    const app = express();
-
-
-    const port =
-      Number(process.env.PORT || 3000);
-
-
-
-    app.get('/', (req,res)=>{
-
-      res.json({
-
-        message:'CatPom online',
-
-        version:pkg.version,
-
-      });
-
-    });
-
-
-
-    app.get('/health',(req,res)=>{
-
-      res.json({
-
-        status:'healthy',
-
-        uptime:process.uptime(),
-
-      });
-
-    });
-
-
-
-    this.webServer =
-      app.listen(port,()=>{
-
-        startupLog(
-          `Web server running on port ${port}`
-        );
-
-      });
-
-  }
-
-
-
-
-
-  async loadHandlers(){
-
-    const handlers=[
-      'events',
-      'interactions'
-    ];
-
-
-    for(const handler of handlers){
-
-      const module =
-        await import(
-          `./handlers/loaders/${handler}.js`
-        );
-
-
-      if(typeof module.default === 'function'){
-
-        await module.default(this);
-
-        startupLog(
-          `Loaded ${handler}`
-        );
-
-      }
-
-    }
-
-  }
-
-
-
-
-
-  async registerCommands(){
-
-    try{
-
-      await registerSlashCommands(
-        this,
-        {
-          clientId: CLIENT_ID
-        }
-      );
-
-
-    }catch(error){
-
-      logger.error(
-        'Command registration failed:',
-        error
-      );
-
-    }
-
-  }
-
-
-
-
-
-  async shutdown(reason='UNKNOWN'){
-
-    shutdownLog(
-      `CatPom shutting down: ${reason}`
+  const module =
+    await import(
+      `./handlers/loaders/${handler}.js`
     );
 
+  if(typeof module.default === 'function'){
 
-    try{
+    await module.default(this);
 
-
-      if(this.webServer){
-
-        this.webServer.close();
-
-      }
-
-
-
-      if(this.db?.db?.pool){
-
-        await this.db.db.pool.end();
-
-      }
-
-
-
-      this.destroy();
-
-      process.exit(0);
-
-
-
-    }catch(error){
-
-      logger.error(
-        'Shutdown error:',
-        error
-      );
-
-      process.exit(1);
-
-    }
+    startupLog(
+      `Loaded ${handler}`
+    );
 
   }
 
 }
+```
 
+}
 
+async registerCommands(){
 
+```
+try{
+
+  await registerSlashCommands(
+    this,
+    {
+      clientId: CLIENT_ID
+    }
+  );
+
+}catch(error){
+
+  logger.error(
+    'Command registration failed:',
+    error
+  );
+
+}
+```
+
+}
+
+async shutdown(reason='UNKNOWN'){
+
+```
+shutdownLog(
+  `CatPom shutting down: ${reason}`
+);
+
+try{
+
+  if(this.webServer){
+    this.webServer.close();
+  }
+
+  if(this.db?.db?.pool){
+    await this.db.db.pool.end();
+  }
+
+  this.destroy();
+  process.exit(0);
+
+}catch(error){
+
+  logger.error(
+    'Shutdown error:',
+    error
+  );
+
+  process.exit(1);
+
+}
+```
+
+}
+
+}
 
 const bot = new CatPom();
 
-
-
-
 process.on(
-  'SIGTERM',
-  ()=>bot.shutdown('SIGTERM')
+'SIGTERM',
+()=>bot.shutdown('SIGTERM')
 );
 
-
 process.on(
-  'SIGINT',
-  ()=>bot.shutdown('SIGINT')
+'SIGINT',
+()=>bot.shutdown('SIGINT')
 );
 
+process.on(
+'uncaughtException',
+error=>{
 
+```
+console.error('💥 UNCAUGHT EXCEPTION');
+console.error(error);
 
+handleTaskError(
+  'uncaught_exception',
+  error,
+  { fatal:true }
+);
+```
+
+}
+);
 
 process.on(
-  'uncaughtException',
-  error=>{
+'unhandledRejection',
+reason=>{
 
-    console.error(
-      '💥 UNCAUGHT EXCEPTION'
-    );
+```
+console.error('💥 UNHANDLED REJECTION');
+console.error(reason);
 
-    console.error(error);
-
-
-    handleTaskError(
-      'uncaught_exception',
-      error,
-      {
-        fatal:true
-      }
-    );
-
+handleTaskError(
+  'unhandled_rejection',
+  reason instanceof Error
+    ? reason
+    : new Error(String(reason)),
+  {
+    errorCode: ErrorCodes.UNHANDLED_REJECTION
   }
 );
+```
 
-
-
-
-process.on(
-  'unhandledRejection',
-  reason=>{
-
-    console.error(
-      '💥 UNHANDLED REJECTION'
-    );
-
-    console.error(reason);
-
-
-    handleTaskError(
-      'unhandled_rejection',
-      reason instanceof Error
-        ? reason
-        : new Error(String(reason)),
-      {
-        errorCode:
-          ErrorCodes.UNHANDLED_REJECTION
-      }
-    );
-
-  }
+}
 );
-
-
 
 bot.start();
-
-
 
 export default CatPom;
