@@ -13,6 +13,14 @@ export async function drawIcons(
         );
 
 
+    const union =
+        layout.nodes.find(
+
+            node =>
+                node.type === 'union'
+
+        );
+
 
     const lovers =
         layout.lovers || [];
@@ -34,39 +42,29 @@ export async function drawIcons(
 
 
     /*
-        💍 ICONO DE UNIÓN
+        💍 ICONO DE MATRIMONIO
+
+        Usa el nodo invisible union_main
+        que está colocado en medio.
     */
 
 
     if (
+        union &&
         members.length > 1
     ) {
-
-
-        const centerX =
-
-            members.reduce(
-
-                (sum,node) =>
-                    sum + node.x,
-
-                0
-
-            )
-            /
-            members.length;
-
 
 
         ctx.fillText(
 
             '💍',
 
-            centerX,
+            union.x,
 
-            members[0].y - 90
+            union.y
 
         );
+
 
     }
 
@@ -83,9 +81,11 @@ export async function drawIcons(
 
 
             if (
+
                 lovers.includes(
                     member.id
                 )
+
             ) {
 
 
