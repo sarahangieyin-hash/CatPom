@@ -14,14 +14,22 @@ export default {
     customId: 'accept_adoption',
 
 
+
     async execute(interaction) {
 
 
-        const [
-            ,
-            parentId,
-            childId
-        ] = interaction.customId.split('_');
+        const parts =
+            interaction.customId.split('_');
+
+
+
+        const parentId =
+            parts[2];
+
+
+
+        const childId =
+            parts[3];
 
 
 
@@ -34,7 +42,8 @@ export default {
                 content:
                     '❌ Esta solicitud no es para ti.',
 
-                ephemeral: true
+                ephemeral:
+                    true
 
             });
 
@@ -71,7 +80,9 @@ export default {
 
 
         if (
-            !Array.isArray(family.children)
+            !Array.isArray(
+                family.children
+            )
         ) {
 
             family.children = [];
@@ -80,38 +91,13 @@ export default {
 
 
 
-        /*
-            LIMPIAR DUPLICADOS
-        */
-
-        family.children =
-            family.children.filter(
-
-                (child, index, array) =>
-
-                    array.findIndex(
-
-                        c => c.id === child.id
-
-                    ) === index
-
-            );
-
-
-
-        /*
-            AÑADIR HIJO
-        */
-
         if (
-
             !family.children.some(
 
                 child =>
                     child.id === childId
 
             )
-
         ) {
 
 
@@ -133,18 +119,15 @@ export default {
 
 
 
-        /*
-            EL HIJO NO ES MIEMBRO PRINCIPAL
-        */
+        await updateFamily(
 
-        family.members =
-            family.members.filter(
+            interaction.guild.id,
 
-                id =>
+            family.id,
 
-                    id !== childId
+            family
 
-            );
+        );
 
 
 
@@ -153,18 +136,6 @@ export default {
             `familyMember:${interaction.guild.id}:${childId}`,
 
             family.id
-
-        );
-
-
-
-        await updateFamily(
-
-            interaction.guild.id,
-
-            family.id,
-
-            family
 
         );
 
