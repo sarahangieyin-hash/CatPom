@@ -158,7 +158,7 @@ export default {
                     new ButtonBuilder()
 
                         .setCustomId(
-                            `accept_marriage:${requestId}`
+                            `accept_marriage_${requestId}`
                         )
 
                         .setLabel(
@@ -173,7 +173,7 @@ export default {
                     new ButtonBuilder()
 
                         .setCustomId(
-                            `reject_marriage:${requestId}`
+                            `reject_marriage_${requestId}`
                         )
 
                         .setLabel(
