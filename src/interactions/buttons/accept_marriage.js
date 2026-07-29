@@ -11,10 +11,16 @@ import {
 
 export default {
 
-    customId: 'accept_marriage',
+    customId:
+        'accept_marriage:marriage',
 
 
-    async execute(interaction, client, args) {
+
+    async execute(
+        interaction,
+        client,
+        args
+    ) {
 
 
         const requestId =
@@ -39,6 +45,26 @@ export default {
 
                 content:
                     '❌ La solicitud de unión ya no existe.',
+
+                ephemeral:
+                    true
+
+            });
+
+        }
+
+
+
+        if (
+            !request.members.includes(
+                interaction.user.id
+            )
+        ) {
+
+            return interaction.reply({
+
+                content:
+                    '❌ Esta solicitud no es para ti.',
 
                 ephemeral:
                     true
@@ -76,7 +102,9 @@ export default {
             updated.members.every(
 
                 id =>
-                    updated.accepted.includes(id)
+                    updated.accepted.includes(
+                        id
+                    )
 
             );
 
@@ -113,9 +141,10 @@ export default {
             await interaction.update({
 
                 content:
-                    '💍 Unión aceptada correctamente.',
+                    '💍 Unión creada correctamente.',
 
-                components: []
+                components:
+                    []
 
             });
 
@@ -131,7 +160,8 @@ export default {
             content:
                 `💍 <@${interaction.user.id}> ha aceptado la unión.`,
 
-            components: []
+            components:
+                []
 
         });
 
