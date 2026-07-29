@@ -3,6 +3,7 @@ export async function calculateLayout(
     family
 ) {
 
+
     const members =
         Array.isArray(family.members)
             ? family.members
@@ -33,7 +34,9 @@ export async function calculateLayout(
             : [];
 
 
+
     const nodes = [];
+
 
 
     const centerX = 900;
@@ -41,14 +44,16 @@ export async function calculateLayout(
 
 
     /*
-        PAREJA PRINCIPAL 💍
+        MATRIMONIOS 💍
 
-        Siempre horizontal.
-        Da igual si son 2, 3 o más.
+        Persona - anillo - persona - anillo - persona
+
+        El espacio del anillo se reserva aquí.
     */
 
 
-    const memberSpacing = 220;
+    const memberSpacing = 260;
+
 
 
     members.forEach(
@@ -60,7 +65,9 @@ export async function calculateLayout(
 
                 id,
 
-                type:'member',
+                type:
+                    'member',
+
 
                 x:
                     centerX +
@@ -72,7 +79,9 @@ export async function calculateLayout(
                     memberSpacing,
 
 
-                y:300
+                y:
+                    300
+
 
             });
 
@@ -87,6 +96,8 @@ export async function calculateLayout(
 
     /*
         HIJOS 👶
+
+        Siempre debajo de la unión familiar.
     */
 
 
@@ -97,21 +108,27 @@ export async function calculateLayout(
 
             nodes.push({
 
-                id:child.id,
+                id:
+                    child.id,
 
-                type:'child',
+
+                type:
+                    'child',
+
 
                 x:
                     centerX +
                     (
                         index -
-                        (children.length -1)/2
+                        (children.length - 1) / 2
                     )
                     *
                     220,
 
 
-                y:600
+                y:
+                    650
+
 
             });
 
@@ -126,6 +143,8 @@ export async function calculateLayout(
 
     /*
         PADRES 👨‍👩‍👧
+
+        Encima de la pareja.
     */
 
 
@@ -136,21 +155,27 @@ export async function calculateLayout(
 
             nodes.push({
 
-                id:parent.id,
+                id:
+                    parent.id,
 
-                type:'parent',
+
+                type:
+                    'parent',
+
 
                 x:
                     centerX +
                     (
                         index -
-                        (parents.length -1)/2
+                        (parents.length - 1) / 2
                     )
                     *
                     260,
 
 
-                y:100
+                y:
+                    80
+
 
             });
 
@@ -165,6 +190,8 @@ export async function calculateLayout(
 
     /*
         HERMANOS 👥
+
+        A un lado.
     */
 
 
@@ -175,16 +202,22 @@ export async function calculateLayout(
 
             nodes.push({
 
-                id:sibling.id,
+                id:
+                    sibling.id,
 
-                type:'sibling',
+
+                type:
+                    'sibling',
+
 
                 x:
-                    150 +
-                    index*220,
+                    200 +
+                    index * 240,
 
 
-                y:300
+                y:
+                    300
+
 
             });
 
@@ -196,26 +229,40 @@ export async function calculateLayout(
 
 
 
+
     return {
 
-        width:1800,
 
-        height:1000,
+        width:
+            1800,
+
+
+        height:
+            1100,
+
 
         guild,
 
+
         nodes,
+
 
         members,
 
+
         children,
+
 
         parents,
 
+
         siblings,
+
 
         lovers
 
+
     };
+
 
 }
