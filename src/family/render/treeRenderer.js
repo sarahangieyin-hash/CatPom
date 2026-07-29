@@ -23,130 +23,75 @@ export async function renderFamilyTree(
     family
 ) {
 
-    const layout =
-        await calculateLayout(
-            guild,
-            family
-        );
+    try {
 
-    const scale = 2;
+        const layout =
+            await calculateLayout(
+                guild,
+                family
+            );
 
-    const width =
-        Math.max(
-            1900,
-            layout.width
-        );
+        const width =
+            Math.max(
+                1800,
+                layout.width || 1800
+            );
 
-    const height =
-        Math.max(
-            1100,
-            layout.height
-        );
+        const height =
+            Math.max(
+                1200,
+                layout.height || 1200
+            );
 
-    const canvas =
-        createCanvas(
-            width * scale,
-            height * scale
-        );
+        const canvas =
+            createCanvas(
+                width,
+                height
+            );
 
-    const ctx =
-        canvas.getContext('2d');
+        const ctx =
+            canvas.getContext('2d');
 
-    ctx.scale(
-        scale,
-        scale
-    );
+        ctx.fillStyle = '#111111';
 
-    /*
-        Fondo estilo MarriageBot
-    */
-
-    const gradient =
-        ctx.createLinearGradient(
+        ctx.fillRect(
             0,
             0,
-            0,
+            width,
             height
         );
 
-    gradient.addColorStop(
-        0,
-        '#202225'
-    );
+        ctx.imageSmoothingEnabled = true;
 
-    gradient.addColorStop(
-        1,
-        '#111315'
-    );
+        await drawLines(
+            ctx,
+            layout
+        );
 
-    ctx.fillStyle =
-        gradient;
+        await drawNodes(
+            ctx,
+            guild,
+            layout
+        );
 
-    ctx.fillRect(
-        0,
-        0,
-        width,
-        height
-    );
+        await drawIcons(
+            ctx,
+            layout
+        );
 
-    /*
-        Panel central
-    */
+        return canvas.toBuffer(
+            'image/png'
+        );
 
-    ctx.fillStyle =
-        '#2b2d31';
+    } catch (err) {
 
-    ctx.beginPath();
+        console.error(
+            "TREE ERROR:",
+            err
+        );
 
-    ctx.roundRect(
-        50,
-        50,
-        width - 100,
-        height - 100,
-        25
-    );
+        throw err;
 
-    ctx.fill();
-
-    /*
-        Título
-    */
-
-    ctx.fillStyle =
-        '#ffffff';
-
-    ctx.font =
-        'bold 46px Arial';
-
-    ctx.textAlign =
-        'center';
-
-    ctx.fillText(
-        'Árbol Familiar',
-        width / 2,
-        95
-    );
-
-    ctx.imageSmoothingEnabled = true;
-
-    await drawLines(
-        ctx,
-        layout
-    );
-
-    await drawNodes(
-        ctx,
-        layout,
-        guild
-    );
-
-    await drawIcons(
-        ctx,
-        layout
-    );
-
-    return canvas.toBuffer(
-        'image/png'
-    );
+    }
 
 }
