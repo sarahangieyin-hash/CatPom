@@ -323,8 +323,7 @@ export async function calculateLayout(
 
 
     /*
-        TAMAÑO DEL LIENZO
-        (ALTURA NO TOCADA)
+        CALCULAR LIMITES REALES
     */
 
 
@@ -404,52 +403,34 @@ export async function calculateLayout(
     const boxSize = 120;
 
 
-    const paddingX = 100;
-
-
-    const paddingY = 100;
-
-
-
-
 
     /*
-        ANCHO CORREGIDO
+        ANCHO ESTRECHO
 
-        Usa el lado más grande
-        para que ambos lados
-        sean iguales.
+        Usa solamente el tamaño real
+        del contenido.
     */
 
 
-    const sideSpace =
+    const contentWidth =
 
-        Math.max(
-
-            Math.abs(minX),
-
-            Math.abs(maxX)
-
-        );
+        maxX -
+        minX;
 
 
 
     const width =
 
-        (
-            sideSpace * 2
-        )
-        +
-        boxSize
-        +
-        paddingX;
+        contentWidth +
+        boxSize +
+        120;
 
 
 
 
 
     /*
-        ALTURA ORIGINAL
+        ALTURA SIN CAMBIAR
     */
 
 
@@ -462,27 +443,33 @@ export async function calculateLayout(
         +
         boxSize
         +
-        paddingY * 2;
+        1000;
 
 
 
 
 
     /*
-        CENTRADO
+        CENTRADO HORIZONTAL
     */
 
 
     const offsetX =
 
-        width / 2;
+        (
+            width -
+            contentWidth
+        )
+        /
+        2
+        -
+        minX;
 
 
 
     const offsetY =
 
-        paddingY +
-        boxSize / 2 -
+        100 -
         minY;
 
 
