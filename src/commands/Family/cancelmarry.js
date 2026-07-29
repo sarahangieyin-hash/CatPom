@@ -2,9 +2,12 @@ import {
     SlashCommandBuilder
 } from 'discord.js';
 
+
 import {
-    deleteMarriageRequest
-} from '../../utils/marriageRequests.js';
+    getFamilyRequestByCreator,
+    deleteFamilyRequest
+} from '../../family/requests/familyRequests.js';
+
 
 
 export default {
@@ -13,18 +16,58 @@ export default {
 
         .setName('cancelarsoli')
 
-        .setDescription('Cancela tu solicitud de unión pendiente.'),
+        .setDescription(
+            'Cancela tu solicitud de unión pendiente.'
+        ),
 
 
 
     async execute(interaction) {
 
 
-        await deleteMarriageRequest(
+        const guildId =
+            interaction.guild.id;
 
-            interaction.guild.id,
 
-            interaction.user.id
+        const userId =
+            interaction.user.id;
+
+
+
+        const request =
+            await getFamilyRequestByCreator(
+
+                guildId,
+
+                userId
+
+            );
+
+
+
+        if (!request) {
+
+
+            return interaction.reply({
+
+                content:
+                    '❌ No tienes ninguna solicitud de unión pendiente.',
+
+                ephemeral:
+                    true
+
+            });
+
+
+        }
+
+
+
+        await deleteFamilyRequest(
+
+            guildId,
+
+            request.id
 
         );
 
