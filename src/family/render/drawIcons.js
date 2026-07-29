@@ -32,6 +32,13 @@ export async function drawIcons(
 ) {
 
 
+    const unions =
+        layout.nodes.filter(
+            node =>
+                node.type === 'union'
+        );
+
+
     const members =
         layout.nodes.filter(
             node =>
@@ -45,13 +52,18 @@ export async function drawIcons(
 
 
     /*
-        💍 ANILLOS ENTRE PERSONAS
+        💍 ANILLOS
 
-        👤 💍 👤 💍 👤
+        Persona - 💍 - Persona - 💍 - Persona
+
+        Usa los nodos union creados
+        por calculateLayout()
     */
 
 
-    if (members.length > 1) {
+    if (
+        unions.length
+    ) {
 
 
         const ring =
@@ -64,34 +76,8 @@ export async function drawIcons(
 
 
         for (
-            let i = 0;
-            i < members.length - 1;
-            i++
+            const union of unions
         ) {
-
-
-            const left =
-                members[i];
-
-
-            const right =
-                members[i + 1];
-
-
-
-            const x =
-                (
-                    left.x +
-                    right.x
-                )
-                /
-                2;
-
-
-
-            const y =
-                left.y;
-
 
 
             const size =
@@ -103,9 +89,9 @@ export async function drawIcons(
 
                 ring,
 
-                x - size / 2,
+                union.x - size / 2,
 
-                y - size / 2,
+                union.y - size / 2,
 
                 size,
 
