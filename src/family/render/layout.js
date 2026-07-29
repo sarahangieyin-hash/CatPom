@@ -44,7 +44,9 @@ export async function calculateLayout(
 
 
     /*
-        UNIÓN PRINCIPAL 💍
+        NODO DE UNIÓN 💍
+        Sirve como punto central para conectar
+        parejas e hijos.
     */
 
 
@@ -91,7 +93,7 @@ export async function calculateLayout(
                         (members.length - 1) / 2
                     )
                     *
-                    260,
+                    180,
 
 
                 y:
@@ -108,6 +110,7 @@ export async function calculateLayout(
 
     /*
         HIJOS 👶
+        Siempre debajo de la unión
     */
 
 
