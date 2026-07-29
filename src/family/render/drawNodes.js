@@ -1,62 +1,62 @@
-import { loadImage } from 'canvas';
+import {
+    getFromDb,
+    setInDb
+} from '../../utils/database/wrapper.js';
+
+import {
+    updateFamily
+} from '../../utils/families.js';
 
 
-export async function drawNodes(
-    ctx,
-    layout
-) {
+export default {
+
+    customId: 'accept_marriage:marriage',
 
 
-    for (
-        const node of layout.nodes
-    ) {
+    async execute(interaction, client, args) {
 
 
-        let user = null;
-
-
-        try {
-
-            const member =
-                await layout.guild.members.fetch(node.id);
-
-            user =
-                member.user;
-
-        } catch {}
+        const familyId =
+            args[0];
 
 
 
-        const radius = 55;
+        const family =
+            await getFromDb(
+
+                `family:${interaction.guild.id}:${familyId}`,
+
+                null
+
+            );
 
 
 
-        /*
-            NOMBRE ENCIMA
-        */
+        if (!family) {
+
+            return interaction.reply({
+
+                content:
+                    '❌ La solicitud de unión ya no existe.',
+
+                ephemeral:
+                    true
+
+            });
+
+        }
 
 
-        if (user) {
 
-            ctx.fillStyle = '#000000';
+        if (
+            !family.members.includes(
+                interaction.user.id
+            )
+        ) {
 
-            ctx.font =
-                'bold 18px Arial';
+            family.members.push(
 
-            ctx.textAlign =
-                'center';
-
-            ctx.textBaseline =
-                'alphabetic';
-
-
-            ctx.fillText(
-
-                user.username,
-
-                node.x,
-
-                node.y - radius - 15
+                interaction.user.id
 
             );
 
@@ -64,123 +64,38 @@ export async function drawNodes(
 
 
 
-        /*
-            CIRCULO FOTO
-        */
+        await updateFamily(
 
+            interaction.guild.id,
 
-        ctx.beginPath();
+            family.id,
 
-        ctx.arc(
-
-            node.x,
-
-            node.y,
-
-            radius,
-
-            0,
-
-            Math.PI * 2
+            family
 
         );
 
 
-        ctx.fillStyle =
-            '#ffffff';
 
+        await setInDb(
 
-        ctx.fill();
+            `familyMember:${interaction.guild.id}:${interaction.user.id}`,
 
+            family.id
 
-        ctx.strokeStyle =
-            '#000000';
-
-
-        ctx.lineWidth =
-            3;
-
-
-        ctx.stroke();
+        );
 
 
 
-        if (user) {
+        await interaction.update({
 
+            content:
+                `💍 <@${interaction.user.id}> ha aceptado la unión.`,
 
-            try {
+            components: []
 
-
-                const avatar =
-                    await loadImage(
-
-                        user.displayAvatarURL({
-
-                            extension:
-                                'png',
-
-                            size:
-                                128
-
-                        })
-
-                    );
-
-
-
-                ctx.save();
-
-
-
-                ctx.beginPath();
-
-
-
-                ctx.arc(
-
-                    node.x,
-
-                    node.y,
-
-                    radius - 3,
-
-                    0,
-
-                    Math.PI * 2
-
-                );
-
-
-
-                ctx.clip();
-
-
-
-                ctx.drawImage(
-
-                    avatar,
-
-                    node.x - radius + 3,
-
-                    node.y - radius + 3,
-
-                    (radius - 3) * 2,
-
-                    (radius - 3) * 2
-
-                );
-
-
-
-                ctx.restore();
-
-
-
-            } catch {}
-
-        }
+        });
 
 
     }
 
-}
+};
