@@ -5,7 +5,6 @@ import {
 } from '../../utils/families.js';
 
 import {
-    getFromDb,
     setInDb
 } from '../../utils/database/wrapper.js';
 
@@ -55,7 +54,6 @@ export default {
                 interaction.user.id !== childId
             ) {
 
-
                 return interaction.reply({
 
                     content:
@@ -65,7 +63,6 @@ export default {
                         true
 
                 });
-
 
             }
 
@@ -89,7 +86,7 @@ export default {
 
 
             console.log(
-                "4 - Familia padre:",
+                "4 - Familia encontrada:",
                 family
             );
 
@@ -119,6 +116,46 @@ export default {
 
 
 
+            /*
+                ASEGURAR MIEMBROS PRINCIPALES
+
+                El padre siempre debe estar
+                en members.
+            */
+
+
+            if (
+                !Array.isArray(
+                    family.members
+                )
+            ) {
+
+                family.members = [];
+
+            }
+
+
+
+            if (
+                !family.members.includes(
+                    parentId
+                )
+            ) {
+
+                family.members.push(
+                    parentId
+                );
+
+            }
+
+
+
+
+            /*
+                ASEGURAR HIJOS
+            */
+
+
             if (
                 !Array.isArray(
                     family.children
@@ -131,16 +168,12 @@ export default {
 
 
 
-            /*
-                EVITAR DUPLICADOS
-            */
-
-
             const alreadyChild =
 
                 family.children.some(
 
                     child =>
+
                         child.id === childId
 
                 );
@@ -155,10 +188,8 @@ export default {
                     id:
                         childId,
 
-
                     parent:
                         parentId,
-
 
                     adoptedAt:
                         Date.now()
@@ -170,31 +201,25 @@ export default {
 
 
 
-            /*
-                QUITAR AL HIJO DE MEMBERS
 
-                Una persona adoptada NO es pareja.
+            /*
+                SI EL HIJO ESTABA COMO MIEMBRO
+                LO QUITAMOS
+
+                Un hijo no aparece arriba
+                como pareja.
             */
 
 
-            if (
-                Array.isArray(
-                    family.members
-                )
-            ) {
+            family.members =
 
+                family.members.filter(
 
-                family.members =
+                    id =>
+                        id !== childId
 
-                    family.members.filter(
+                );
 
-                        id =>
-                            id !== childId
-
-                    );
-
-
-            }
 
 
 
@@ -216,13 +241,15 @@ export default {
 
 
             console.log(
-                "6 - Familia actualizada"
+                "6 - Familia guardada:",
+                family
             );
 
 
 
+
             /*
-                ASIGNAR FAMILIA AL HIJO
+                RELACIONAR HIJO CON FAMILIA
             */
 
 
@@ -237,8 +264,9 @@ export default {
 
 
             console.log(
-                "7 - familyMember guardado"
+                "7 - familyMember actualizado"
             );
+
 
 
 
@@ -257,7 +285,7 @@ export default {
 
 
             console.log(
-                "8 - Interaction finalizada"
+                "8 - Fin accept adoption"
             );
 
 
