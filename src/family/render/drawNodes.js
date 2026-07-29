@@ -50,53 +50,14 @@ export async function drawNodes(
 
 
 
-    const totalPeople =
-
-        (layout.members?.length || 0) +
-
-        (layout.children?.length || 0) +
-
-        (layout.parents?.length || 0) +
-
-        (layout.siblings?.length || 0);
-
-
-
-
-
-    /*
-        TAMAÑO BASE
-
-        La familia crece,
-        pero las cajas no se hacen pequeñas.
-
-    */
-
-
-    const fontSize =
-
-        Math.max(
-
-            16,
-
-            Math.min(
-
-                22,
-
-                22 - totalPeople
-
-            )
-
-        );
-
-
-
-
-
     for (
         const node of layout.nodes
     ) {
 
+
+        /*
+            SOLO PERSONAS
+        */
 
 
         if (
@@ -119,6 +80,11 @@ export async function drawNodes(
 
 
 
+        /*
+            IDS VALIDOS
+        */
+
+
         if (
 
             typeof node.id !== 'string' ||
@@ -135,6 +101,11 @@ export async function drawNodes(
 
 
 
+        /*
+            EVITAR DUPLICADOS
+        */
+
+
         if (
 
             drawn.has(node.id)
@@ -144,7 +115,6 @@ export async function drawNodes(
             continue;
 
         }
-
 
 
         drawn.add(
@@ -160,13 +130,17 @@ export async function drawNodes(
 
 
 
+
+
         try {
 
 
             const member =
 
                 await layout.guild.members.fetch(
+
                     node.id
+
                 );
 
 
@@ -199,7 +173,7 @@ export async function drawNodes(
 
                 .slice(
                     0,
-                    18
+                    25
                 );
 
 
@@ -207,12 +181,13 @@ export async function drawNodes(
 
 
         /*
-            CAJA DINÁMICA
-
-            El ancho depende del nombre.
-            La altura siempre igual.
-
+            TEXTO
         */
+
+
+        const fontSize =
+            20;
+
 
 
         ctx.font =
@@ -221,13 +196,31 @@ export async function drawNodes(
 
 
 
+
+
         const textWidth =
 
             ctx.measureText(
+
                 safeName || '???'
+
             )
             .width;
 
+
+
+
+
+        /*
+            CAJA ADAPTABLE
+
+            Nombre corto:
+            120px
+
+            Nombre largo:
+            crece horizontalmente
+
+        */
 
 
         const boxWidth =
@@ -251,7 +244,7 @@ export async function drawNodes(
 
 
         /*
-            CAJA
+            CUADRADO
         */
 
 
