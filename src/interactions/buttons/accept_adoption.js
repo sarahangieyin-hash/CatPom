@@ -17,11 +17,16 @@ export default {
     async execute(interaction) {
 
 
-        const [
-            ,
-            parentId,
-            childId
-        ] = interaction.customId.split('_');
+        const parts =
+            interaction.customId.split('_');
+
+
+        const parentId =
+            parts[2];
+
+
+        const childId =
+            parts[3];
 
 
 
@@ -91,7 +96,6 @@ export default {
             )
         ) {
 
-
             family.children.push({
 
                 id:
@@ -105,15 +109,9 @@ export default {
 
             });
 
-
         }
 
 
-
-        /*
-            REGISTRAR AL HIJO COMO PARTE DE LA FAMILIA
-            PARA QUE PUEDA USAR /tree
-        */
 
         await setInDb(
 
