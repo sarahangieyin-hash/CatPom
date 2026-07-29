@@ -4,8 +4,7 @@ import {
 
 import {
     getFamilyByMember,
-    updateFamily,
-    createFamily
+    updateFamily
 } from '../../utils/families.js';
 
 import {
@@ -70,7 +69,7 @@ export default {
 
 
 
-        family.members =
+        const otherMembers =
             family.members.filter(
 
                 id =>
@@ -79,6 +78,19 @@ export default {
             );
 
 
+
+        /*
+            Quitamos al usuario de la unión
+        */
+
+        family.members =
+            otherMembers;
+
+
+
+        /*
+            Quitamos sus hijos de esta familia
+        */
 
         family.children =
             family.children.filter(
@@ -102,69 +114,91 @@ export default {
 
 
 
-        const newFamily =
-            await createFamily(
+        /*
+            Si tiene hijos adoptados,
+            crea una familia individual
+            solo para él y sus hijos
+        */
+
+        if (
+            myChildren.length > 0
+        ) {
+
+
+            const newFamily = {
+
+                id:
+                    Date.now().toString(),
+
+                members:
+                    [],
+
+                children:
+                    myChildren,
+
+                parents:
+                    [],
+
+                siblings:
+                    [],
+
+                lovers:
+                    [],
+
+                createdAt:
+                    Date.now()
+
+            };
+
+
+
+            await updateFamily(
 
                 guildId,
 
-                [
-                    userId
-                ]
+                newFamily.id,
+
+                newFamily
 
             );
 
 
 
-        newFamily.children =
-            myChildren;
-
-
-
-        await updateFamily(
-
-            guildId,
-
-            newFamily.id,
-
-            newFamily
-
-        );
-
-
-
-        await setInDb(
-
-            `familyMember:${guildId}:${userId}`,
-
-            newFamily.id
-
-        );
-
-
-
-        for (
-            const child of myChildren
-        ) {
-
-
             await setInDb(
 
-                `familyMember:${guildId}:${child.id}`,
+                `familyMember:${guildId}:${userId}`,
 
                 newFamily.id
 
             );
 
 
+
+            for (
+                const child of myChildren
+            ) {
+
+                await setInDb(
+
+                    `familyMember:${guildId}:${child.id}`,
+
+                    newFamily.id
+
+                );
+
+            }
+
+
         }
 
 
 
-        await interaction.editReply(
+        await interaction.editReply({
 
-            '💔 La unión se ha separado.'
+            content:
+                '💔 Has terminado la unión correctamente.'
 
-        );
+        });
 
 
     }
