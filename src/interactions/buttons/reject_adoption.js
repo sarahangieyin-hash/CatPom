@@ -1,105 +1,107 @@
 import {
-    SlashCommandBuilder,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle
-} from 'discord.js';
+    getFamilyByMember,
+    updateFamily
+} from '../../utils/families.js';
 
 
 export default {
 
-    data: new SlashCommandBuilder()
-
-        .setName('adopt')
-
-        .setDescription('Solicita adoptar a una persona.')
-
-        .addUserOption(option =>
-            option
-                .setName('persona')
-                .setDescription('Persona que quieres adoptar')
-                .setRequired(true)
-        ),
+    customId:
+        'reject_adoption',
 
 
-
-    async execute(interaction) {
-
-
-        const child =
-            interaction.options.getUser('persona');
-
+    async execute(
+        interaction,
+        client,
+        args
+    ) {
 
 
-        if (
-            child.id === interaction.user.id
-        ) {
+        try {
 
-            return interaction.reply({
+
+            const parentId =
+                args[0];
+
+
+            const childId =
+                args[1];
+
+
+
+            if (
+
+                interaction.user.id !== childId
+
+            ) {
+
+
+                return interaction.reply({
+
+                    content:
+                        '❌ Esta solicitud no es para ti.',
+
+                    ephemeral:
+                        true
+
+                });
+
+            }
+
+
+
+
+
+            await interaction.update({
 
                 content:
-                    '❌ No puedes adoptarte a ti mismo.',
 
-                ephemeral: true
+                    `❌ <@${childId}> ha rechazado ser adoptado/a por <@${parentId}>.`,
+
+                components:
+
+                    []
 
             });
+
+
+
+        } catch(error) {
+
+
+            console.error(
+                'ERROR REJECT_ADOPTION:',
+                error
+            );
+
+
+
+            if (
+
+                !interaction.replied &&
+                !interaction.deferred
+
+            ) {
+
+
+                await interaction.reply({
+
+                    content:
+
+                        `❌ Error: ${error.message}`,
+
+                    ephemeral:
+                        true
+
+                }).catch(() => {});
+
+            }
+
 
         }
 
 
-
-        const row =
-            new ActionRowBuilder()
-                .addComponents(
-
-
-                    new ButtonBuilder()
-
-                        .setCustomId(
-
-                            `accept_adoption:${interaction.user.id}:${child.id}`
-
-                        )
-
-                        .setLabel('Aceptar')
-
-                        .setStyle(
-                            ButtonStyle.Success
-                        ),
-
-
-
-                    new ButtonBuilder()
-
-                        .setCustomId(
-
-                            `reject_adoption:${interaction.user.id}:${child.id}`
-
-                        )
-
-                        .setLabel('Rechazar')
-
-                        .setStyle(
-                            ButtonStyle.Danger
-                        )
-
-                );
-
-
-
-        await interaction.reply({
-
-            content:
-
-                `👶 ${interaction.user} quiere adoptarte.\n\n${child}, ¿aceptas?`,
-
-            components: [
-                row
-            ]
-
-        });
-
-
     }
+
 
 };
