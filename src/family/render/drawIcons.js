@@ -6,8 +6,10 @@ export async function drawIcons(
 
     const members =
         layout.nodes.filter(
+
             node =>
                 node.type === 'member'
+
         );
 
 
@@ -26,15 +28,57 @@ export async function drawIcons(
         'center';
 
 
-
     ctx.textBaseline =
         'middle';
 
 
 
-    // 🔥 Amantes
+    /*
+        💍 ICONO DE UNIÓN
+    */
+
+
+    if (
+        members.length > 1
+    ) {
+
+
+        const centerX =
+
+            members.reduce(
+
+                (sum,node) =>
+                    sum + node.x,
+
+                0
+
+            )
+            /
+            members.length;
+
+
+
+        ctx.fillText(
+
+            '💍',
+
+            centerX,
+
+            members[0].y - 90
+
+        );
+
+    }
+
+
+
+    /*
+        🔥 AMANTES
+    */
+
 
     members.forEach(
+
         member => {
 
 
@@ -62,44 +106,6 @@ export async function drawIcons(
         }
 
     );
-
-
-
-    // 💍 Unión
-
-    if (
-        members.length > 1
-    ) {
-
-
-        const centerX =
-
-            members.reduce(
-
-                (sum, node) =>
-                    sum + node.x,
-
-                0
-
-            )
-            /
-            members.length;
-
-
-
-        ctx.fillText(
-
-            '💍',
-
-            centerX,
-
-            members[0].y - 90
-
-        );
-
-
-    }
-
 
 
 }
