@@ -136,15 +136,15 @@ export default {
 
                     .setDescription(
 
-                        'La unión se ha completado correctamente.\n\n' +
+                        '🎉 ¡La unión se ha completado correctamente!\n\n' +
 
                         updated.members
                             .map(
                                 id => `❤️ <@${id}>`
                             )
-                            .join('\n\n') +
+                            .join('\n') +
 
-                        '\n\n¡Que vuestra historia dure para siempre!'
+                        '\n\n💐 ¡Que vuestra historia dure para siempre!'
 
                     )
 
