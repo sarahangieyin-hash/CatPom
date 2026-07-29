@@ -32,11 +32,8 @@ export default {
 
 
                 await command.execute(
-
                     interaction,
-
                     client
-
                 );
 
 
@@ -50,11 +47,20 @@ export default {
             if (interaction.isButton()) {
 
 
-                const [
-                    customId,
-                    ...args
-                ] =
-                    interaction.customId.split(':');
+                const parts =
+                    interaction.customId.split('_');
+
+
+
+                const customId =
+                    parts[0] + '_' + parts[1];
+
+
+
+                const args =
+                    [
+                        parts.slice(2).join('_')
+                    ];
 
 
 
