@@ -42,6 +42,7 @@ export default {
 
             if (!family) {
 
+
                 return interaction.reply({
 
                     content:
@@ -52,13 +53,14 @@ export default {
 
                 });
 
+
             }
 
 
 
             const hasFamily =
 
-                (family.members?.length > 1) ||
+                (family.members?.length > 0) ||
 
                 (family.children?.length > 0) ||
 
@@ -72,6 +74,7 @@ export default {
 
             if (!hasFamily) {
 
+
                 return interaction.reply({
 
                     content:
@@ -82,6 +85,7 @@ export default {
 
                 });
 
+
             }
 
 
@@ -91,8 +95,27 @@ export default {
 
 
             console.log(
-                "GENERANDO TREE:",
-                JSON.stringify(family, null, 2)
+                "========== FAMILIA TREE =========="
+            );
+
+
+            console.log(
+
+                JSON.stringify(
+
+                    family,
+
+                    null,
+
+                    2
+
+                )
+
+            );
+
+
+            console.log(
+                "=================================="
             );
 
 
@@ -110,7 +133,9 @@ export default {
 
             await interaction.editReply({
 
-                files: [
+                files:
+
+                [
 
                     {
 
@@ -132,8 +157,11 @@ export default {
 
 
             console.error(
+
                 "ERROR GENERANDO TREE:",
+
                 error
+
             );
 
 
@@ -146,10 +174,13 @@ export default {
                 await interaction.editReply({
 
                     content:
+
                         "❌ Error generando árbol: " +
+
                         error.message
 
                 });
+
 
 
             } else {
@@ -158,10 +189,13 @@ export default {
                 await interaction.reply({
 
                     content:
+
                         "❌ Error generando árbol: " +
+
                         error.message,
 
                     ephemeral:
+
                         true
 
                 });
