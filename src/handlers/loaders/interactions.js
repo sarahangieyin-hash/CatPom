@@ -8,6 +8,7 @@ const __dirname = path.dirname(
 );
 
 
+
 export default async function loadInteractions(client) {
 
 
@@ -80,11 +81,33 @@ export default async function loadInteractions(client) {
 
 
 
+            if (type.collection.has(data.customId)) {
+
+                console.log(
+
+                    '⚠️ DUPLICADO:',
+
+                    data.customId,
+
+                    'ARCHIVO:',
+
+                    file
+
+                );
+
+            }
+
+
+
             console.log(
 
                 'INTERACTION REGISTRADA:',
 
-                data.customId
+                data.customId,
+
+                'DESDE:',
+
+                file
 
             );
 
