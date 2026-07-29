@@ -43,9 +43,6 @@ export async function calculateLayout(
 
     /*
         ESPACIADO
-
-        Crece solo horizontalmente
-        cuando hay más parejas.
     */
 
 
@@ -53,13 +50,13 @@ export async function calculateLayout(
 
         Math.max(
 
-            180,
+            160,
 
             Math.min(
 
-                300,
+                280,
 
-                180 +
+                160 +
                 members.length * 35
 
             )
@@ -72,13 +69,13 @@ export async function calculateLayout(
 
         Math.max(
 
-            180,
+            160,
 
             Math.min(
 
                 260,
 
-                180 +
+                160 +
                 children.length * 30
 
             )
@@ -91,14 +88,14 @@ export async function calculateLayout(
 
         Math.max(
 
-            200,
+            180,
 
             Math.min(
 
-                300,
+                280,
 
-                200 +
-                parents.length * 30
+                180 +
+                parents.length * 35
 
             )
 
@@ -110,8 +107,6 @@ export async function calculateLayout(
 
     /*
         MIEMBROS PRINCIPALES 💍
-
-        Siempre en línea horizontal.
     */
 
 
@@ -286,11 +281,9 @@ export async function calculateLayout(
                 y:
 
                     650 +
-                    (
-                        Math.floor(index / 5)
-                        *
-                        120
-                    )
+                    Math.floor(index / 5)
+                    *
+                    120
 
 
             });
@@ -306,8 +299,6 @@ export async function calculateLayout(
 
     /*
         PADRES 👨‍👩‍👧
-
-        Solo ocupan arriba si existen.
     */
 
 
@@ -354,8 +345,6 @@ export async function calculateLayout(
 
     /*
         HERMANOS 👥
-
-        Laterales.
     */
 
 
@@ -401,9 +390,9 @@ export async function calculateLayout(
     /*
         TAMAÑO DEL LIENZO
 
-        Parejas = ancho.
-        Hijos = alto.
-        Sin padres = no hay espacio arriba.
+        Parejas -> ancho
+        Hijos -> abajo
+        Padres -> arriba
     */
 
 
@@ -421,29 +410,6 @@ export async function calculateLayout(
 
 
 
-    const childrenHeight =
-
-        children.length > 0
-
-            ? 450 +
-              Math.ceil(children.length / 5)
-              *
-              120
-
-            : 250;
-
-
-
-    const parentsHeight =
-
-        parents.length > 0
-
-            ? 250
-
-            : 50;
-
-
-
     const width =
 
         Math.max(
@@ -451,7 +417,7 @@ export async function calculateLayout(
             900,
 
             memberWidth +
-            500
+            400
 
         );
 
@@ -463,11 +429,17 @@ export async function calculateLayout(
 
             700,
 
-            parentsHeight +
-            900 +
+            (
+                parents.length
+                    ? 250
+                    : 0
+            )
+            +
+            700
+            +
             (
                 children.length *
-                30
+                80
             )
 
         );
@@ -477,15 +449,70 @@ export async function calculateLayout(
 
 
     /*
-        CENTRAR HORIZONTALMENTE
-
-        NO centrar verticalmente.
+        CENTRADO HORIZONTAL REAL
     */
+
+
+    const visibleNodes =
+
+        nodes.filter(
+
+            node =>
+                node.type !== 'union'
+
+        );
+
+
+
+    const minX =
+
+        Math.min(
+
+            ...visibleNodes.map(
+
+                node =>
+                    node.x
+
+            )
+
+        );
+
+
+
+    const maxX =
+
+        Math.max(
+
+            ...visibleNodes.map(
+
+                node =>
+                    node.x
+
+            )
+
+        );
+
+
+
+    const contentCenter =
+
+        (
+            minX +
+            maxX
+        )
+        /
+        2;
+
 
 
     const offsetX =
 
-        width / 2;
+        (
+            width /
+            2
+        )
+        -
+        contentCenter;
 
 
 
