@@ -195,3 +195,32 @@ export async function updateFamily(
     return family;
 
 }
+
+export async function cleanFamilyChildren(
+    guildId,
+    familyId
+) {
+
+    const family =
+        await getFromDb(
+            familyKey(guildId, familyId),
+            null
+        );
+
+
+    if (!family)
+        return null;
+
+
+    family.children = [];
+
+
+    await setInDb(
+        familyKey(guildId, familyId),
+        family
+    );
+
+
+    return family;
+
+}
