@@ -134,40 +134,67 @@ export default {
 
 
 
-        /*
-            TODOS ACEPTARON
-        */
-
-
         if (allAccepted) {
 
 
 
             /*
-                BUSCAR FAMILIA EXISTENTE
+                BUSCAR FAMILIAS EXISTENTES
 
-                NO CREAR UNA NUEVA
-                SI YA TIENEN HIJOS
+                IMPORTANTE:
+                No crear una nueva si alguien
+                ya tiene hijos/adopciones.
             */
 
 
-            let family =
-                await getFamilyByMember(
-
-                    interaction.guild.id,
-
-                    updated.members[0]
-
-                );
+            let family = null;
 
 
 
+            for (
+
+                const member of updated.members
+
+            ) {
+
+
+                const existing =
+
+                    await getFamilyByMember(
+
+                        interaction.guild.id,
+
+                        member
+
+                    );
+
+
+
+                if (existing) {
+
+                    family = existing;
+
+                    break;
+
+                }
+
+
+            }
+
+
+
+
+
+            /*
+                SI NADIE TIENE FAMILIA
+            */
 
 
             if (!family) {
 
 
                 family =
+
                     await createFamily(
 
                         interaction.guild.id,
@@ -182,15 +209,26 @@ export default {
 
 
                 /*
-                    AÑADIR NUEVOS MIEMBROS
+                    AÑADIR NUEVAS PAREJAS
 
-                    MANTIENE:
-                    - hijos
-                    - padres
-                    - hermanos
-                    - datos anteriores
-
+                    NO TOCAR:
+                    - children
+                    - parents
+                    - siblings
+                    - lovers
                 */
+
+
+                if (
+                    !Array.isArray(
+                        family.members
+                    )
+                ) {
+
+                    family.members = [];
+
+                }
+
 
 
                 for (
@@ -202,12 +240,20 @@ export default {
 
                     if (
 
-                        !family.members.includes(member)
+                        !family.members.includes(
+
+                            member
+
+                        )
 
                     ) {
 
 
-                        family.members.push(member);
+                        family.members.push(
+
+                            member
+
+                        );
 
 
                     }
@@ -361,11 +407,6 @@ export default {
 
 
 
-
-
-        /*
-            TODAVÍA FALTA GENTE
-        */
 
 
         const restantes =
