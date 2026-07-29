@@ -22,7 +22,7 @@ import {
 import path from 'path';
 
 import {
-    fileURLToPath
+    fileURLToFilename
 } from 'url';
 
 
@@ -79,44 +79,24 @@ export async function renderFamilyTree(
 
 
     /*
-        TAMAÑO DINÁMICO REAL
+        EL TAMAÑO VIENE DEL LAYOUT
 
-        La familia pequeña ocupa poco.
-        Al crecer, el fondo crece.
-
+        No añade espacio extra.
     */
 
 
-    const memberCount =
-        (layout.members?.length || 0) +
-        (layout.children?.length || 0) +
-        (layout.parents?.length || 0) +
-        (layout.siblings?.length || 0);
-
-
-
     const width =
-        Math.max(
 
-            700,
-
-            layout.width,
-
-            600 + memberCount * 220
-
+        Math.ceil(
+            layout.width
         );
 
 
 
     const height =
-        Math.max(
 
-            500,
-
-            layout.height,
-
-            450 + memberCount * 120
-
+        Math.ceil(
+            layout.height
         );
 
 
@@ -149,9 +129,7 @@ export async function renderFamilyTree(
 
 
     /*
-        FONDO
-
-        Se adapta al tamaño del árbol.
+        FONDO ADAPTADO
     */
 
 
@@ -187,8 +165,11 @@ export async function renderFamilyTree(
 
 
         console.log(
+
             "No se pudo cargar fondo:",
+
             error.message
+
         );
 
 
@@ -217,6 +198,7 @@ export async function renderFamilyTree(
 
     ctx.imageSmoothingEnabled =
         true;
+
 
 
 
