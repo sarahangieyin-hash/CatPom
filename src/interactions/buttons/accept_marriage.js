@@ -12,14 +12,10 @@ import {
     createFamily
 } from '../../utils/families.js';
 
-
-
 export default {
 
     customId:
         'accept_marriage',
-
-
 
     async execute(
         interaction,
@@ -27,11 +23,8 @@ export default {
         args
     ) {
 
-
         const requestId =
             args[0];
-
-
 
         const request =
             await getFamilyRequest(
@@ -41,8 +34,6 @@ export default {
                 requestId
 
             );
-
-
 
         if (!request) {
 
@@ -57,8 +48,6 @@ export default {
             });
 
         }
-
-
 
         if (
             !request.members.includes(
@@ -78,8 +67,6 @@ export default {
 
         }
 
-
-
         await acceptFamilyRequest(
 
             interaction.guild.id,
@@ -90,8 +77,6 @@ export default {
 
         );
 
-
-
         const updated =
             await getFamilyRequest(
 
@@ -101,8 +86,6 @@ export default {
 
             );
 
-
-
         const allAccepted =
             updated.members.every(
 
@@ -111,89 +94,96 @@ export default {
 
             );
 
+        /*
+            TODOS ACEPTARON
+        */
 
+        if (allAccepted) {
 
-if (allAccepted) {
+            await createFamily(
 
-    await createFamily(
-
-        interaction.guild.id,
-
-        updated.members
-
-    );
-
-    await deleteFamilyRequest(
-
-        interaction.guild.id,
-
-        requestId
-
-    );
-
-    const embed =
-        new EmbedBuilder()
-
-            .setTitle(
-                '💍 ¡Se han casado!'
-            )
-
-            .setDescription(
+                interaction.guild.id,
 
                 updated.members
-                    .map(id => `<@${id}>`)
-                    .join(' ❤️ ')
 
-            )
-
-            .setColor(
-                0xff69b4
             );
 
-    await interaction.message.edit({
+            await deleteFamilyRequest(
 
-        content: '',
+                interaction.guild.id,
 
-        embeds: [
-            embed
-        ],
+                requestId
 
-        components: []
+            );
 
-    });
+            const embed =
+                new EmbedBuilder()
 
-    await interaction.deferUpdate();
+                    .setTitle(
+                        '💍 ¡Se han casado!'
+                    )
 
-    return;
+                    .setDescription(
 
-}
+                        updated.members
+                            .map(id => `<@${id}>`)
+                            .join(' ❤️ ')
 
+                    )
 
-/*
-    Aún faltan personas por aceptar
-*/
+                    .setColor(
+                        0xff69b4
+                    );
 
-const restantes =
-    updated.members.length -
-    updated.accepted.length;
+            await interaction.message.edit({
 
-await interaction.reply({
+                content: '',
 
-    content:
-        '✅ Has aceptado la unión.',
+                embeds: [
+                    embed
+                ],
 
-    ephemeral: true
+                components: []
 
-});
+            });
 
-await interaction.channel.send({
+            await interaction.deferUpdate();
 
-    content:
+            return;
 
-        `💍 <@${interaction.user.id}> ha aceptado la unión.\n\n` +
+        }
 
-        `⏳ Esperando a **${restantes}** persona(s) más.`
+        /*
+            AÚN FALTA GENTE
+        */
 
-});
+        const restantes =
+            updated.members.length -
+            updated.accepted.length;
 
-return;
+        await interaction.deferUpdate();
+
+        await interaction.followUp({
+
+            content:
+                '✅ Has aceptado la unión.',
+
+            ephemeral: true
+
+        });
+
+        await interaction.channel.send({
+
+            content:
+
+                `💍 <@${interaction.user.id}> ha aceptado la unión.\n\n` +
+
+                `⏳ Esperando a **${restantes}** persona(s) más.`
+
+        });
+
+        return;
+
+    }
+
+};
