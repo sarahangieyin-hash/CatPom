@@ -32,13 +32,54 @@ export async function drawNodes(
 
 
 
-        ctx.fillStyle =
+        switch(node.type) {
 
-            node.type === 'child'
 
-                ? '#7ec8ff'
+            case 'child':
 
-                : '#ffd166';
+                ctx.fillStyle =
+                    '#7ec8ff';
+
+                break;
+
+
+
+            case 'parent':
+
+                ctx.fillStyle =
+                    '#ff9f9f';
+
+                break;
+
+
+
+            case 'sibling':
+
+                ctx.fillStyle =
+                    '#b8ff9f';
+
+                break;
+
+
+
+            case 'lover':
+
+                ctx.fillStyle =
+                    '#ff6b6b';
+
+                break;
+
+
+
+            default:
+
+                ctx.fillStyle =
+                    '#ffd166';
+
+                break;
+
+
+        }
 
 
 
@@ -63,7 +104,7 @@ export async function drawNodes(
 
 
         ctx.font =
-            '20px Arial';
+            '18px Arial';
 
 
         ctx.textAlign =
