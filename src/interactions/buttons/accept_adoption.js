@@ -12,31 +12,44 @@ export default {
 
         const [parentId, childId] = args;
 
+
         if (interaction.user.id !== childId) {
+
             return interaction.reply({
                 content: '❌ Esta solicitud no es para ti.',
                 ephemeral: true
             });
+
         }
 
-        let family = await getFamilyByMember(
-            interaction.guild.id,
-            parentId
-        );
+
+        let family =
+            await getFamilyByMember(
+                interaction.guild.id,
+                parentId
+            );
+
 
         if (!family) {
-            family = await createFamily(
-                interaction.guild.id,
-                [parentId]
-            );
+
+            family =
+                await createFamily(
+                    interaction.guild.id,
+                    [parentId]
+                );
+
         }
 
-        family.children ??= [];
-        family.members ??= [];
+
+        if (!Array.isArray(family.children)) {
+            family.children = [];
+        }
+
 
         if (!family.members.includes(childId)) {
             family.members.push(childId);
         }
+
 
         family.children.push({
             id: childId,
@@ -44,11 +57,13 @@ export default {
             adoptedAt: Date.now()
         });
 
+
         await updateFamily(
             interaction.guild.id,
             family.id,
             family
         );
+
 
         await interaction.update({
             content: `👶 <@${childId}> ha aceptado ser adoptado/a por <@${parentId}>.`,
