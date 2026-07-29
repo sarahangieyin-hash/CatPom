@@ -129,6 +129,9 @@ export async function calculateLayout(
 
     /*
         UNIONES 💍
+
+        Siempre entre dos miembros.
+
     */
 
 
@@ -193,13 +196,6 @@ export async function calculateLayout(
 
     /*
         HIJOS 👶
-
-        Hijos adoptados:
-        permanecen ligados a su padre.
-
-        Hijos sin padre:
-        pertenecen a la unión.
-
     */
 
 
@@ -225,11 +221,6 @@ export async function calculateLayout(
 
 
 
-
-
-    /*
-        HIJOS INDIVIDUALES
-    */
 
 
     individualChildren.forEach(
@@ -284,39 +275,6 @@ export async function calculateLayout(
                 });
 
 
-            } else {
-
-
-                nodes.push({
-
-                    id:
-                        child.id,
-
-
-                    type:
-                        'child',
-
-
-                    x:
-
-                        (
-                            index -
-                            (
-                                individualChildren.length - 1
-                            ) / 2
-                        )
-                        *
-                        childSpacing,
-
-
-                    y:
-
-                        centerY + 350
-
-
-                });
-
-
             }
 
 
@@ -326,11 +284,6 @@ export async function calculateLayout(
 
 
 
-
-
-    /*
-        HIJOS DE LA UNIÓN
-    */
 
 
     sharedChildren.forEach(
@@ -470,17 +423,16 @@ export async function calculateLayout(
 
     /*
         LIMITES REALES
+
+        AHORA INCLUYE UNIONES 💍
+
     */
 
 
     const visibleNodes =
+        nodes;
 
-        nodes.filter(
 
-            node =>
-                node.type !== 'union'
-
-        );
 
 
 
@@ -603,9 +555,8 @@ export async function calculateLayout(
 
 
     /*
-        CENTRADO REAL
+        CENTRADO
 
-        Mismo espacio izquierda/derecha.
     */
 
 
@@ -627,7 +578,16 @@ export async function calculateLayout(
 
     const offsetY =
 
-        80 -
+        (
+            height -
+            (
+                maxY - minY
+            )
+
+        )
+        /
+        2
+        -
         minY;
 
 
