@@ -5,10 +5,6 @@ import {
     ButtonStyle
 } from 'discord.js';
 
-import {
-    getFamilyByMember
-} from '../../utils/families.js';
-
 
 export default {
 
@@ -33,7 +29,6 @@ export default {
             interaction.options.getUser('persona');
 
 
-
         if (
             child.id === interaction.user.id
         ) {
@@ -51,7 +46,7 @@ export default {
 
 
 
-        const buttons =
+        const row =
             new ActionRowBuilder()
                 .addComponents(
 
@@ -87,10 +82,10 @@ export default {
         await interaction.reply({
 
             content:
-                `👶 ${interaction.user} quiere adoptarte como hijo/a, ${child}.\n\n¿Aceptas la adopción?`,
+                `👶 ${interaction.user} quiere adoptarte como hijo/a.\n\n${child}, ¿aceptas?`,
 
             components:[
-                buttons
+                row
             ]
 
         });
