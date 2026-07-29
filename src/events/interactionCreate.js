@@ -1,3 +1,4 @@
+console.log("ESTOY USANDO interactionCreate.js");
 import { Events } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
