@@ -1,15 +1,17 @@
 import {
+    EmbedBuilder
+} from 'discord.js';
+
+
+import {
     acceptFamilyRequest,
     getFamilyRequest
 } from '../../family/requests/familyRequests.js';
 
+
 import {
     createFamily
 } from '../../utils/families.js';
-
-import {
-    EmbedBuilder
-} from 'discord.js';
 
 
 
@@ -131,25 +133,26 @@ export default {
                 new EmbedBuilder()
 
                     .setTitle(
-                        '💍✨ ¡Felicidades! ✨💍'
+                        '🎉💍 ¡Felicidades!'
                     )
 
                     .setDescription(
 
-                        '🎉 ¡La unión se ha completado correctamente!\n\n' +
+                        `❤️ La unión entre ${updated.members
+                            .map(id => `<@${id}>`)
+                            .join(' y ')} ha sido creada correctamente.\n\n` +
 
-                        updated.members
-                            .map(
-                                id => `❤️ <@${id}>`
-                            )
-                            .join('\n') +
-
-                        '\n\n💐 ¡Que vuestra historia dure para siempre!'
+                        'Que vuestro vínculo dure para siempre ✨'
 
                     )
 
+                    // Pon aquí tu GIF de boda
+                    .setImage(
+                        'URL_DEL_GIF_AQUI'
+                    )
+
                     .setColor(
-                        0xff69b4
+                        '#ff69b4'
                     );
 
 
@@ -179,7 +182,12 @@ export default {
         await interaction.update({
 
             content:
-                `💍 <@${interaction.user.id}> ha aceptado la unión.`,
+                `💍 <@${interaction.user.id}> ha aceptado la unión.\n\n` +
+
+                'Esperando a que todas las personas acepten...',
+
+            embeds:
+                [],
 
             components:
                 []
