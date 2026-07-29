@@ -1,12 +1,12 @@
 import {
-    getFamilyRequest,
-    acceptFamilyRequest,
-    deleteFamilyRequest
-} from '../../family/requests/familyRequests.js';
+    getFamilyByMember,
+    createFamily,
+    updateFamily
+} from '../../utils/families.js';
 
 import {
-    createFamily
-} from '../../utils/families.js';
+    setInDb
+} from '../../utils/database/wrapper.js';
 
 
 export default {
@@ -14,31 +14,62 @@ export default {
     customId: 'accept_marriage',
 
 
-    async execute(
-        interaction,
-        client,
-        args
-    ) {
+    async execute(interaction, client, args) {
 
 
-        const requestId =
+        const familyId =
             args[0];
 
 
-        const request =
-            await getFamilyRequest(
+
+        const family =
+            await getFamilyByMember(
+
                 interaction.guild.id,
-                requestId
+
+                interaction.user.id
+
             );
 
 
-        if (!request) {
+
+        if (family) {
 
             return interaction.reply({
+
                 content:
-                    '❌ Esta solicitud ya no existe.',
+                    '❌ Ya perteneces a una familia.',
+
                 ephemeral:
                     true
+
+            });
+
+        }
+
+
+
+        const requestFamily =
+            await getFromDb(
+
+                `family:${interaction.guild.id}:${familyId}`,
+
+                null
+
+            );
+
+
+
+        if (!requestFamily) {
+
+            return interaction.reply({
+
+                content:
+                    '❌ La solicitud de unión ya no existe.',
+
+                ephemeral:
+                    true
+
             });
 
         }
@@ -46,69 +77,39 @@ export default {
 
 
         if (
-            !request.members.includes(
+            !requestFamily.members.includes(
                 interaction.user.id
             )
         ) {
 
-            return interaction.reply({
-                content:
-                    '❌ No estás en esta solicitud.',
-                ephemeral:
-                    true
-            });
+            requestFamily.members.push(
+
+                interaction.user.id
+
+            );
 
         }
 
 
 
-        await acceptFamilyRequest(
+        await updateFamily(
+
             interaction.guild.id,
-            requestId,
-            interaction.user.id
+
+            requestFamily.id,
+
+            requestFamily
+
         );
 
 
 
-        const updated =
-            await getFamilyRequest(
-                interaction.guild.id,
-                requestId
-            );
+        await setInDb(
 
+            `familyMember:${interaction.guild.id}:${interaction.user.id}`,
 
+            requestFamily.id
 
-        const allAccepted =
-            updated.members.every(
-                id =>
-                    updated.accepted.includes(id)
-            );
-
-
-
-        if (!allAccepted) {
-
-            return interaction.reply({
-                content:
-                    '✅ Has aceptado. Esperando al resto.',
-                ephemeral:
-                    true
-            });
-
-        }
-
-
-
-        await createFamily(
-            interaction.guild.id,
-            updated.members
-        );
-
-
-
-        await deleteFamilyRequest(
-            interaction.guild.id,
-            requestId
         );
 
 
@@ -116,9 +117,7 @@ export default {
         await interaction.update({
 
             content:
-                `💍 Unión creada: ${updated.members.map(id => `<@${id}>`).join(', ')}`,
-
-            embeds: [],
+                `💍 <@${interaction.user.id}> ha aceptado la unión.`,
 
             components: []
 
