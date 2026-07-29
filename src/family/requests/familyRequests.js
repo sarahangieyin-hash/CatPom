@@ -240,3 +240,19 @@ export async function getAllFamilyRequests(
     );
 
 }
+
+export async function getFamilyRequestByCreator(
+    guildId,
+    userId
+) {
+
+    const key =
+        `familyRequest:${guildId}:${userId}`;
+
+
+    return await getFromDb(
+        key,
+        null
+    );
+
+}
