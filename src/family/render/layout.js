@@ -44,8 +44,10 @@ export async function calculateLayout(
 
 
     /*
-        ANILLO DE UNIÓN 💍
-        Siempre en medio de la pareja
+        NODO CENTRAL DE UNIÓN 💍
+
+        No se dibuja.
+        Sirve para conectar pareja e hijos.
     */
 
     nodes.push({
@@ -67,32 +69,16 @@ export async function calculateLayout(
 
 
     /*
-        PAREJAS 👩 💍 👨
-        Siempre alrededor del anillo
+        MIEMBROS DE LA UNIÓN 💍
+
+        Siempre en línea horizontal.
+        Ej:
+        A - 💍 - B - 💍 - C
     */
-
-    const radius = 180;
-
 
     members.forEach(
 
         (id, index) => {
-
-
-            const total =
-                members.length;
-
-
-            const angle =
-                (
-                    Math.PI *
-                    2 *
-                    index /
-                    total
-                )
-                -
-                Math.PI / 2;
-
 
 
             nodes.push({
@@ -105,14 +91,16 @@ export async function calculateLayout(
 
                 x:
                     centerX +
-                    Math.cos(angle) *
-                    radius,
+                    (
+                        index -
+                        (members.length - 1) / 2
+                    )
+                    *
+                    180,
 
 
                 y:
-                    300 +
-                    Math.sin(angle) *
-                    radius / 2
+                    300
 
             });
 
@@ -125,9 +113,9 @@ export async function calculateLayout(
 
     /*
         HIJOS 👶
-        Siempre debajo del matrimonio
-    */
 
+        Siempre debajo del centro de la unión.
+    */
 
     children.forEach(
 
@@ -168,9 +156,9 @@ export async function calculateLayout(
 
     /*
         PADRES 👨‍👩‍👧
-        Arriba conectados al anillo
-    */
 
+        Arriba del núcleo familiar.
+    */
 
     parents.forEach(
 
@@ -212,7 +200,6 @@ export async function calculateLayout(
     /*
         HERMANOS 👥
     */
-
 
     siblings.forEach(
 
