@@ -20,7 +20,6 @@ export default {
     data: new SlashCommandBuilder()
 
         .setName('marry')
-
         .setDescription('Solicita una unión matrimonial.')
 
         .addUserOption(option =>
@@ -51,20 +50,16 @@ export default {
         const personas = [
 
             interaction.options.getUser('persona1'),
-
             interaction.options.getUser('persona2'),
-
             interaction.options.getUser('persona3')
 
-        ]
-        .filter(Boolean);
+        ].filter(Boolean);
 
 
 
-        const miembros = [
+        const usuarios = [
 
             interaction.user,
-
             ...personas
 
         ];
@@ -72,7 +67,7 @@ export default {
 
 
         const ids =
-            miembros.map(
+            usuarios.map(
                 user => user.id
             );
 
@@ -96,22 +91,17 @@ export default {
 
 
         for (
-            const user of miembros
+            const user of usuarios
         ) {
 
-
-            const exists =
+            const family =
                 await isUserInFamily(
-
                     interaction.guild.id,
-
                     user.id
-
                 );
 
 
-
-            if (exists) {
+            if (family) {
 
                 return interaction.reply({
 
@@ -128,27 +118,33 @@ export default {
 
 
 
-        const request =
+        const requestId =
+            `marriage_${Date.now()}`;
 
-            createFamilyRequest(
 
-                'marriage',
 
-                {
+        await createFamilyRequest(
 
-                    members: ids,
+            interaction.guild.id,
 
-                    creator:
-                        interaction.user.id
+            requestId,
 
-                }
+            {
 
-            );
+                type: 'marriage',
+
+                members: ids,
+
+                creator:
+                    interaction.user.id
+
+            }
+
+        );
 
 
 
         const embed =
-
             new EmbedBuilder()
 
                 .setTitle(
@@ -171,14 +167,13 @@ export default {
                 .setFooter({
 
                     text:
-                        `Solicitud: ${request.id}`
+                        `Solicitud: ${requestId}`
 
                 });
 
 
 
-        const buttons =
-
+        const row =
             new ActionRowBuilder()
 
                 .addComponents(
@@ -186,7 +181,7 @@ export default {
                     new ButtonBuilder()
 
                         .setCustomId(
-                            `accept_marriage:${request.id}`
+                            `accept_marriage:${requestId}`
                         )
 
                         .setLabel(
@@ -201,7 +196,7 @@ export default {
                     new ButtonBuilder()
 
                         .setCustomId(
-                            `reject_marriage:${request.id}`
+                            `reject_marriage:${requestId}`
                         )
 
                         .setLabel(
@@ -223,7 +218,7 @@ export default {
             ],
 
             components: [
-                buttons
+                row
             ]
 
         });
