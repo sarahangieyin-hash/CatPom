@@ -19,6 +19,10 @@ import {
     drawIcons
 } from './drawIcons.js';
 
+import {
+    drawMarriage
+} from './drawMarriage.js';
+
 import path from 'path';
 
 import {
@@ -44,6 +48,8 @@ const backgroundPath =
 
 
 
+
+
 export async function renderFamilyTree(
     guild,
     family
@@ -61,6 +67,8 @@ export async function renderFamilyTree(
 
 
 
+
+
     const layout =
         await calculateLayout(
             guild,
@@ -68,8 +76,11 @@ export async function renderFamilyTree(
         );
 
 
+
     layout.guild =
         guild;
+
+
 
 
 
@@ -78,15 +89,6 @@ export async function renderFamilyTree(
 
 
 
-
-
-    /*
-        MEDIR TODO EL CONTENIDO
-
-        IMPORTANTE:
-        Incluye unions 💍
-        para que no se desplacen.
-    */
 
 
     const nodes =
@@ -160,16 +162,11 @@ export async function renderFamilyTree(
 
 
     const contentWidth =
-
-        maxX -
-        minX;
-
+        maxX - minX;
 
 
     const contentHeight =
-
-        maxY -
-        minY;
+        maxY - minY;
 
 
 
@@ -203,14 +200,6 @@ export async function renderFamilyTree(
 
 
 
-
-
-    /*
-        CENTRADO REAL
-
-        Mantiene personas y anillos
-        en el mismo sitio.
-    */
 
 
     const offsetX =
@@ -287,11 +276,6 @@ export async function renderFamilyTree(
 
 
 
-    /*
-        FONDO
-    */
-
-
     try {
 
 
@@ -363,12 +347,14 @@ export async function renderFamilyTree(
 
 
     /*
-        ORDEN:
+        ORDEN DE DIBUJO
 
         1. Líneas detrás
         2. Personas
-        3. Iconos/anillos encima
+        3. Anillos 💍
+        4. Otros iconos 🔥
     */
+
 
 
     await drawLines(
@@ -382,6 +368,16 @@ export async function renderFamilyTree(
 
 
     await drawNodes(
+
+        ctx,
+
+        layout
+
+    );
+
+
+
+    await drawMarriage(
 
         ctx,
 
