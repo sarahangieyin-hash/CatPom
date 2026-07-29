@@ -9,13 +9,19 @@ import {
 } from '../../family/requests/familyRequests.js';
 
 import {
-    createFamily
+    getFamilyByMember,
+    createFamily,
+    updateFamily
 } from '../../utils/families.js';
+
+
 
 export default {
 
     customId:
         'accept_marriage',
+
+
 
     async execute(
         interaction,
@@ -23,8 +29,11 @@ export default {
         args
     ) {
 
+
         const requestId =
             args[0];
+
+
 
         const request =
             await getFamilyRequest(
@@ -35,35 +44,55 @@ export default {
 
             );
 
+
+
         if (!request) {
+
 
             return interaction.reply({
 
                 content:
                     '❌ La solicitud de unión ya no existe.',
 
-                ephemeral: true
+                ephemeral:
+                    true
 
             });
 
+
         }
 
+
+
+
+
         if (
+
             !request.members.includes(
+
                 interaction.user.id
+
             )
+
         ) {
+
 
             return interaction.reply({
 
                 content:
                     '❌ Esta solicitud no es para ti.',
 
-                ephemeral: true
+                ephemeral:
+                    true
 
             });
 
+
         }
+
+
+
+
 
         await acceptFamilyRequest(
 
@@ -75,6 +104,10 @@ export default {
 
         );
 
+
+
+
+
         const updated =
             await getFamilyRequest(
 
@@ -84,7 +117,12 @@ export default {
 
             );
 
+
+
+
+
         const allAccepted =
+
             updated.members.every(
 
                 id =>
@@ -92,19 +130,111 @@ export default {
 
             );
 
+
+
+
+
         /*
             TODOS ACEPTARON
         */
 
+
         if (allAccepted) {
 
-            await createFamily(
 
-                interaction.guild.id,
 
-                updated.members
+            /*
+                BUSCAR FAMILIA EXISTENTE
 
-            );
+                NO CREAR UNA NUEVA
+                SI YA TIENEN HIJOS
+            */
+
+
+            let family =
+                await getFamilyByMember(
+
+                    interaction.guild.id,
+
+                    updated.members[0]
+
+                );
+
+
+
+
+
+            if (!family) {
+
+
+                family =
+                    await createFamily(
+
+                        interaction.guild.id,
+
+                        updated.members
+
+                    );
+
+
+            } else {
+
+
+
+                /*
+                    AÑADIR NUEVOS MIEMBROS
+
+                    MANTIENE:
+                    - hijos
+                    - padres
+                    - hermanos
+                    - datos anteriores
+
+                */
+
+
+                for (
+
+                    const member of updated.members
+
+                ) {
+
+
+                    if (
+
+                        !family.members.includes(member)
+
+                    ) {
+
+
+                        family.members.push(member);
+
+
+                    }
+
+
+                }
+
+
+
+
+
+                await updateFamily(
+
+                    interaction.guild.id,
+
+                    family.id,
+
+                    family
+
+                );
+
+
+            }
+
+
+
+
 
             await deleteFamilyRequest(
 
@@ -114,35 +244,71 @@ export default {
 
             );
 
+
+
+
+
             const miembros =
+
                 updated.members.map(
-                    id => `<@${id}>`
+
+                    id =>
+                        `<@${id}>`
+
                 );
+
+
+
+
 
             let lista;
 
-            if (miembros.length === 2) {
+
+
+            if (
+
+                miembros.length === 2
+
+            ) {
+
 
                 lista =
                     `${miembros[0]} y ${miembros[1]}`;
 
+
             } else {
 
+
                 lista =
+
                     miembros
+
                         .slice(0, -1)
+
                         .join(', ') +
+
                     ' y ' +
+
                     miembros.at(-1);
+
 
             }
 
+
+
+
+
             const embed =
+
                 new EmbedBuilder()
 
+
                     .setTitle(
+
                         '🎉💍 ¡Felicidades! ¡Estáis casados!'
+
                     )
+
 
                     .setDescription(
 
@@ -152,37 +318,71 @@ export default {
 
                     )
 
+
                     .setColor(
+
                         0xff69b4
+
                     );
+
+
+
+
 
             await interaction.message.edit({
 
-                content: '',
+                content:
+                    '',
 
-                embeds: [
-                    embed
-                ],
+                embeds:
+                    [
 
-                components: []
+                        embed
+
+                    ],
+
+                components:
+                    []
 
             });
 
+
+
+
+
             await interaction.deferUpdate();
+
+
 
             return;
 
+
         }
+
+
+
+
 
         /*
             TODAVÍA FALTA GENTE
         */
 
+
         const restantes =
+
             updated.members.length -
+
             updated.accepted.length;
 
+
+
+
+
         await interaction.deferUpdate();
+
+
+
+
 
         await interaction.channel.send({
 
@@ -194,6 +394,9 @@ export default {
 
         });
 
+
+
     }
+
 
 };
