@@ -79,10 +79,10 @@ export async function renderFamilyTree(
 
 
     /*
-        TAMAÑO DINÁMICO
+        TAMAÑO DINÁMICO REAL
 
-        Cuantos más miembros,
-        más grande será el lienzo.
+        La familia pequeña ocupa poco.
+        Al crecer, el fondo crece.
 
     */
 
@@ -98,11 +98,11 @@ export async function renderFamilyTree(
     const width =
         Math.max(
 
-            1600,
+            700,
 
             layout.width,
 
-            1200 + memberCount * 180
+            600 + memberCount * 220
 
         );
 
@@ -111,11 +111,11 @@ export async function renderFamilyTree(
     const height =
         Math.max(
 
-            1000,
+            500,
 
             layout.height,
 
-            900 + memberCount * 80
+            450 + memberCount * 120
 
         );
 
@@ -149,9 +149,9 @@ export async function renderFamilyTree(
 
 
     /*
-        FONDO DINÁMICO
+        FONDO
 
-        La imagen ocupa todo el árbol.
+        Se adapta al tamaño del árbol.
     */
 
 
