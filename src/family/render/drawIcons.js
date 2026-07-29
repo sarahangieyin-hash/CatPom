@@ -19,8 +19,8 @@ export async function drawIcons(
     /*
         💍 ANILLO DE CASADOS
 
-        Se dibuja en medio de las parejas.
-        No usa emojis para evitar cuadrados.
+        Dibujado con Canvas para evitar
+        emojis rotos y cuadrados.
     */
 
 
@@ -50,7 +50,7 @@ export async function drawIcons(
 
 
         /*
-            Aro del anillo
+            Aro exterior dorado
         */
 
 
@@ -59,7 +59,7 @@ export async function drawIcons(
 
 
         ctx.lineWidth =
-            5;
+            7;
 
 
         ctx.beginPath();
@@ -71,7 +71,7 @@ export async function drawIcons(
 
             centerY,
 
-            18,
+            22,
 
             0,
 
@@ -85,12 +85,16 @@ export async function drawIcons(
 
 
         /*
-            Diamante del anillo
+            Interior del aro
         */
 
 
-        ctx.fillStyle =
-            "#d4af37";
+        ctx.strokeStyle =
+            "#fff4a3";
+
+
+        ctx.lineWidth =
+            3;
 
 
         ctx.beginPath();
@@ -98,11 +102,11 @@ export async function drawIcons(
 
         ctx.arc(
 
-            centerX + 12,
+            centerX,
 
-            centerY - 14,
+            centerY,
 
-            6,
+            13,
 
             0,
 
@@ -111,7 +115,73 @@ export async function drawIcons(
         );
 
 
+        ctx.stroke();
+
+
+
+        /*
+            Piedra del anillo
+        */
+
+
+        ctx.fillStyle =
+            "#e8ffff";
+
+
+        ctx.strokeStyle =
+            "#d4af37";
+
+
+        ctx.lineWidth =
+            2;
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+
+            centerX,
+
+            centerY - 38
+
+        );
+
+
+        ctx.lineTo(
+
+            centerX + 12,
+
+            centerY - 22
+
+        );
+
+
+        ctx.lineTo(
+
+            centerX,
+
+            centerY - 8
+
+        );
+
+
+        ctx.lineTo(
+
+            centerX - 12,
+
+            centerY - 22
+
+        );
+
+
+        ctx.closePath();
+
+
         ctx.fill();
+
+
+        ctx.stroke();
 
 
     }
@@ -123,7 +193,7 @@ export async function drawIcons(
     /*
         🔥 AMANTES
 
-        También sin emoji para evitar cuadrados.
+        Sin emojis para evitar cuadrados.
     */
 
 
@@ -142,11 +212,11 @@ export async function drawIcons(
 
 
                 ctx.fillStyle =
-                    "#ff4500";
+                    "#ff3030";
 
 
                 ctx.font =
-                    "35px Arial";
+                    "32px Arial";
 
 
                 ctx.textAlign =
