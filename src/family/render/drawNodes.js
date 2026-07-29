@@ -46,10 +46,10 @@ export async function drawNodes(
 
 
         /*
-            NODO INVISIBLE DE UNIÓN 💍
+            💍 NODO INVISIBLE
 
-            No se dibuja.
-            Solo sirve para las líneas.
+            No dibujar.
+            Solo existe para colocar el anillo.
         */
 
         if (
@@ -63,7 +63,7 @@ export async function drawNodes(
 
 
         let username =
-            node.id;
+            String(node.id);
 
 
 
@@ -86,11 +86,6 @@ export async function drawNodes(
         const size =
             120;
 
-
-
-        /*
-            CAJA DEL USUARIO
-        */
 
 
         ctx.fillStyle =
@@ -136,11 +131,6 @@ export async function drawNodes(
 
 
 
-        /*
-            NOMBRE
-        */
-
-
         ctx.fillStyle =
             '#000000';
 
@@ -153,7 +143,6 @@ export async function drawNodes(
 
         ctx.textAlign =
             'center';
-
 
 
         ctx.textBaseline =
@@ -185,7 +174,7 @@ export async function drawNodes(
 
         ctx.fillText(
 
-            safeName || node.id,
+            safeName || '???',
 
             node.x,
 
