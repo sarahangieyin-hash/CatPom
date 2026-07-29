@@ -3,7 +3,6 @@ export async function calculateLayout(
     family
 ) {
 
-
     const members =
         Array.isArray(family.members)
             ? family.members
@@ -34,62 +33,34 @@ export async function calculateLayout(
             : [];
 
 
-
     const nodes = [];
 
 
-
-    const centerX = 800;
-
-
-
-    /*
-        NODO DE UNIÓN 💍
-        Invisible.
-        Sirve para conectar padres e hijos.
-    */
-
-    nodes.push({
-
-        id:
-            'union_main',
-
-        type:
-            'union',
-
-        x:
-            centerX,
-
-        y:
-            300
-
-    });
+    const centerX = 900;
 
 
 
     /*
         PAREJA PRINCIPAL 💍
+
         Siempre horizontal.
-        Ej:
-        Madre - Padre
-        Madre - Padre - Pareja
+        Da igual si son 2, 3 o más.
     */
+
 
     const memberSpacing = 220;
 
 
     members.forEach(
 
-        (id, index) => {
+        (id,index)=>{
 
 
             nodes.push({
 
                 id,
 
-                type:
-                    'member',
-
+                type:'member',
 
                 x:
                     centerX +
@@ -101,8 +72,7 @@ export async function calculateLayout(
                     memberSpacing,
 
 
-                y:
-                    300
+                y:300
 
             });
 
@@ -110,42 +80,38 @@ export async function calculateLayout(
         }
 
     );
+
+
 
 
 
     /*
         HIJOS 👶
-        Siempre debajo de TODA la unión.
     */
 
 
     children.forEach(
 
-        (child, index) => {
+        (child,index)=>{
 
 
             nodes.push({
 
-                id:
-                    child.id,
+                id:child.id,
 
-
-                type:
-                    'child',
-
+                type:'child',
 
                 x:
                     centerX +
                     (
                         index -
-                        (children.length - 1) / 2
+                        (children.length -1)/2
                     )
                     *
-                    240,
+                    220,
 
 
-                y:
-                    650
+                y:600
 
             });
 
@@ -153,42 +119,38 @@ export async function calculateLayout(
         }
 
     );
+
+
 
 
 
     /*
         PADRES 👨‍👩‍👧
-        Encima de la pareja.
     */
 
 
     parents.forEach(
 
-        (parent, index) => {
+        (parent,index)=>{
 
 
             nodes.push({
 
-                id:
-                    parent.id,
+                id:parent.id,
 
-
-                type:
-                    'parent',
-
+                type:'parent',
 
                 x:
                     centerX +
                     (
                         index -
-                        (parents.length - 1) / 2
+                        (parents.length -1)/2
                     )
                     *
-                    280,
+                    260,
 
 
-                y:
-                    80
+                y:100
 
             });
 
@@ -196,6 +158,8 @@ export async function calculateLayout(
         }
 
     );
+
+
 
 
 
@@ -206,26 +170,21 @@ export async function calculateLayout(
 
     siblings.forEach(
 
-        (sibling, index) => {
+        (sibling,index)=>{
 
 
             nodes.push({
 
-                id:
-                    sibling.id,
+                id:sibling.id,
 
-
-                type:
-                    'sibling',
-
+                type:'sibling',
 
                 x:
                     150 +
-                    index * 230,
+                    index*220,
 
 
-                y:
-                    300
+                y:300
 
             });
 
@@ -236,39 +195,27 @@ export async function calculateLayout(
 
 
 
+
     return {
 
+        width:1800,
 
-        width:
-            1800,
-
-
-        height:
-            1000,
-
+        height:1000,
 
         guild,
 
-
         nodes,
-
 
         members,
 
-
         children,
-
 
         parents,
 
-
         siblings,
-
 
         lovers
 
-
     };
-
 
 }
