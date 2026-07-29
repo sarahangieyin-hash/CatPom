@@ -79,17 +79,19 @@ export async function renderFamilyTree(
 
 
     /*
-        EL TAMAÑO VIENE DEL LAYOUT
+        TAMAÑO DINÁMICO
 
-        No añade espacio extra.
-        El layout decide el tamaño.
+        El layout decide el tamaño,
+        pero se añade margen para
+        que los nodos no queden pegados
+        al borde.
     */
 
 
     const width =
 
         Math.ceil(
-            layout.width
+            layout.width + 300
         );
 
 
@@ -97,7 +99,7 @@ export async function renderFamilyTree(
     const height =
 
         Math.ceil(
-            layout.height
+            layout.height + 200
         );
 
 
@@ -130,7 +132,7 @@ export async function renderFamilyTree(
 
 
     /*
-        FONDO ADAPTADO AL LIENZO
+        FONDO
     */
 
 
