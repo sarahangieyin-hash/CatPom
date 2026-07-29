@@ -1,101 +1,111 @@
-import {
-    getFromDb,
-    setInDb
-} from '../../utils/database/wrapper.js';
-
-import {
-    updateFamily
-} from '../../utils/families.js';
+export async function drawNodes(
+    ctx,
+    layout
+) {
 
 
-export default {
-
-    customId: 'accept_marriage:marriage',
-
-
-    async execute(interaction, client, args) {
+    for (
+        const node of layout.nodes
+    ) {
 
 
-        const familyId =
-            args[0];
+        let username =
+            node.id;
 
 
 
-        const family =
-            await getFromDb(
+        try {
 
-                `family:${interaction.guild.id}:${familyId}`,
-
-                null
-
-            );
+            const member =
+                await layout.guild.members.fetch(node.id);
 
 
+            username =
+                member.user.username;
 
-        if (!family) {
 
-            return interaction.reply({
-
-                content:
-                    '❌ La solicitud de unión ya no existe.',
-
-                ephemeral:
-                    true
-
-            });
-
-        }
+        } catch {}
 
 
 
-        if (
-            !family.members.includes(
-                interaction.user.id
-            )
-        ) {
-
-            family.members.push(
-
-                interaction.user.id
-
-            );
-
-        }
+        const size = 120;
 
 
 
-        await updateFamily(
+        ctx.fillStyle =
+            '#ffffff';
 
-            interaction.guild.id,
 
-            family.id,
 
-            family
+        ctx.fillRect(
+
+            node.x - size / 2,
+
+            node.y - size / 2,
+
+            size,
+
+            size
 
         );
 
 
 
-        await setInDb(
+        ctx.strokeStyle =
+            '#000000';
 
-            `familyMember:${interaction.guild.id}:${interaction.user.id}`,
 
-            family.id
+
+        ctx.lineWidth =
+            3;
+
+
+
+        ctx.strokeRect(
+
+            node.x - size / 2,
+
+            node.y - size / 2,
+
+            size,
+
+            size
 
         );
 
 
 
-        await interaction.update({
+        ctx.fillStyle =
+            '#000000';
 
-            content:
-                `💍 <@${interaction.user.id}> ha aceptado la unión.`,
 
-            components: []
 
-        });
+        ctx.font =
+            'bold 18px Arial';
+
+
+
+        ctx.textAlign =
+            'center';
+
+
+
+        ctx.textBaseline =
+            'middle';
+
+
+
+        ctx.fillText(
+
+            username,
+
+            node.x,
+
+            node.y
+
+        );
 
 
     }
 
-};
+}
