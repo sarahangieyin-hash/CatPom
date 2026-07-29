@@ -9,6 +9,7 @@ import {
 } from 'url';
 
 
+
 const __filename =
     fileURLToPath(import.meta.url);
 
@@ -45,20 +46,30 @@ export async function drawNodes(
     ) {
 
 
-        /*
-            💍 NODO INVISIBLE
 
-            No dibujar.
-            Solo existe para colocar el anillo.
+        /*
+            NODO DE UNIÓN 💍
+
+            Invisible.
+            Solo sirve para colocar el anillo.
         */
 
         if (
-            node.type === 'union'
+
+            node.id === 'union_main' ||
+
+            node.id === 'UNION' ||
+
+            node.type === 'union' ||
+
+            node.hidden === true
+
         ) {
 
             continue;
 
         }
+
 
 
 
@@ -68,6 +79,7 @@ export async function drawNodes(
 
 
         try {
+
 
             const member =
                 await layout.guild.members.fetch(
@@ -83,9 +95,16 @@ export async function drawNodes(
 
 
 
+
         const size =
             120;
 
+
+
+
+        /*
+            CAJA DEL USUARIO
+        */
 
 
         ctx.fillStyle =
@@ -107,9 +126,9 @@ export async function drawNodes(
 
 
 
+
         ctx.strokeStyle =
             '#000000';
-
 
 
         ctx.lineWidth =
@@ -131,6 +150,13 @@ export async function drawNodes(
 
 
 
+
+
+        /*
+            NOMBRE
+        */
+
+
         ctx.fillStyle =
             '#000000';
 
@@ -145,12 +171,15 @@ export async function drawNodes(
             'center';
 
 
+
         ctx.textBaseline =
             'middle';
 
 
 
+
         const safeName =
+
             username
 
                 .normalize('NFD')
@@ -169,6 +198,7 @@ export async function drawNodes(
                     0,
                     12
                 );
+
 
 
 
