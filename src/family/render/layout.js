@@ -39,8 +39,10 @@ export async function calculateLayout(
 
 
 
+
+
     /*
-        ESPACIADO DINÁMICO
+        ESPACIADOS
     */
 
 
@@ -48,10 +50,11 @@ export async function calculateLayout(
         Math.max(
             180,
             Math.min(
-                320,
-                140 + members.length * 45
+                300,
+                180 + members.length * 35
             )
         );
+
 
 
     const childSpacing =
@@ -59,41 +62,86 @@ export async function calculateLayout(
             180,
             Math.min(
                 280,
-                140 + children.length * 35
+                180 + children.length * 40
             )
         );
+
 
 
     const parentSpacing =
         Math.max(
             200,
             Math.min(
-                350,
-                160 + parents.length * 40
+                320,
+                200 + parents.length * 40
             )
         );
 
+
+
+
+
+    /*
+        TAMAÑO DINÁMICO
+
+        El lienzo crece según la familia,
+        pero mantiene el centro.
+    */
+
+
+    const maxHorizontalNodes =
+        Math.max(
+            members.length,
+            children.length,
+            parents.length,
+            siblings.length,
+            2
+        );
+
+
+
+    const width =
+        Math.max(
+
+            1200,
+
+            (
+                maxHorizontalNodes *
+                220
+            )
+            +
+            700
+
+        );
+
+
+
+    const height =
+        Math.max(
+
+            900,
+
+            500 +
+
+            children.length *
+            160 +
+
+            parents.length *
+            100
+
+        );
+
+
+
+
+
+    /*
+        CENTRO REAL DEL CANVAS
+    */
 
 
     const centerX =
-        Math.max(
-
-            800,
-
-            (
-                Math.max(
-                    members.length,
-                    2
-                )
-                *
-                memberSpacing
-            )
-            /
-            2
-            +
-            200
-
-        );
+        width / 2;
 
 
 
@@ -118,7 +166,9 @@ export async function calculateLayout(
 
 
                 x:
+
                     centerX +
+
                     (
                         index -
                         (members.length - 1) / 2
@@ -151,11 +201,11 @@ export async function calculateLayout(
     ) {
 
 
-        for (
+        for(
             let i = 0;
             i < members.length - 1;
             i++
-        ) {
+        ){
 
 
             const left =
@@ -179,10 +229,10 @@ export async function calculateLayout(
 
 
 
-            if (
+            if(
                 left &&
                 right
-            ) {
+            ){
 
 
                 nodes.push({
@@ -239,7 +289,9 @@ export async function calculateLayout(
 
 
                 x:
+
                     centerX +
+
                     (
                         index -
                         (children.length - 1) / 2
@@ -249,7 +301,7 @@ export async function calculateLayout(
 
 
                 y:
-                    750
+                    700
 
             });
 
@@ -283,7 +335,9 @@ export async function calculateLayout(
 
 
                 x:
+
                     centerX +
+
                     (
                         index -
                         (parents.length - 1) / 2
@@ -327,146 +381,21 @@ export async function calculateLayout(
 
 
                 x:
-                    200 +
-                    index *
-                    260,
+
+                    centerX +
+
+                    (
+                        index -
+                        (siblings.length - 1) / 2
+                    )
+                    *
+                    220,
 
 
                 y:
                     350
 
             });
-
-
-        }
-
-    );
-
-
-
-
-
-    /*
-        AJUSTE AUTOMÁTICO DEL LIENZO
-
-        Usa la posición real de los nodos.
-        Evita espacios vacíos.
-        Centra el árbol.
-    */
-
-
-    const padding =
-        250;
-
-
-
-    const visibleNodes =
-
-        nodes.filter(
-
-            node =>
-                node.type !== 'union'
-
-        );
-
-
-
-    const minX =
-        Math.min(
-
-            ...visibleNodes.map(
-
-                node =>
-                    node.x
-
-            )
-
-        );
-
-
-
-    const maxX =
-        Math.max(
-
-            ...visibleNodes.map(
-
-                node =>
-                    node.x
-
-            )
-
-        );
-
-
-
-    const minY =
-        Math.min(
-
-            ...visibleNodes.map(
-
-                node =>
-                    node.y
-
-            )
-
-        );
-
-
-
-    const maxY =
-        Math.max(
-
-            ...visibleNodes.map(
-
-                node =>
-                    node.y
-
-            )
-
-        );
-
-
-
-    const width =
-
-        (
-            maxX -
-            minX
-        )
-        +
-        padding * 2;
-
-
-
-    const height =
-
-        (
-            maxY -
-            minY
-        )
-        +
-        padding * 2;
-
-
-
-    /*
-        CENTRAR TODOS LOS NODOS
-    */
-
-
-    nodes.forEach(
-
-        node => {
-
-
-            node.x -= minX;
-
-            node.x += padding;
-
-
-            node.y -= minY;
-
-            node.y += padding;
 
 
         }
