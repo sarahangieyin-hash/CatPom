@@ -41,40 +41,35 @@ export async function calculateLayout(
 
     /*
         ESPACIADO DINÁMICO
-
-        Pocas personas = compacto.
-        Muchas personas = se separa.
     */
 
 
     const memberSpacing =
         Math.max(
-            150,
+            180,
             Math.min(
-                280,
-                120 + members.length * 35
+                320,
+                140 + members.length * 45
             )
         );
-
 
 
     const childSpacing =
         Math.max(
-            150,
+            180,
             Math.min(
-                250,
-                120 + children.length * 20
+                280,
+                140 + children.length * 35
             )
         );
 
 
-
     const parentSpacing =
         Math.max(
-            180,
+            200,
             Math.min(
-                300,
-                150 + parents.length * 30
+                350,
+                160 + parents.length * 40
             )
         );
 
@@ -82,7 +77,9 @@ export async function calculateLayout(
 
     const centerX =
         Math.max(
-            600,
+
+            800,
+
             (
                 Math.max(
                     members.length,
@@ -90,9 +87,12 @@ export async function calculateLayout(
                 )
                 *
                 memberSpacing
-            ) / 2
+            )
+            /
+            2
             +
             200
+
         );
 
 
@@ -100,11 +100,7 @@ export async function calculateLayout(
 
 
     /*
-        PERSONAS PRINCIPALES 💍
-
-        Siempre horizontal:
-
-        Persona - anillo - Persona - anillo - Persona
+        MIEMBROS PRINCIPALES 💍
     */
 
 
@@ -132,7 +128,7 @@ export async function calculateLayout(
 
 
                 y:
-                    300
+                    350
 
             });
 
@@ -146,16 +142,11 @@ export async function calculateLayout(
 
 
     /*
-        NODOS DE UNIÓN 💍
-
-        Crea un punto invisible entre
-        cada pareja para conectar hijos,
-        padres y anillos.
-
-        Ejemplo:
-
-        A - 💍 - B - 💍 - C
+        UNIONES 💍
     */
+
+
+    const unionNodes = [];
 
 
     if (
@@ -190,13 +181,15 @@ export async function calculateLayout(
                 );
 
 
+
             if (
                 left &&
                 right
             ) {
 
 
-                nodes.push({
+                const union = {
+
 
                     type:
                         'union',
@@ -212,9 +205,16 @@ export async function calculateLayout(
 
 
                     y:
-                        300
+                        350
 
-                });
+
+                };
+
+
+                unionNodes.push(union);
+
+
+                nodes.push(union);
 
 
             }
@@ -224,10 +224,13 @@ export async function calculateLayout(
 
 
     }
-        /*
-        HIJOS 👶
 
-        Siempre debajo de la unión.
+
+
+
+
+    /*
+        HIJOS 👶
     */
 
 
@@ -257,7 +260,7 @@ export async function calculateLayout(
 
 
                 y:
-                    650
+                    750
 
             });
 
@@ -271,9 +274,7 @@ export async function calculateLayout(
 
 
     /*
-        PADRES 👨‍👩‍👧
-
-        Encima de la unión.
+        PADRES
     */
 
 
@@ -303,7 +304,7 @@ export async function calculateLayout(
 
 
                 y:
-                    80
+                    120
 
             });
 
@@ -317,9 +318,7 @@ export async function calculateLayout(
 
 
     /*
-        HERMANOS 👥
-
-        Lateral.
+        HERMANOS
     */
 
 
@@ -339,13 +338,13 @@ export async function calculateLayout(
 
 
                 x:
-                    150 +
+                    200 +
                     index *
-                    220,
+                    260,
 
 
                 y:
-                    300
+                    350
 
             });
 
@@ -359,39 +358,57 @@ export async function calculateLayout(
 
 
     /*
-        AJUSTE DE TAMAÑO
+        TAMAÑO DINÁMICO DEL LIENZO
 
-        Se adapta al crecimiento
-        de la familia.
+        Aumenta SOLO si hay más familia.
     */
 
 
+    const totalPeople =
+
+        members.length +
+        children.length +
+        parents.length +
+        siblings.length;
+
+
+
     const width =
+
         Math.max(
 
-            1200,
+            1600,
 
-            members.length *
-            memberSpacing
+            (
+                totalPeople *
+                220
+            )
             +
-            500
+            700
 
         );
 
 
 
     const height =
+
         Math.max(
 
-            900,
+            1000,
 
-            children.length *
-            80
-            +
-            900
+            900 +
+            (
+                children.length *
+                120
+            )
 
         );
-        return {
+
+
+
+
+
+    return {
 
 
         width,
