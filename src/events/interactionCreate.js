@@ -1,4 +1,5 @@
 console.log("USANDO ESTE interactionCreate");
+
 import { Events } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
@@ -6,8 +7,7 @@ import { handleInteractionError } from '../utils/errorHandler.js';
 
 export default {
 
-    name:
-        Events.InteractionCreate,
+    name: Events.InteractionCreate,
 
 
     async execute(
@@ -48,20 +48,48 @@ export default {
             if (interaction.isButton()) {
 
 
-                const parts =
-                    interaction.customId.split('_');
-
-
-
                 const customId =
-                    parts[0] + '_' + parts[1];
+                    interaction.customId;
+
+
+                let button;
+                let args = [];
 
 
 
-                const args =
-                    [
+                if (customId.includes('_')) {
+
+
+                    const parts =
+                        customId.split('_');
+
+
+                    const baseId =
+                        parts.slice(0, 2).join('_');
+
+
+                    button =
+                        client.buttons.get(
+                            baseId
+                        );
+
+
+                    args = [
+
                         parts.slice(2).join('_')
+
                     ];
+
+
+                } else {
+
+
+                    button =
+                        client.buttons.get(
+                            customId
+                        );
+
+                }
 
 
 
@@ -71,16 +99,13 @@ export default {
 
                     customId,
 
+                    "BUSCANDO:",
+
+                    button?.customId,
+
                     args
 
                 );
-
-
-
-                const button =
-                    client.buttons.get(
-                        customId
-                    );
 
 
 
