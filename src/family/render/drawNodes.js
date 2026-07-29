@@ -13,6 +13,12 @@ export async function drawNodes(
         const user =
             member?.user;
 
+        const displayName =
+            member?.displayName ??
+            user?.displayName ??
+            user?.username ??
+            node.id;
+
         const radius = 55;
 
         ctx.beginPath();
@@ -25,11 +31,11 @@ export async function drawNodes(
             Math.PI * 2
         );
 
-        ctx.fillStyle = '#2b2d31';
+        ctx.fillStyle = '#ffffff';
         ctx.fill();
 
-        ctx.strokeStyle = '#5865F2';
-        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
         ctx.stroke();
 
         if (user) {
@@ -51,7 +57,7 @@ export async function drawNodes(
                 ctx.arc(
                     node.x,
                     node.y,
-                    radius - 5,
+                    radius - 4,
                     0,
                     Math.PI * 2
                 );
@@ -60,39 +66,33 @@ export async function drawNodes(
 
                 ctx.drawImage(
                     avatar,
-                    node.x - radius + 5,
-                    node.y - radius + 5,
-                    (radius - 5) * 2,
-                    (radius - 5) * 2
+                    node.x - radius + 4,
+                    node.y - radius + 4,
+                    (radius - 4) * 2,
+                    (radius - 4) * 2
                 );
 
                 ctx.restore();
 
             } catch {}
 
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 22px Arial";
-            ctx.textAlign = "center";
-
-            ctx.fillText(
-                user.username,
-                node.x,
-                node.y + 85
-            );
-
-        } else {
-
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "18px Arial";
-            ctx.textAlign = "center";
-
-            ctx.fillText(
-                node.id,
-                node.x,
-                node.y
-            );
-
         }
+
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 22px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+
+        let name = displayName;
+
+        if (name.length > 14)
+            name = name.slice(0, 11) + "...";
+
+        ctx.fillText(
+            name,
+            node.x,
+            node.y + 70
+        );
 
     }
 
