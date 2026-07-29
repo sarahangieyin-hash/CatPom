@@ -2,12 +2,11 @@ import {
     EmbedBuilder
 } from 'discord.js';
 
-
 import {
     acceptFamilyRequest,
-    getFamilyRequest
+    getFamilyRequest,
+    deleteFamilyRequest
 } from '../../family/requests/familyRequests.js';
-
 
 import {
     createFamily
@@ -19,7 +18,6 @@ export default {
 
     customId:
         'accept_marriage',
-
 
 
     async execute(
@@ -108,9 +106,7 @@ export default {
             updated.members.every(
 
                 id =>
-                    updated.accepted.includes(
-                        id
-                    )
+                    updated.accepted.includes(id)
 
             );
 
@@ -128,19 +124,13 @@ export default {
             );
 
 
+            await deleteFamilyRequest(
 
-            await interaction.update({
+                interaction.guild.id,
 
-                content:
-                    ' ',
+                requestId
 
-                embeds:
-                    [],
-
-                components:
-                    []
-
-            });
+            );
 
 
 
@@ -148,18 +138,16 @@ export default {
                 new EmbedBuilder()
 
                     .setTitle(
-                        '🎉💍 ¡Felicidades! 💍🎉'
+                        '🎉💍 ¡Felicidades! ¡Estáis casados!'
                     )
 
                     .setDescription(
 
                         `❤️ La unión entre ${updated.members
-                            .map(
-                                id => `<@${id}>`
-                            )
-                            .join(' y ')} ha sido creada correctamente.\n\n` +
+                            .map(id => `<@${id}>`)
+                            .join(' y ')} se ha creado correctamente.\n\n` +
 
-                        '✨ ¡Que vuestra historia dure para siempre! ✨'
+                        '✨ Que vuestro vínculo dure para siempre ✨'
 
                     )
 
@@ -168,16 +156,20 @@ export default {
                     );
 
 
+            await interaction.message.edit({
 
-            await interaction.followUp({
+                content:
+                    ' ',
 
                 embeds:
                     [
                         embed
-                    ]
+                    ],
+
+                components:
+                    []
 
             });
-
 
 
             return;
