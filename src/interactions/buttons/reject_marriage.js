@@ -1,22 +1,33 @@
 import {
     getFamilyRequest,
-    rejectFamilyRequest,
     deleteFamilyRequest
 } from '../../family/requests/familyRequests.js';
 
 
+
 export default {
 
-    customId: 'reject_marriage',
+
+    customId:
+        'reject_marriage',
 
 
-    async execute(interaction, client, args) {
+
+    async execute(
+        interaction,
+        client,
+        args
+    ) {
 
 
-        const requestId = args[0];
+
+        const requestId =
+            args[0];
+
 
 
         const request =
+
             await getFamilyRequest(
 
                 interaction.guild.id,
@@ -29,47 +40,45 @@ export default {
 
         if (!request) {
 
+
             return interaction.reply({
 
                 content:
                     '❌ Esta solicitud ya no existe.',
 
-                ephemeral: true
+                ephemeral:
+                    true
 
             });
+
 
         }
 
 
 
         if (
+
             !request.members.includes(
+
                 interaction.user.id
+
             )
+
         ) {
+
 
             return interaction.reply({
 
                 content:
                     '❌ No formas parte de esta solicitud.',
 
-                ephemeral: true
+                ephemeral:
+                    true
 
             });
 
+
         }
-
-
-
-        await rejectFamilyRequest(
-
-            interaction.guild.id,
-
-            requestId,
-
-            interaction.user.id
-
-        );
 
 
 
@@ -87,13 +96,16 @@ export default {
 
             content:
 
-                `❌ <@${interaction.user.id}> ha rechazado la unión.`,
+                `❌ <@${interaction.user.id}> ha rechazado la unión. No se ha creado el matrimonio.`,
 
-            embeds: [],
+            embeds:
+                [],
 
-            components: []
+            components:
+                []
 
         });
+
 
 
     }
