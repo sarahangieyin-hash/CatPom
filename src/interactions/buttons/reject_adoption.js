@@ -1,26 +1,104 @@
+import {
+    SlashCommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle
+} from 'discord.js';
+
+
 export default {
 
-    customId: 'reject_adoption',
+    data: new SlashCommandBuilder()
 
-    async execute(interaction, client, args) {
+        .setName('adopt')
 
-        const [parentId, childId] = args;
+        .setDescription('Solicita adoptar a una persona.')
+
+        .addUserOption(option =>
+            option
+                .setName('persona')
+                .setDescription('Persona que quieres adoptar')
+                .setRequired(true)
+        ),
 
 
-        if (interaction.user.id !== childId) {
+
+    async execute(interaction) {
+
+
+        const child =
+            interaction.options.getUser('persona');
+
+
+
+        if (
+            child.id === interaction.user.id
+        ) {
 
             return interaction.reply({
-                content: '❌ Esta solicitud no es para ti.',
+
+                content:
+                    '❌ No puedes adoptarte a ti mismo.',
+
                 ephemeral: true
+
             });
 
         }
 
 
-        await interaction.update({
-            content: `❌ <@${childId}> ha rechazado la adopción de <@${parentId}>.`,
-            components: []
+
+        const row =
+            new ActionRowBuilder()
+                .addComponents(
+
+
+                    new ButtonBuilder()
+
+                        .setCustomId(
+
+                            `accept_adoption:${interaction.user.id}:${child.id}`
+
+                        )
+
+                        .setLabel('Aceptar')
+
+                        .setStyle(
+                            ButtonStyle.Success
+                        ),
+
+
+
+                    new ButtonBuilder()
+
+                        .setCustomId(
+
+                            `reject_adoption:${interaction.user.id}:${child.id}`
+
+                        )
+
+                        .setLabel('Rechazar')
+
+                        .setStyle(
+                            ButtonStyle.Danger
+                        )
+
+                );
+
+
+
+        await interaction.reply({
+
+            content:
+
+                `👶 ${interaction.user} quiere adoptarte.\n\n${child}, ¿aceptas?`,
+
+            components: [
+                row
+            ]
+
         });
+
 
     }
 
