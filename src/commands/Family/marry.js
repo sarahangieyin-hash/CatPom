@@ -7,7 +7,8 @@ import {
 } from 'discord.js';
 
 import {
-    createFamilyRequest
+    createFamilyRequest,
+    getFamilyRequestByCreator
 } from '../../family/requests/familyRequests.js';
 
 
@@ -41,6 +42,29 @@ export default {
 
 
     async execute(interaction) {
+
+
+        const existing =
+            await getFamilyRequestByCreator(
+                interaction.guild.id,
+                interaction.user.id
+            );
+
+
+        if (existing) {
+
+            return interaction.reply({
+
+                content:
+                    '❌ Ya tienes una solicitud de unión pendiente.',
+
+                ephemeral:
+                    true
+
+            });
+
+        }
+
 
 
         const personas = [
@@ -82,15 +106,22 @@ export default {
 
             {
 
-                type: 'marriage',
+                type:
+                    'marriage',
 
-                members: ids,
+                members:
+                    ids,
 
-                creator: interaction.user.id,
+                creator:
+                    interaction.user.id,
 
-                accepted: [
-                    interaction.user.id
-                ]
+                accepted:
+                    [
+                        interaction.user.id
+                    ],
+
+                createdAt:
+                    Date.now()
 
             }
 
@@ -159,13 +190,15 @@ export default {
 
         await interaction.reply({
 
-            embeds: [
-                embed
-            ],
+            embeds:
+                [
+                    embed
+                ],
 
-            components: [
-                row
-            ]
+            components:
+                [
+                    row
+                ]
 
         });
 
