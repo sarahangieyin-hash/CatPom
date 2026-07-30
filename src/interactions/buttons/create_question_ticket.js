@@ -1,7 +1,10 @@
 import {
     ChannelType,
     PermissionFlagsBits,
-    EmbedBuilder
+    EmbedBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle
 } from "discord.js";
 
 
@@ -134,6 +137,34 @@ Si necesitas ayuda, escribe tu problema en este ticket o menciona a <@&151579157
             embeds: [
 
                 embed
+
+            ],
+
+            components: [
+
+                new ActionRowBuilder()
+
+                    .addComponents(
+
+                        new ButtonBuilder()
+
+                            .setCustomId(
+                                "close_ticket"
+                            )
+
+                            .setLabel(
+                                "Cerrar ticket"
+                            )
+
+                            .setEmoji(
+                                "🔒"
+                            )
+
+                            .setStyle(
+                                ButtonStyle.Danger
+                            )
+
+                    )
 
             ]
 
