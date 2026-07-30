@@ -16,26 +16,6 @@ export default {
         const guild = interaction.guild;
 
 
-        const existing = guild.channels.cache.find(channel =>
-            channel.topic === `ticket-owner:${interaction.user.id}`
-        );
-
-
-        if (existing) {
-
-            return interaction.reply({
-
-                content:
-                    "Ya tienes un ticket abierto.",
-
-                ephemeral:
-                    true
-
-            });
-
-        }
-
-
 
         const channel =
             await guild.channels.create({
