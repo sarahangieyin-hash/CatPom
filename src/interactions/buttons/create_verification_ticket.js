@@ -136,7 +136,7 @@ Indícanos por este ticket qué pueblo eliges:
 - Sakura
 - Hrafheim
 
-Si tienes cualquier duda durante el proceso, pregunta en este ticket.`
+Si tienes cualquier duda durante el proceso, pregunta en este ticket o menciona a <@&1515791573026082948>.`
                 );
 
 
