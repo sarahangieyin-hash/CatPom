@@ -56,25 +56,11 @@ export async function renderFamilyTree(
 ) {
 
 
-    console.log(
-        "TREE FAMILY:",
-        JSON.stringify(
-            family,
-            null,
-            2
-        )
-    );
-
-
-
-
-
     const layout =
         await calculateLayout(
             guild,
             family
         );
-
 
 
     layout.guild =
@@ -83,11 +69,8 @@ export async function renderFamilyTree(
 
 
 
-
     const scale =
         2;
-
-
 
 
 
@@ -105,59 +88,36 @@ export async function renderFamilyTree(
 
 
 
-
-
     const minX =
-
         Math.min(
-
             ...nodes.map(
-                node =>
-                    node.x
+                node => node.x
             )
-
         );
-
 
 
     const maxX =
-
         Math.max(
-
             ...nodes.map(
-                node =>
-                    node.x
+                node => node.x
             )
-
         );
-
 
 
     const minY =
-
         Math.min(
-
             ...nodes.map(
-                node =>
-                    node.y
+                node => node.y
             )
-
         );
-
 
 
     const maxY =
-
         Math.max(
-
             ...nodes.map(
-                node =>
-                    node.y
+                node => node.y
             )
-
         );
-
-
 
 
 
@@ -170,44 +130,30 @@ export async function renderFamilyTree(
 
 
 
-
-
     const width =
-
         Math.max(
-
             900,
-
             contentWidth +
             nodeSize +
             padding * 2
-
         );
 
 
 
     const height =
-
         Math.max(
-
             700,
-
             contentHeight +
             nodeSize +
             padding * 2
-
         );
 
 
 
-
-
     const offsetX =
-
         (
             width -
             contentWidth
-
         )
         /
         2
@@ -217,11 +163,9 @@ export async function renderFamilyTree(
 
 
     const offsetY =
-
         (
             height -
             contentHeight
-
         )
         /
         2
@@ -230,34 +174,23 @@ export async function renderFamilyTree(
 
 
 
-
-
     layout.nodes.forEach(
-
         node => {
-
 
             node.x += offsetX;
 
-
             node.y += offsetY;
 
-
         }
-
     );
-
 
 
 
 
     const canvas =
         createCanvas(
-
             width * scale,
-
             height * scale
-
         );
 
 
@@ -278,60 +211,36 @@ export async function renderFamilyTree(
 
     try {
 
-
         const bg =
             new Image();
-
 
 
         bg.src =
             backgroundPath;
 
 
-
         ctx.drawImage(
-
             bg,
-
             0,
-
             0,
-
             width,
-
             height
-
         );
 
 
-    } catch(error) {
-
-
-        console.log(
-
-            "No se pudo cargar fondo:",
-
-            error.message
-
-        );
+    } catch {
 
 
         ctx.fillStyle =
-            "#ffffff";
+            '#ffffff';
 
 
         ctx.fillRect(
-
             0,
-
             0,
-
             width,
-
             height
-
         );
-
 
     }
 
@@ -339,60 +248,37 @@ export async function renderFamilyTree(
 
 
 
-    ctx.imageSmoothingEnabled =
-        true;
-
-
-
-
-
     /*
-        ORDEN DE DIBUJO
+        ORDEN:
 
-        1. Líneas detrás
-        2. Personas
-        3. Anillos 💍
-        4. Otros iconos 🔥
+        1. Líneas familiares
+        2. Cajas
+        3. Anillo matrimonio
+        4. Otros iconos
     */
 
 
-
     await drawLines(
-
         ctx,
-
         layout
-
     );
-
 
 
     await drawNodes(
-
         ctx,
-
         layout
-
     );
-
 
 
     await drawMarriage(
-
         ctx,
-
         layout
-
     );
 
 
-
     await drawIcons(
-
         ctx,
-
         layout
-
     );
 
 
@@ -402,5 +288,6 @@ export async function renderFamilyTree(
     return canvas.toBuffer(
         'image/png'
     );
+
 
 }
