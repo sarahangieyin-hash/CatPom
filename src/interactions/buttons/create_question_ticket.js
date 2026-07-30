@@ -19,7 +19,6 @@ export default {
         const guild = interaction.guild;
 
 
-
         const channel =
             await guild.channels.create({
 
@@ -119,12 +118,14 @@ export default {
 
 Este ticket puede utilizarse para:
 
-- Problemas con tumbas.
-- Dudas sobre el servidor.
-- Problemas técnicos.
-- Cualquier otro asunto relacionado con Valbruma.
+• Problemas con tumbas.
+• Dudas sobre el servidor.
+• Problemas técnicos.
+• Cualquier otro asunto relacionado con Valbruma.
 
-Si necesitas ayuda, escribe tu problema en este ticket o menciona a <@&1515791573026082948>.`
+Describe tu problema con el mayor detalle posible para que podamos ayudarte más rápido.
+
+Si necesitas ayuda adicional, escribe en este ticket o menciona a <@&1515791573026082948>.`
                 );
 
 
