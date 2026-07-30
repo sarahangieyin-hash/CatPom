@@ -1,4 +1,5 @@
 import {
+    SlashCommandBuilder,
     EmbedBuilder,
     ActionRowBuilder,
     ButtonBuilder,
@@ -6,35 +7,52 @@ import {
     PermissionFlagsBits
 } from "discord.js";
 
+
 export default {
 
-    name: "ticketpanel",
+    data: new SlashCommandBuilder()
 
-    description: "Crear panel de tickets",
+        .setName("ticketpanel")
+
+        .setDescription(
+            "Crear panel de tickets"
+        ),
+
+
 
     async execute(interaction) {
+
 
         if (
             !interaction.member.permissions.has(
                 PermissionFlagsBits.Administrator
             )
         ) {
+
             return interaction.reply({
-                content: "❌ No tienes permisos para usar este comando.",
-                ephemeral: true
+
+                content:
+                    "❌ No tienes permisos para usar este comando.",
+
+                ephemeral:
+                    true
+
             });
+
         }
 
 
-        const embed = new EmbedBuilder()
 
-            .setColor(0x8FBF8F)
+        const embed =
+            new EmbedBuilder()
 
-            .setTitle(
-                `🌲 Bienvenida a ${interaction.guild.name}`
-            )
+                .setColor(0x8FBF8F)
 
-            .setDescription(
+                .setTitle(
+                    `Bienvenida a ${interaction.guild.name}`
+                )
+
+                .setDescription(
 `¿En qué podemos ayudarte?
 
 🪪 **Verificación**
@@ -42,51 +60,55 @@ export default {
 
 💬 **Consultas**
 > Para incidencias, dudas o problemas relacionados con el servidor.`
-            );
+                );
 
 
-        const row = new ActionRowBuilder()
 
-            .addComponents(
+        const row =
+            new ActionRowBuilder()
 
-                new ButtonBuilder()
+                .addComponents(
 
-                    .setCustomId(
-                        "create_verification_ticket"
-                    )
+                    new ButtonBuilder()
 
-                    .setLabel(
-                        "Verificación"
-                    )
+                        .setCustomId(
+                            "create_verification_ticket"
+                        )
 
-                    .setEmoji(
-                        "🪪"
-                    )
+                        .setLabel(
+                            "Verificación"
+                        )
 
-                    .setStyle(
-                        ButtonStyle.Success
-                    ),
+                        .setEmoji(
+                            "🪪"
+                        )
+
+                        .setStyle(
+                            ButtonStyle.Success
+                        ),
 
 
-                new ButtonBuilder()
 
-                    .setCustomId(
-                        "create_question_ticket"
-                    )
+                    new ButtonBuilder()
 
-                    .setLabel(
-                        "Consultas"
-                    )
+                        .setCustomId(
+                            "create_question_ticket"
+                        )
 
-                    .setEmoji(
-                        "💬"
-                    )
+                        .setLabel(
+                            "Consultas"
+                        )
 
-                    .setStyle(
-                        ButtonStyle.Secondary
-                    )
+                        .setEmoji(
+                            "💬"
+                        )
 
-            );
+                        .setStyle(
+                            ButtonStyle.Secondary
+                        )
+
+                );
+
 
 
         await interaction.channel.send({
@@ -102,15 +124,17 @@ export default {
         });
 
 
+
         await interaction.reply({
 
             content:
-                "✅ Panel creado.",
+                "Panel creado correctamente.",
 
             ephemeral:
                 true
 
         });
+
 
     }
 
