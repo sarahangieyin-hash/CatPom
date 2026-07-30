@@ -3,8 +3,7 @@ import {
     EmbedBuilder,
     ActionRowBuilder,
     ButtonBuilder,
-    ButtonStyle,
-    PermissionFlagsBits
+    ButtonStyle
 } from "discord.js";
 
 
@@ -24,8 +23,8 @@ export default {
 
 
         if (
-            !interaction.member.permissions.has(
-                PermissionFlagsBits.Administrator
+            !interaction.member.roles.cache.has(
+                "1515791573026082948"
             )
         ) {
 
