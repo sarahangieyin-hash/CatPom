@@ -147,8 +147,11 @@ Envía un audio diciendo un trabalenguas en <#1530837580667682957>.
 Envía una captura del chat donde recibiste el enlace de invitación al servidor.
 
 **5. Elegir pueblo**
-Cuando terminemos la verificación podrás escoger uno de nuestros pueblos en <#1526731395790016545>:
+Cuando terminemos la verificación podrás elegir uno de nuestros pueblos.
 
+Puedes consultar las opciones disponibles en <#1526731395790016545>.
+
+Indícanos por este ticket qué pueblo eliges:
 - Metztlan
 - Sakura
 - Hrafheim
