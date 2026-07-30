@@ -58,85 +58,9 @@ export async function drawLines(
 
 
     /*
-        MATRIMONIOS 💍
-
-        Solo dibuja la unión entre personas.
-        NO crea líneas extra.
-    */
-
-
-    unions.forEach(
-
-        (union,index)=>{
-
-
-            const left =
-                members[index];
-
-
-            const right =
-                members[index + 1];
-
-
-
-            if (
-                !left ||
-                !right
-            ) {
-
-                return;
-
-            }
-
-
-
-            ctx.beginPath();
-
-
-            ctx.moveTo(
-
-                left.x,
-
-                left.y
-
-            );
-
-
-            ctx.lineTo(
-
-                union.x,
-
-                union.y
-
-            );
-
-
-            ctx.lineTo(
-
-                right.x,
-
-                right.y
-
-            );
-
-
-            ctx.stroke();
-
-
-        }
-
-    );
-
-
-
-
-
-
-
-    /*
         PADRES 👨‍👩‍👧
 
-        Se conectan al primer miembro.
+        Conectan con el miembro principal.
     */
 
 
@@ -156,7 +80,7 @@ export async function drawLines(
 
         parents.forEach(
 
-            parent=>{
+            parent => {
 
 
                 ctx.beginPath();
@@ -199,30 +123,36 @@ export async function drawLines(
     /*
         HIJOS 👶
 
-        Hijos individuales:
-        salen del padre que los adoptó.
+        Hijos con padre:
+        salen de ese padre.
 
         Hijos compartidos:
         salen del matrimonio.
+
     */
 
 
     children.forEach(
 
-        child=>{
+        child => {
 
 
-            let origin = null;
+            let origin =
+                null;
+
 
 
 
 
             if (
+
                 child.parent
+
             ) {
 
 
                 origin =
+
                     members.find(
 
                         member =>
@@ -237,9 +167,13 @@ export async function drawLines(
 
 
 
+
             if (
+
                 !origin &&
+
                 unions.length
+
             ) {
 
 
@@ -252,9 +186,13 @@ export async function drawLines(
 
 
 
+
             if (
+
                 !origin &&
+
                 members.length
+
             ) {
 
 
@@ -278,7 +216,6 @@ export async function drawLines(
             ctx.beginPath();
 
 
-
             ctx.moveTo(
 
                 origin.x,
@@ -288,7 +225,6 @@ export async function drawLines(
             );
 
 
-
             ctx.lineTo(
 
                 child.x,
@@ -296,7 +232,6 @@ export async function drawLines(
                 child.y - 60
 
             );
-
 
 
             ctx.stroke();
@@ -315,6 +250,8 @@ export async function drawLines(
 
     /*
         HERMANOS 👥
+
+        Conectan con el miembro principal.
     */
 
 
@@ -334,7 +271,7 @@ export async function drawLines(
 
         siblings.forEach(
 
-            sibling=>{
+            sibling => {
 
 
                 ctx.beginPath();
@@ -359,6 +296,7 @@ export async function drawLines(
 
 
                 ctx.stroke();
+
 
 
             }
