@@ -1,6 +1,7 @@
 import {
     ChannelType,
-    PermissionFlagsBits
+    PermissionFlagsBits,
+    EmbedBuilder
 } from "discord.js";
 
 
@@ -9,30 +10,10 @@ export default {
     customId: "create_question_ticket",
 
 
-    async execute(interaction, client) {
+    async execute(interaction) {
 
 
         const guild = interaction.guild;
-
-
-        const existing = guild.channels.cache.find(channel =>
-            channel.topic === `ticket-owner:${interaction.user.id}`
-        );
-
-
-        if (existing) {
-
-            return interaction.reply({
-
-                content:
-                    "Ya tienes un ticket abierto.",
-
-                ephemeral:
-                    true
-
-            });
-
-        }
 
 
 
@@ -121,32 +102,38 @@ export default {
 
 
 
-        await channel.send({
+        const embed =
+            new EmbedBuilder()
 
-            content:
-                `${interaction.user}`,
+                .setColor(0x8FBF8F)
 
+                .setTitle(
+                    "Consultas"
+                )
 
-            embeds: [
-
-                {
-
-                    color:
-                        0x8FBF8F,
-
-                    title:
-                        "Consultas",
-
-                    description:
+                .setDescription(
 `Cuéntanos qué necesitas y una administradora te ayudará.
 
 Este ticket puede utilizarse para:
-- Problemas con tumbas.
-- Dudas del servidor.
-- Problemas técnicos.
-- Cualquier otro asunto relacionado con Valbruma.`
 
-                }
+- Problemas con tumbas.
+- Dudas sobre el servidor.
+- Problemas técnicos.
+- Cualquier otro asunto relacionado con Valbruma.
+
+Si necesitas ayuda, escribe tu problema en este ticket o menciona a <@&1515791573026082948>.`
+                );
+
+
+
+        await channel.send({
+
+            content:
+                `${interaction.user} <@&1515791573026082948>`,
+
+            embeds: [
+
+                embed
 
             ]
 
