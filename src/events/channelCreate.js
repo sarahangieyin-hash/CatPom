@@ -3,7 +3,8 @@ import {
     EmbedBuilder,
     ActionRowBuilder,
     ButtonBuilder,
-    ButtonStyle
+    ButtonStyle,
+    ChannelType
 } from "discord.js";
 
 export default {
@@ -12,59 +13,66 @@ export default {
 
     async execute(channel) {
 
-        // Solo canales de texto
-        if (!channel.isTextBased()) return;
+        // Solo canales de texto normales
+        if (channel.type !== ChannelType.GuildText) return;
 
-        // Categoría de tickets
+        // Solo la categoría de tickets
         if (channel.parentId !== "1519058009232248853") return;
 
         // Esperar a que Ticket Tool termine de crear el canal
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Buscar al único miembro que no sea bot y que no tenga el rol Admin
-        const members = [...channel.members.values()].filter(member =>
-            !member.user.bot &&
-            !member.roles.cache.has("1515791573026082948")
+        // Evitar enviar el panel dos veces
+        const messages = await channel.messages.fetch({ limit: 10 });
+
+        const alreadySent = messages.some(message =>
+            message.author.id === channel.client.user.id &&
+            message.components.length > 0
         );
 
-        if (!members.length) return;
-
-        const member = members[0];
+        if (alreadySent) return;
 
         const embed = new EmbedBuilder()
-            .setColor("#8FBF8F")
+            .setColor(0x8FBF8F)
             .setTitle(`Bienvenida a ${channel.guild.name}`)
             .setDescription(
-`${member}
-
-Antes de continuar, selecciona el tipo de ticket que deseas abrir.
+`Selecciona el tipo de ticket que deseas abrir.
 
 🪪 **Verificación**
 > Para completar el proceso de verificación.
 
 💬 **Consultas**
 > Para miembros del servidor o cualquier otro asunto.`
+            )
+            .setFooter({
+                text: "Solo podrás seleccionar una opción."
+            });
+
+        const row = new ActionRowBuilder()
+            .addComponents(
+
+                new ButtonBuilder()
+                    .setCustomId("join_server")
+                    .setLabel("Verificación")
+                    .setEmoji("🪪")
+                    .setStyle(ButtonStyle.Success),
+
+                new ButtonBuilder()
+                    .setCustomId("member_ticket")
+                    .setLabel("Consultas")
+                    .setEmoji("💬")
+                    .setStyle(ButtonStyle.Secondary)
+
             );
 
-        const row = new ActionRowBuilder().addComponents(
-
-            new ButtonBuilder()
-                .setCustomId("join_server")
-                .setLabel("Verificación")
-                .setEmoji("🪪")
-                .setStyle(ButtonStyle.Success),
-
-            new ButtonBuilder()
-                .setCustomId("member_ticket")
-                .setLabel("Consultas")
-                .setEmoji("💬")
-                .setStyle(ButtonStyle.Secondary)
-
-        );
-
         await channel.send({
+
+            content: "## Bienvenida",
+
             embeds: [embed],
+
             components: [row]
+
         });
 
     }
