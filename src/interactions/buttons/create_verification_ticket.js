@@ -1,7 +1,10 @@
 import {
     ChannelType,
     PermissionFlagsBits,
-    EmbedBuilder
+    EmbedBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle
 } from "discord.js";
 
 
@@ -14,7 +17,6 @@ export default {
 
 
         const guild = interaction.guild;
-
 
 
         const channel =
@@ -127,8 +129,6 @@ Envía un audio diciendo un trabalenguas en <#1530837580667682957>.
 Envía una captura del chat donde recibiste el enlace de invitación al servidor.
 
 **5. Elegir pueblo**
-Cuando terminemos la verificación podrás elegir uno de nuestros pueblos.
-
 Puedes consultar las opciones disponibles en <#1526731395790016545>.
 
 Indícanos por este ticket qué pueblo eliges:
@@ -136,7 +136,7 @@ Indícanos por este ticket qué pueblo eliges:
 - Sakura
 - Hrafheim
 
-Si tienes cualquier duda durante el proceso, pregunta en este ticket o menciona a <@&1515791573026082948>.`
+Si tienes cualquier duda, pregunta en este ticket o menciona a <@&1515791573026082948>.`
                 );
 
 
@@ -149,6 +149,34 @@ Si tienes cualquier duda durante el proceso, pregunta en este ticket o menciona 
             embeds: [
 
                 embed
+
+            ],
+
+            components: [
+
+                new ActionRowBuilder()
+
+                    .addComponents(
+
+                        new ButtonBuilder()
+
+                            .setCustomId(
+                                "close_ticket"
+                            )
+
+                            .setLabel(
+                                "Cerrar ticket"
+                            )
+
+                            .setEmoji(
+                                "🔒"
+                            )
+
+                            .setStyle(
+                                ButtonStyle.Danger
+                            )
+
+                    )
 
             ]
 
