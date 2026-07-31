@@ -22,7 +22,7 @@ export async function drawNodes(ctx, layout) {
 
         const lineColor = settings.lines || '#000000';
 
-        // Dibujar contenedor del nodo
+        // Dibujar rectángulo del usuario
         ctx.save();
         ctx.beginPath();
         if (ctx.roundRect) {
@@ -39,7 +39,7 @@ export async function drawNodes(ctx, layout) {
         ctx.stroke();
         ctx.restore();
 
-        // Dibujar el nombre centrado en la tarjeta
+        // Texto del usuario totalmente centrado
         ctx.save();
         ctx.fillStyle = textColor;
         ctx.font = 'bold 13px Sans-Serif';
