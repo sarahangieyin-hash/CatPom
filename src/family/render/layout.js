@@ -1,15 +1,11 @@
-/**
- * Configuración de espaciado compacto para el árbol familiar
- */
-const NODE_WIDTH = 100;       // Ancho del cuadrado
-const NODE_HEIGHT = 100;      // Alto del cuadrado
-const HORIZONTAL_GAP = 40;    // Distancia lateral reducida entre hermanos y parejas
-const VERTICAL_GAP = 60;      // Distancia vertical reducida entre niveles (padres, hijos)
+const NODE_WIDTH = 100;
+const NODE_HEIGHT = 100;
+const HORIZONTAL_GAP = 40;
+const VERTICAL_GAP = 60;
 
 export async function calculateLayout(guild, family) {
     const rootId = family.userId || family.targetUser;
 
-    // Función auxiliar para obtener datos del usuario de Discord
     const fetchUser = async (id) => {
         try {
             const member = await guild.members.fetch(id).catch(() => null);
@@ -41,8 +37,6 @@ export async function calculateLayout(guild, family) {
         return nodesMap.get(id);
     };
 
-    // 1. Asignar niveles jerárquicos:
-    // Nivel 0 = Padres | Nivel 1 = Usuario, Parejas, Hermanos | Nivel 2 = Hijos
     const rootNode = await addNode(rootId, 1, true);
 
     const parentIds = family.parents || [];
@@ -57,14 +51,12 @@ export async function calculateLayout(guild, family) {
     for (const id of loverIds) await addNode(id, 1);
     for (const id of childIds) await addNode(id, 2);
 
-    // 2. Agrupar por filas/niveles
     const levels = { 0: [], 1: [], 2: [] };
     for (const node of nodesMap.values()) {
         if (!levels[node.level]) levels[node.level] = [];
         levels[node.level].push(node);
     }
 
-    // 3. Calcular posiciones X e Y compactas
     const levelKeys = Object.keys(levels).map(Number).sort((a, b) => a - b);
 
     levelKeys.forEach((level) => {
@@ -83,20 +75,15 @@ export async function calculateLayout(guild, family) {
         });
     });
 
-    // 4. Construir conexiones (Líneas cortas entre las cajas)
-    
-    // Padres -> Usuario principal y Hermanos
     if (parentIds.length > 0) {
         parentIds.forEach(pId => {
             const pNode = nodesMap.get(pId);
             if (pNode) {
-                // Línea Padre -> Usuario
                 connections.push({
                     from: { x: pNode.x, y: pNode.y + NODE_HEIGHT / 2 },
                     to: { x: rootNode.x, y: rootNode.y - NODE_HEIGHT / 2 }
                 });
 
-                // Línea Padre -> Hermanos
                 siblingIds.forEach(sId => {
                     const sNode = nodesMap.get(sId);
                     if (sNode) {
@@ -110,7 +97,6 @@ export async function calculateLayout(guild, family) {
         });
     }
 
-    // Usuario principal <-> Cónyuges / Amantes
     [...spouseIds, ...loverIds].forEach(sId => {
         const sNode = nodesMap.get(sId);
         if (sNode) {
@@ -127,7 +113,6 @@ export async function calculateLayout(guild, family) {
         }
     });
 
-    // Usuario principal -> Hijos
     childIds.forEach(cId => {
         const cNode = nodesMap.get(cId);
         if (cNode) {
