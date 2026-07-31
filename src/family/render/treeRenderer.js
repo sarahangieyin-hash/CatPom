@@ -1,4 +1,4 @@
-import { createCanvas, Image } from 'canvas';
+import { createCanvas } from 'canvas';
 import { calculateLayout } from './layout.js';
 import { drawNodes } from './drawNodes.js';
 import { drawLines } from './drawLines.js';
@@ -47,7 +47,7 @@ export async function renderFamilyTree(guild, family) {
 
     ctx.scale(scale, scale);
 
-    // Color de fondo del Canvas según personalización
+    // Color de fondo dinámico
     ctx.fillStyle = settings.background || '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
