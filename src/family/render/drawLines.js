@@ -30,21 +30,16 @@ export async function drawLines(ctx, layout) {
         ctx.beginPath();
 
         if (conn.type === 'partner-ring') {
-            const fromNode = nodes.find(n => n.id === conn.fromNodeId);
-            const toNode = nodes.find(n => n.id === conn.toNodeId);
-            if (!fromNode || !toNode) continue;
+            const { leftNode, rightNode } = conn;
+            if (!leftNode || !rightNode) continue;
 
-            // Coordenada X exacta del espacio libre entre el borde derecho de un nodo y el izquierdo del otro
-            const rightOfFrom = fromNode.x + NODE_WIDTH;
-            const leftOfTo = toNode.x;
-            const midX = (rightOfFrom + leftOfTo) / 2;
-            
-            // Coordenada Y exacta de la mitad de la altura de las tarjetas para que quede centrado verticalmente
-            const midY = fromNode.y + (NODE_HEIGHT / 2);
+            const rightOfLeft = leftNode.x + NODE_WIDTH;
+            const leftOfRight = rightNode.x;
+            const midX = (rightOfLeft + leftOfRight) / 2;
+            const midY = leftNode.y + (NODE_HEIGHT / 2);
 
             if (ringImage) {
-                const iconSize = 30;
-                // Dibujar centrado milimétricamente en el espacio libre
+                const iconSize = 28;
                 ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
             }
             continue;
@@ -62,21 +57,32 @@ export async function drawLines(ctx, layout) {
             ctx.moveTo(startX, startY);
             ctx.lineTo(endX, endY);
         }
-        else if (conn.type === 'family-child') {
-            const rootNode = nodes.find(n => n.isRoot);
-            const childNode = nodes.find(n => n.id === conn.toNodeId);
-            if (!rootNode || !childNode) continue;
+        else if (conn.type === 'family-children-bar') {
+            const { leftMost, rightMost, children } = conn;
+            if (!leftMost || !rightMost) continue;
 
-            const startX = rootNode.x + NODE_WIDTH / 2;
-            const startY = rootNode.y + NODE_HEIGHT;
-            const childTopY = childNode.y;
-            const midY = (startY + childTopY) / 2;
-            const childCenterX = childNode.x + NODE_WIDTH / 2;
+            const barStartX = leftMost.x + NODE_WIDTH / 2;
+            const barEndX = rightMost.x + NODE_WIDTH / 2;
+            const barY = leftMost.y + NODE_HEIGHT + 25; // Línea horizontal inferior (la barra de hijos)
+            const parentBottomY = leftMost.y + NODE_HEIGHT;
+            const rootCenterX = nodes.find(n => n.isRoot).x + NODE_WIDTH / 2;
 
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(startX, midY);
-            ctx.lineTo(childCenterX, midY);
-            ctx.lineTo(childCenterX, childTopY);
+            // 1. Línea vertical desde el bloque central de padres hacia la barra horizontal inferior
+            ctx.moveTo(rootCenterX, parentBottomY);
+            ctx.lineTo(rootCenterX, barY);
+
+            // 2. Barra horizontal de lado a lado (como dibujaste en rojo)
+            ctx.moveTo(barStartX, barY);
+            ctx.lineTo(barEndX, barY);
+
+            // 3. Si hay hijos, baja líneas desde la barra horizontal hasta cada hijo
+            if (children && children.length > 0) {
+                for (const child of children) {
+                    const childCenterX = child.x + NODE_WIDTH / 2;
+                    ctx.moveTo(childCenterX, barY);
+                    ctx.lineTo(childCenterX, child.y);
+                }
+            }
         }
 
         ctx.stroke();
