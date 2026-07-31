@@ -3,7 +3,7 @@ console.log("USANDO ESTE interactionCreate");
 import { Events, EmbedBuilder, MessageFlags } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
-import { addRelation, getUserFamilyData, saveFamilyData } from '../utils/families.js';
+import { addRelation, getUserFamilyData } from '../utils/families.js';
 
 export default {
     name: Events.InteractionCreate,
@@ -118,8 +118,9 @@ export default {
                     }
 
                     if (customId === 'expand_marriage_accept') {
+                        // Actualizamos este mensaje para cerrarlo y dejar constancia
                         await interaction.update({
-                            content: `✅ Has autorizado la ampliación. Enviando propuesta formal al nuevo integrante...`,
+                            content: `✅ Has autorizado la ampliación de la unión.`,
                             components: []
                         });
 
@@ -148,6 +149,7 @@ export default {
 
                         const mentions = currentGroup.map(id => `<@${id}>`).join(', ');
 
+                        // Enviamos un followUp para que la nueva persona reciba un mensaje nuevo con botones activos
                         return interaction.followUp({
                             content: `💍 <@${targetId}>, el grupo actual (${mentions}) te ha propuesto unirte a su matrimonio múltiple. ¿Aceptas?`,
                             components: [row]
@@ -173,13 +175,11 @@ export default {
                     if (customId === 'multimarry_accept') {
                         const allMembers = [...groupIds, targetId];
 
-                        for (const memberId of allMembers) {
-                            const memberFamily = await getUserFamilyData(interaction.guild.id, memberId);
-                            if (!memberFamily.spouses) memberFamily.spouses = [];
-
-                            memberFamily.spouses = allMembers.filter(id => id !== memberId);
-
-                            await saveFamilyData(interaction.guild.id, memberId, memberFamily);
+                        // Añadir o actualizar las relaciones cruzadas mediante addRelation para garantizar la persistencia de relaciones
+                        for (let i = 0; i < allMembers.length; i++) {
+                            for (let j = i + 1; j < allMembers.length; j++) {
+                                await addRelation(interaction.guild.id, allMembers[i], allMembers[j], 'marriage');
+                            }
                         }
 
                         const allMentions = allMembers.map(id => `<@${id}>`).join(', ');
