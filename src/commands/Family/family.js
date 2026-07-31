@@ -4,35 +4,41 @@ import { getUserFamilyData } from '../../utils/families.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('family')
-        .setDescription('Muestra la familia de un usuario.')
+        .setDescription('Muestra el árbol o perfil familiar de un usuario.')
         .addUserOption(option =>
             option
                 .setName('usuario')
-                .setDescription('Usuario a consultar')
+                .setDescription('El usuario del que quieres ver la familia')
                 .setRequired(false)
         ),
 
     async execute(interaction) {
-        const user = interaction.options.getUser('usuario') ?? interaction.user;
-        const family = await getUserFamilyData(interaction.guild.id, user.id);
+        const targetUser = interaction.options.getUser('usuario') || interaction.user;
+        const guildId = interaction.guild.id;
 
-        const spouses = family.spouses.map(id => `<@${id}>`);
-        const children = family.children.map(id => `<@${id}>`);
-        const parents = family.parents.map(id => `<@${id}>`);
-        const siblings = family.siblings.map(id => `<@${id}>`);
-        const lovers = family.lovers.map(id => `<@${id}>`);
+        // Obtener datos familiares con el nuevo sistema atómico
+        const family = await getUserFamilyData(guildId, targetUser.id);
+
+        // Formatear menciones
+        const formatList = (ids) => {
+            if (!ids || ids.length === 0) return 'Ninguno';
+            return ids.map(id => `<@${id}>`).join(', ');
+        };
 
         const embed = new EmbedBuilder()
-            .setTitle(`👨‍👩‍👧 Familia de ${user.username}`)
-            .setColor(0x8b5a2b)
+            .setTitle(`📜 Familia de ${targetUser.username}`)
+            .setColor('#2b2d31')
+            .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
             .addFields(
-                { name: '💍 Unión', value: spouses.length ? spouses.join('\n') : 'Ninguna' },
-                { name: ' Hijos', value: children.length ? children.join('\n') : 'Ninguno' },
-                { name: ' Padres', value: parents.length ? parents.join('\n') : 'Ninguno' },
-                { name: ' Hermanos', value: siblings.length ? siblings.join('\n') : 'Ninguno' },
-                { name: '🔥 Amantes', value: lovers.length ? lovers.join('\n') : 'Ninguno' }
-            );
+                { name: '💍 Pareja(s)', value: formatList(family.spouses), inline: false },
+                { name: '👨‍👩‍👦 Padres', value: formatList(family.parents), inline: true },
+                { name: '👶 Hijos', value: formatList(family.children), inline: true },
+                { name: '👫 Hermanos', value: formatList(family.siblings), inline: false },
+                { name: '💋 Amantes', value: formatList(family.lovers), inline: false }
+            )
+            .setFooter({ text: `CatPom System • Solicitado por ${interaction.user.username}` })
+            .setTimestamp();
 
-        await interaction.reply({ embeds: [embed] });
+        return interaction.reply({ embeds: [embed] });
     }
 };
