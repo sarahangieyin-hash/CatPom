@@ -1,3 +1,4 @@
+import { MessageFlags } from 'discord.js';
 import { getFamilyRequest, deleteFamilyRequest } from '../../family/requests/familyRequests.js';
 import { addRelation } from '../../utils/families.js';
 
@@ -12,14 +13,14 @@ export default {
         if (!request) {
             return interaction.reply({
                 content: '❌ Esta solicitud ya no existe o ha expirado.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (interaction.user.id !== request.u1) {
             return interaction.reply({
                 content: '❌ Esta solicitud no es para ti.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
