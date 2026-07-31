@@ -1,80 +1,44 @@
-import {
-    SlashCommandBuilder
-} from 'discord.js';
-
-import {
-    getFamilyByMember,
-    updateFamily
-} from '../../utils/families.js';
-
+import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import { getGuildRelations, saveGuildRelations } from '../../utils/families.js';
 
 export default {
-
     data: new SlashCommandBuilder()
-
         .setName('cleanfamily')
-
-        .setDescription('Limpia hijos de la familia.'),
-
-
+        .setDescription('Limpia las relaciones familiares de un usuario o de todo el servidor.')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addUserOption(option =>
+            option
+                .setName('usuario')
+                .setDescription('Usuario al que limpiar la familia (deja vacío para limpiar TODO el servidor)')
+                .setRequired(false)
+        ),
 
     async execute(interaction) {
+        const user = interaction.options.getUser('usuario');
+        const guildId = interaction.guild.id;
 
+        if (user) {
+            // Limpiar solo las relaciones de un usuario específico
+            let relations = await getGuildRelations(guildId);
+            const initialCount = relations.length;
 
-        const family =
-            await getFamilyByMember(
+            relations = relations.filter(r => r.u1 !== user.id && r.u2 !== user.id);
+            await saveGuildRelations(guildId, relations);
 
-                interaction.guild.id,
-
-                interaction.user.id
-
-            );
-
-
-
-        if (!family) {
+            const removed = initialCount - relations.length;
 
             return interaction.reply({
-
-                content:
-                    '❌ No tienes familia.',
-
-                ephemeral:
-                    true
-
+                content: `🧹 Se han eliminado **${removed}** relaciones familiares de ${user}.`,
+                ephemeral: true
             });
+        } else {
+            // Limpiar TODAS las relaciones del servidor
+            await saveGuildRelations(guildId, []);
 
+            return interaction.reply({
+                content: '🧹 Se han eliminado **todas** las relaciones familiares de este servidor.',
+                ephemeral: true
+            });
         }
-
-
-
-        family.children = [];
-
-
-
-        await updateFamily(
-
-            interaction.guild.id,
-
-            family.id,
-
-            family
-
-        );
-
-
-
-        await interaction.reply({
-
-            content:
-                '✅ Hijos limpiados de esta familia.',
-
-            ephemeral:
-                true
-
-        });
-
-
     }
-
 };
