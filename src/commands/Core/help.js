@@ -6,9 +6,7 @@ import {
 } from "discord.js";
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed } from "../../utils/embeds.js";
-import {
-    createSelectMenu,
-} from "../../utils/components.js";
+import { createSelectMenu } from "../../utils/components.js";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -49,7 +47,9 @@ function formatCategoryName(rawCategory) {
         .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export async function createInitialHelpMenu(client) {
+export async function createInitialHelpMenu(clientOrInteraction) {
+    const client = clientOrInteraction?.client || clientOrInteraction;
+    
     const commandsPath = path.join(__dirname, "../../commands");
     const categoryDirs = (
         await fs.readdir(commandsPath, { withFileTypes: true })
@@ -75,18 +75,22 @@ export async function createInitialHelpMenu(client) {
         }),
     ];
 
-    const botName = client?.user?.username || "Bot";
+    const botUser = client?.user;
+    const botName = botUser?.username || "Bot";
+    const avatarUrl = botUser?.displayAvatarURL ? botUser.displayAvatarURL({ size: 1024 }) : null;
+
     const embed = createEmbed({
         title: `📖 ${botName} Help`,
         description: 'Set up your server, pick what to enable, then browse commands below.',
         color: 'primary',
-        thumbnail: client.user?.displayAvatarURL?.({ size: 1024 }),
+        thumbnail: avatarUrl,
         fields: [
             {
                 name: '🚀 Getting Started',
                 value: [
                     '**1. Launch setup** — Run `/configwizard` to configure prefix, mod role, and logs.',
-                    '**2. Enable systems** — Use `/commands dashboard` to turn categories on or off.',                    '**3. Browse commands** — Use the menu below to view categories and commands.',
+                    '**2. Enable systems** — Use `/commands dashboard` to turn categories on or off.',
+                    '**3. Browse commands** — Use the menu below to view categories and commands.',
                 ].join('\n'),
                 inline: false,
             },
@@ -146,11 +150,10 @@ export default {
         .setDescription("Displays the help menu with all available commands"),
 
     async execute(interaction, guildConfig, client) {
-        
-        const { MessageFlags } = await import('discord.js');
         await InteractionHelper.safeDefer(interaction);
         
-        const { embeds, components } = await createInitialHelpMenu(client);
+        // Se envía interaction o client asegurando que no rompa si alguno es undefined
+        const { embeds, components } = await createInitialHelpMenu(client || interaction);
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds,
@@ -174,7 +177,7 @@ export default {
                     components: [],
                 });
             } catch (error) {
-                logger.debug('Help menu close edit failed (interaction may have expired):', error?.message);
+                // Silencioso
             }
         }, HELP_MENU_TIMEOUT_MS);
     },
