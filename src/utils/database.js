@@ -1247,32 +1247,8 @@ export async function clearWarns(client, guildId, userId) {
 }
 
 // ==========================================
-// KEY HELPERS & EXPIRED CLEANUP
+// EXPIRED CLEANUP
 // ==========================================
-
-export function getApplicationRoleSettingsKey(guildId, roleId) {
-    return `guild:${guildId}:application_role_settings:${roleId}`;
-}
-
-export function getApplicationKey(guildId, applicationId) {
-    return `guild:${guildId}:applications:${applicationId}`;
-}
-
-export function getUserApplicationsKey(guildId, userId) {
-    return `guild:${guildId}:user_applications:${userId}`;
-}
-
-export function getJoinToCreateConfigKey(guildId) {
-    return `guild:${guildId}:join_to_create:config`;
-}
-
-export function unwrapReplitData(data) {
-    if (data === null || data === undefined) return data;
-    if (typeof data === 'object' && 'value' in data) {
-        return data.value;
-    }
-    return data;
-}
 
 export async function cleanupExpiredApplications(client, guildId) {
     try {
