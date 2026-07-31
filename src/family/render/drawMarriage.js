@@ -24,3 +24,5 @@ export async function drawMarriage(ctx, layout) {
 
     ctx.restore();
 }
+
+export default drawMarriage;
