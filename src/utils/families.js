@@ -1,89 +1,53 @@
-import { getFromDb, setInDb } from './database/wrapper.js';
-
 /**
- * Obtiene todas las relaciones de la guild desde tu BD (Postgres/Wrapper)
- */
-export async function getGuildRelations(guildId) {
-    const data = await getFromDb(`relations_${guildId}`);
-    return data || [];
-}
-
-/**
- * Guarda el array de relaciones en tu BD (Postgres/Wrapper)
- */
-export async function saveGuildRelations(guildId, relations) {
-    await setInDb(`relations_${guildId}`, relations);
-}
-
-/**
- * Añade una relación atómica entre dos usuarios si no existe previa
- */
-export async function addRelation(guildId, user1Id, user2Id, type) {
-    const relations = await getGuildRelations(guildId);
-    
-    const exists = relations.some(r => 
-        ((r.u1 === user1Id && r.u2 === user2Id) || (r.u1 === user2Id && r.u2 === user1Id)) && r.type === type
-    );
-
-    if (!exists) {
-        relations.push({ u1: user1Id, u2: user2Id, type, createdAt: Date.now() });
-        await saveGuildRelations(guildId, relations);
-    }
-}
-
-/**
- * Elimina una relación específica
- */
-export async function removeRelation(guildId, user1Id, user2Id, type) {
-    let relations = await getGuildRelations(guildId);
-    relations = relations.filter(r => 
-        !(((r.u1 === user1Id && r.u2 === user2Id) || (r.u1 === user2Id && r.u2 === user1Id)) && r.type === type)
-    );
-    await saveGuildRelations(guildId, relations);
-}
-
-/**
- * Obtiene la vista de la familia de un usuario específico procesando el grafo
+ * Obtiene la información familiar consolidada de un usuario.
  */
 export async function getUserFamilyData(guildId, userId) {
     const relations = await getGuildRelations(guildId);
-
-    // 1. Uniones/Parejas
-    const spouses = relations
-        .filter(r => r.type === 'spouse' && (r.u1 === userId || r.u2 === userId))
-        .map(r => r.u1 === userId ? r.u2 : r.u1);
-
-    // 2. Padres (u1 es el padre, u2 es el hijo)
-    const parents = relations
-        .filter(r => r.type === 'parent_child' && r.u2 === userId)
-        .map(r => r.u1);
-
-    // 3. Hijos (u1 es el padre, u2 es el hijo)
-    const children = relations
-        .filter(r => r.type === 'parent_child' && r.u1 === userId)
-        .map(r => r.u2);
-
-    // 4. Hermanos (Tienen al menos un padre común)
+    
+    let spouses = [];
+    let parents = [];
+    let children = [];
     let siblings = [];
-    if (parents.length > 0) {
-        siblings = relations
-            .filter(r => r.type === 'parent_child' && parents.includes(r.u1) && r.u2 !== userId)
-            .map(r => r.u2);
-        siblings = [...new Set(siblings)];
+    let lovers = [];
+
+    for (const rel of relations) {
+        if (rel.type === 'marriage') {
+            if (rel.u1 === userId) spouses.push(rel.u2);
+            else if (rel.u2 === userId) spouses.push(rel.u1);
+        } else if (rel.type === 'parent_child') {
+            // u1 es el padre/madre, u2 es el hijo/a
+            if (rel.u2 === userId) parents.push(rel.u1);
+            if (rel.u1 === userId) children.push(rel.u2);
+        } else if (rel.type === 'sibling') {
+            if (rel.u1 === userId) siblings.push(rel.u2);
+            else if (rel.u2 === userId) siblings.push(rel.u1);
+        } else if (rel.type === 'lover') {
+            if (rel.u1 === userId) lovers.push(rel.u2);
+            else if (rel.u2 === userId) lovers.push(rel.u1);
+        }
     }
 
-    // 5. Amantes
-    const lovers = relations
-        .filter(r => r.type === 'lover' && (r.u1 === userId || r.u2 === userId))
-        .map(r => r.u1 === userId ? r.u2 : r.u1);
+    // 👨‍👩‍👦 Lógica extendida de padres:
+    // Si tus padres directos están casados con alguien más, añadimos a esas parejas a tu lista de padres/madrastras.
+    const allParents = new Set(parents);
+
+    for (const parentId of parents) {
+        for (const rel of relations) {
+            if (rel.type === 'marriage') {
+                if (rel.u1 === parentId && rel.u2 !== userId) {
+                    allParents.add(rel.u2);
+                } else if (rel.u2 === parentId && rel.u1 !== userId) {
+                    allParents.add(rel.u1);
+                }
+            }
+        }
+    }
 
     return {
-        userId,
-        spouses,
-        parents,
-        children,
-        siblings,
-        lovers,
-        rawRelations: relations
+        spouses: Array.from(new Set(spouses)),
+        parents: Array.from(allParents), // Incluye padres directos + sus parejas (padrastros/madrastras)
+        children: Array.from(new Set(children)),
+        siblings: Array.from(new Set(siblings)),
+        lovers: Array.from(new Set(lovers))
     };
 }
