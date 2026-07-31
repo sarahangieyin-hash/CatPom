@@ -1,144 +1,129 @@
 import { 
-    SlashCommandBuilder, 
-    EmbedBuilder, 
     ActionRowBuilder, 
+    StringSelectMenuBuilder, 
     ButtonBuilder, 
     ButtonStyle, 
     ModalBuilder, 
     TextInputBuilder, 
     TextInputStyle,
-    MessageFlags 
+    AttachmentBuilder 
 } from 'discord.js';
+import { renderFamilyTree } from './treeRenderer.js';
+import { getFamily, updateTreeSettings } from '../../utils/families.js';
 
-import { getTreeSettings, saveTreeSettings, DEFAULT_TREE_SETTINGS } from '../../utils/families.js';
+export async function handleCustomizeCommand(interaction) {
+    // 1. IMPORTANTE: Responder de forma pública (NO ephemeral)
+    await interaction.deferReply({ ephemeral: false });
 
-export default {
-    data: new SlashCommandBuilder()
-        .setName('customizetree')
-        .setDescription('Personaliza la apariencia y dirección de tu árbol familiar.'),
+    const userId = interaction.user.id;
+    let family = await getFamily(userId);
 
-    async execute(interaction) {
-        const userId = interaction.user.id;
-        let settings = await getTreeSettings(userId);
+    // Función auxiliar para generar la imagen y la interfaz
+    const generateTreeResponse = async () => {
+        const imageBuffer = await renderFamilyTree(interaction.guild, family);
+        const attachment = new AttachmentBuilder(imageBuffer, { name: 'family-tree.png' });
 
-        const buildEmbed = (st) => {
-            return new EmbedBuilder()
-                .setTitle('🎨 Personalización del Árbol Familiar')
-                .setDescription('Configura los colores y la dirección con la que se generará tu árbol.')
-                .addFields(
-                    { name: '👤 Tu Caja (Fondo)', value: `\`${st.userBg}\``, inline: true },
-                    { name: '✍️ Tu Texto', value: `\`${st.userText}\``, inline: true },
-                    { name: '👥 Cajas Familiares', value: `\`${st.nodeBg}\``, inline: true },
-                    { name: '📝 Texto Familiar', value: `\`${st.nodeText}\``, inline: true },
-                    { name: '🔗 Líneas de Unión', value: `\`${st.lines}\``, inline: true },
-                    { name: '🖼️ Fondo del Canvas', value: `\`${st.background}\``, inline: true },
-                    { name: '📐 Dirección del Árbol', value: st.direction === 'TB' ? '⬇️ Vertical (Arriba a Abajo)' : '➡️ Horizontal (Izquierda a Derecha)', inline: false }
-                )
-                .setColor(st.userBg.startsWith('#') ? st.userBg : '#1d4ed8');
+        // Menú selector estilo "Ruleta / Paleta de Colores"
+        const colorSelectMenu = new StringSelectMenuBuilder()
+            .setCustomId('select_tree_color')
+            .setPlaceholder('🎨 Selecciona un color de la paleta...')
+            .addOptions([
+                { label: 'Azul Real', value: '#1d4ed8', emoji: '🟦' },
+                { label: 'Rojo Carmesí', value: '#dc2626', emoji: '🟥' },
+                { label: 'Verde Esmeralda', value: '#10b981', emoji: '🟩' },
+                { label: 'Morado Neón', value: '#8b5cf6', emoji: '🟪' },
+                { label: 'Rosa Pastel', value: '#f472b6', emoji: '🌸' },
+                { label: 'Dorado / Oro', value: '#f59e0b', emoji: '🟧' },
+                { label: 'Oscuro Elegante', value: '#111111', emoji: '⬛' },
+            ]);
+
+        // Botón para meter un Hex personalizado (#ffffff, etc.)
+        const customHexButton = new ButtonBuilder()
+            .setCustomId('btn_custom_hex')
+            .setLabel('Escribir código #HEX')
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji('🖌️');
+
+        const row1 = new ActionRowBuilder().addComponents(colorSelectMenu);
+        const row2 = new ActionRowBuilder().addComponents(customHexButton);
+
+        return {
+            content: `✨ **Personalizando el árbol de <@${userId}>** (Cualquiera en el canal puede ver los cambios):`,
+            files: [attachment],
+            components: [row1, row2]
         };
+    };
 
-        const buildButtons = (st) => {
-            return new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId('tree_toggle_direction')
-                    .setLabel(`Dirección: ${st.direction === 'TB' ? 'Vertical ⬇️' : 'Horizontal ➡️'}`)
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('tree_edit_colors')
-                    .setLabel('Editar Colores 🎨')
-                    .setStyle(ButtonStyle.Success),
-                new ButtonBuilder()
-                    .setCustomId('tree_reset')
-                    .setLabel('Restablecer 🔄')
-                    .setStyle(ButtonStyle.Danger)
-            );
-        };
+    // Renderizar por primera vez
+    const initialPayload = await generateTreeResponse();
+    const responseMessage = await interaction.editReply(initialPayload);
 
-        const response = await interaction.reply({
-            embeds: [buildEmbed(settings)],
-            components: [buildButtons(settings)],
-            flags: MessageFlags.Ephemeral
-        });
+    // 2. Crear coleccionista para mantener la sesión abierta
+    const collector = responseMessage.createMessageComponentCollector({
+        time: 300000 // Mantener activo durante 5 minutos
+    });
 
-        // Colector para los botones del panel
-        const collector = response.createMessageComponentCollector({ time: 120000 });
+    collector.on('collect', async (i) => {
+        // Asegurar que solo el dueño del árbol cambie las configuraciones
+        if (i.user.id !== userId) {
+            return i.reply({ content: '❌ Solo el dueño del árbol puede cambiar los colores.', ephemeral: true });
+        }
 
-        collector.on('collect', async (i) => {
-            if (i.customId === 'tree_toggle_direction') {
-                const newDirection = settings.direction === 'TB' ? 'LR' : 'TB';
-                settings.direction = newDirection;
-                await saveTreeSettings(userId, { direction: newDirection });
+        // A) Si seleccionó un color del menú desplegable ("ruleta")
+        if (i.customId === 'select_tree_color') {
+            const selectedColor = i.values[0];
+            
+            // Guardar color en DB
+            await updateTreeSettings(userId, { userBg: selectedColor });
+            family = await getFamily(userId); // Recargar datos
 
-                await i.update({
-                    embeds: [buildEmbed(settings)],
-                    components: [buildButtons(settings)]
-                });
-            } else if (i.customId === 'tree_reset') {
-                settings = { ...DEFAULT_TREE_SETTINGS };
-                await saveTreeSettings(userId, settings);
+            // Actualizar el mensaje con la nueva imagen de inmediato SIN cerrar el menú
+            const updatedPayload = await generateTreeResponse();
+            await i.update(updatedPayload);
+        }
 
-                await i.update({
-                    embeds: [buildEmbed(settings)],
-                    components: [buildButtons(settings)]
-                });
-            } else if (i.customId === 'tree_edit_colors') {
-                // Desplegar Modal para ingresar códigos HEX
-                const modal = new ModalBuilder()
-                    .setCustomId('tree_colors_modal')
-                    .setTitle('Personalizar Colores (Códigos HEX)');
+        // B) Si hace clic en introducir código HEX manual (#ffffff)
+        if (i.customId === 'btn_custom_hex') {
+            const modal = new ModalBuilder()
+                .setCustomId('modal_hex_input')
+                .setTitle('Color Personalizado');
 
-                const userInput = new TextInputBuilder()
-                    .setCustomId('userBg')
-                    .setLabel('Tu Caja y Tu Texto (ej: #1d4ed8, #ffffff)')
-                    .setValue(`${settings.userBg}, ${settings.userText}`)
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+            const hexInput = new TextInputBuilder()
+                .setCustomId('hex_value')
+                .setLabel('Código Hexadecimal (Ej: #ff5500)')
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder('#ffffff')
+                .setMaxLength(7)
+                .setMinLength(4)
+                .setRequired(true);
 
-                const nodeInput = new TextInputBuilder()
-                    .setCustomId('nodeBg')
-                    .setLabel('Cajas Usuarios y Texto (ej: #111111, #ffffff)')
-                    .setValue(`${settings.nodeBg}, ${settings.nodeText}`)
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+            modal.addComponents(new ActionRowBuilder().addComponents(hexInput));
+            await i.showModal(modal);
 
-                const linesInput = new TextInputBuilder()
-                    .setCustomId('lines')
-                    .setLabel('Líneas y Fondo (ej: #000000, #ffffff)')
-                    .setValue(`${settings.lines}, ${settings.background}`)
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+            // Esperar la respuesta del Modal
+            try {
+                const modalSubmit = await i.awaitModalSubmit({ time: 60000 });
+                const hexColor = modalSubmit.fields.getTextInputValue('hex_value');
 
-                modal.addComponents(
-                    new ActionRowBuilder().addComponents(userInput),
-                    new ActionRowBuilder().addComponents(nodeInput),
-                    new ActionRowBuilder().addComponents(linesInput)
-                );
+                if (/^#([0-9A-F]{3}){1,2}$/i.test(hexColor)) {
+                    await updateTreeSettings(userId, { userBg: hexColor });
+                    family = await getFamily(userId);
 
-                await i.showModal(modal);
-
-                // Esperar envío del modal
-                try {
-                    const modalSubmit = await i.awaitModalSubmit({ time: 60000 });
-
-                    const [uBg, uText] = modalSubmit.fields.getTextInputValue('userBg').split(',').map(s => s.trim());
-                    const [nBg, nText] = modalSubmit.fields.getTextInputValue('nodeBg').split(',').map(s => s.trim());
-                    const [lColor, bColor] = modalSubmit.fields.getTextInputValue('lines').split(',').map(s => s.trim());
-
-                    if (uBg) settings.userBg = uBg;
-                    if (uText) settings.userText = uText;
-                    if (nBg) settings.nodeBg = nBg;
-                    if (nText) settings.nodeText = nText;
-                    if (lColor) settings.lines = lColor;
-                    if (bColor) settings.background = bColor;
-
-                    await saveTreeSettings(userId, settings);
-
-                    await modalSubmit.update({
-                        embeds: [buildEmbed(settings)],
-                        components: [buildButtons(settings)]
-                    });
-                } catch {}
+                    const updatedPayload = await generateTreeResponse();
+                    await modalSubmit.update(updatedPayload);
+                } else {
+                    await modalSubmit.reply({ content: '❌ Código Hex inválido. Debe ser como `#ff0000` o `#fff`.', ephemeral: true });
+                }
+            } catch (err) {
+                // Tiempo de modal agotado
             }
-        });
-    }
-};
+        }
+    });
+
+    collector.on('end', async () => {
+        // Deshabilitar botones/menús al terminar el tiempo
+        try {
+            await interaction.editReply({ components: [] });
+        } catch (e) {}
+    });
+}
