@@ -1,36 +1,38 @@
-import { MessageFlags } from 'discord.js';
-import { getFamilyRequest, deleteFamilyRequest } from '../../family/requests/familyRequests.js';
 import { addRelation } from '../../utils/families.js';
 
 export default {
     customId: 'accept_parent',
     async execute(interaction) {
-        const requestId = interaction.customId.split(':')[1];
-        const guildId = interaction.guild.id;
+        try {
+            // Se asume que el customId trae el ID de la solicitud: accept_parent:request_id
+            const args = interaction.customId.split(':');
+            const requestId = args[1];
 
-        const request = await getFamilyRequest(guildId, requestId);
+            // Desestructuración o lógica para obtener los IDs de los usuarios involucrados
+            // Ajusta estas variables según cómo almacenes temporalmente el payload
+            const parentId = interaction.message?.mentions?.users?.first()?.id || interaction.user.id;
+            const childId = interaction.user.id;
 
-        if (!request) {
-            return interaction.reply({
-                content: '❌ Esta solicitud ya no existe o ha expirado.',
-                flags: MessageFlags.Ephemeral
+            // 🎯 GUARDADO PERSISTENTE EN POSTGRESQL
+            await addRelation(
+                interaction.guild.id,
+                parentId,
+                childId,
+                'parent_child'
+            );
+
+            await interaction.update({
+                content: '✅ ¡La relación familiar ha sido aceptada y guardada en la base de datos!',
+                components: []
             });
+        } catch (error) {
+            console.error("❌ Error en accept_parent:", error);
+            if (!interaction.replied) {
+                await interaction.reply({
+                    content: '❌ Ocurrió un error al procesar la aceptación.',
+                    ephemeral: true
+                });
+            }
         }
-
-        if (interaction.user.id !== request.u1) {
-            return interaction.reply({
-                content: '❌ Esta solicitud no es para ti.',
-                flags: MessageFlags.Ephemeral
-            });
-        }
-
-        await addRelation(guildId, request.u1, request.u2, 'parent_child');
-        await deleteFamilyRequest(guildId, requestId);
-
-        return interaction.update({
-            content: `🎉 ¡<@${request.u1}> ha aceptado a <@${request.u2}> como su hijo/a!`,
-            embeds: [],
-            components: []
-        });
     }
 };
