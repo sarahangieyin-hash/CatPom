@@ -1249,38 +1249,90 @@ export async function clearWarns(client, guildId, userId) {
 // ==========================================
 // EXPIRED CLEANUP
 // ==========================================
+// ==========================================
+// WARNS & MODERATION MODULE
+// ==========================================
 
-export async function cleanupExpiredApplications(client, guildId) {
+export function getWarnKey(guildId, userId) {
+    return `guild:${guildId}:warns:${userId}`;
+}
+
+export async function addWarn(client, guildId, userId, warnData) {
+    const key = getWarnKey(guildId, userId);
     try {
-        if (!client.db || typeof client.db.list !== "function") return;
-
-        const prefix = `guild:${guildId}:applications:`;
-        let keys = await client.db.list(prefix);
-
-        if (!Array.isArray(keys)) {
-            if (typeof keys === 'object' && keys !== null) {
-                keys = Object.keys(keys).filter(k => k.startsWith(prefix));
-            } else {
-                return;
-            }
+        if (!client.db || typeof client.db.get !== "function") {
+            logger.error("Database client is not available for addWarn.");
+            return null;
         }
 
-        const now = Date.now();
-        const maxAgeMs = 30 * 24 * 60 * 60 * 1000; // 30 días
+        const existingRaw = await client.db.get(key, []);
+        const existingWarns = unwrapReplitData(existingRaw) || [];
+        const warnsArray = Array.isArray(existingWarns) ? [...existingWarns] : [];
 
-        for (const key of keys) {
-            try {
-                const rawApp = await client.db.get(key);
-                const app = unwrapReplitData(rawApp);
+        const warnId = generateCaseId();
+        const newWarn = {
+            id: warnId,
+            reason: warnData.reason || "Sin razón especificada",
+            moderatorId: warnData.moderatorId,
+            timestamp: Date.now()
+        };
 
-                if (app && app.status !== 'pending' && (now - app.updatedAt > maxAgeMs)) {
-                    await client.db.delete(key);
-                }
-            } catch (err) {
-                logger.error(`Error cleaning up expired application key ${key}:`, err);
-            }
-        }
+        warnsArray.push(newWarn);
+        await client.db.set(key, warnsArray);
+
+        return newWarn;
     } catch (error) {
-        logger.error(`Error during cleanupExpiredApplications for guild ${guildId}:`, error);
+        logger.error(`Error adding warn to user ${userId} in guild ${guildId}:`, error);
+        return null;
     }
 }
+
+export async function getWarns(client, guildId, userId) {
+    const key = getWarnKey(guildId, userId);
+    try {
+        if (!client.db || typeof client.db.get !== "function") {
+            return [];
+        }
+
+        const rawData = await client.db.get(key, []);
+        const warns = unwrapReplitData(rawData);
+        return Array.isArray(warns) ? warns : [];
+    } catch (error) {
+        logger.error(`Error getting warns for user ${userId} in guild ${guildId}:`, error);
+        return [];
+    }
+}
+
+export async function removeWarn(client, guildId, userId, warnId) {
+    const key = getWarnKey(guildId, userId);
+    try {
+        const warns = await getWarns(client, guildId, userId);
+        const filtered = warns.filter(w => w.id !== warnId);
+
+        if (warns.length === filtered.length) {
+            return false;
+        }
+
+        await client.db.set(key, filtered);
+        return true;
+    } catch (error) {
+        logger.error(`Error removing warn ${warnId} for user ${userId} in guild ${guildId}:`, error);
+        return false;
+    }
+}
+
+export async function clearWarns(client, guildId, userId) {
+    const key = getWarnKey(guildId, userId);
+    try {
+        if (!client.db || typeof client.db.delete !== "function") {
+            return false;
+        }
+
+        await client.db.delete(key);
+        return true;
+    } catch (error) {
+        logger.error(`Error clearing warns for user ${userId} in guild ${guildId}:`, error);
+        return false;
+    }
+}
+
