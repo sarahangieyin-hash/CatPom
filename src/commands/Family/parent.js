@@ -3,7 +3,8 @@ import {
     ActionRowBuilder, 
     ButtonBuilder, 
     ButtonStyle, 
-    EmbedBuilder 
+    EmbedBuilder,
+    MessageFlags 
 } from 'discord.js';
 import { createFamilyRequest } from '../../family/requests/familyRequests.js';
 import { getUserFamilyData } from '../../utils/families.js';
@@ -28,14 +29,14 @@ export default {
         if (targetUser.id === sender.id) {
             return interaction.reply({
                 content: '❌ No puedes añadirte a ti mismo/a como padre o madre.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (targetUser.bot) {
             return interaction.reply({
                 content: '❌ No puedes añadir a un bot como padre o madre.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -45,16 +46,15 @@ export default {
         if (senderFamily.parents && senderFamily.parents.length >= 1) {
             return interaction.reply({
                 content: '❌ Ya tienes un padre/madre registrado. No puedes añadir a más personas directamente.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         // Generar un ID único para la solicitud
         const requestId = `parent_${Date.now()}_${sender.id}`;
 
-        // Guardar la solicitud (u1 = Padre propuesto, u2 = Hijo que pide la relación)
-        await createFamilyRequest(guildId, {
-            id: requestId,
+        // Guardar la solicitud (Pasando la ID como 2º parámetro y los datos como 3º)
+        await createFamilyRequest(guildId, requestId, {
             type: 'parent_child',
             u1: targetUser.id,
             u2: sender.id,
