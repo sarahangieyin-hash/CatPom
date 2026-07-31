@@ -6,7 +6,7 @@ import logger from './logger.js';
 
 export async function initializeDatabase(client) {
     try {
-        if (!client.db) {
+        if (!client?.db) {
             logger.warn('Client DB instance is not initialized or unavailable.');
             return false;
         }
@@ -88,7 +88,7 @@ export function buildApplicationSettingsDefaults() {
 }
 
 export async function getApplicationSettings(client, guildId) {
-    if (!client.db) {
+    if (!client?.db) {
         logger.warn('Database not available for getApplicationSettings');
         return buildApplicationSettingsDefaults();
     }
@@ -183,7 +183,7 @@ export async function deleteApplication(client, guildId, applicationId, userIdHi
 
 export async function cleanupExpiredApplications(client, guildId) {
     try {
-        if (!client.db || typeof client.db.list !== 'function') {
+        if (!client?.db || typeof client.db.list !== 'function') {
             return { removed: 0, scanned: 0 };
         }
 
@@ -233,7 +233,7 @@ export async function cleanupExpiredApplications(client, guildId) {
 
 export async function getApplicationRoleSettings(client, guildId, roleId) {
     try {
-        if (!client.db || typeof client.db.get !== "function") {
+        if (!client?.db || typeof client.db.get !== "function") {
             return { questions: null, logChannelId: null };
         }
 
@@ -248,7 +248,7 @@ export async function getApplicationRoleSettings(client, guildId, roleId) {
 
 export async function saveApplicationRoleSettings(client, guildId, roleId, settings) {
     try {
-        if (!client.db || typeof client.db.set !== "function") {
+        if (!client?.db || typeof client.db.set !== "function") {
             logger.error("Database client is not available for saveApplicationRoleSettings.");
             return false;
         }
@@ -264,7 +264,7 @@ export async function saveApplicationRoleSettings(client, guildId, roleId, setti
 
 export async function deleteApplicationRoleSettings(client, guildId, roleId) {
     try {
-        if (!client.db || typeof client.db.delete !== "function") {
+        if (!client?.db || typeof client.db.delete !== "function") {
             logger.error("Database client is not available for deleteApplicationRoleSettings.");
             return false;
         }
@@ -295,7 +295,7 @@ export async function createApplication(client, application) {
     };
 
     try {
-        if (!client.db || typeof client.db.set !== "function") {
+        if (!client?.db || typeof client.db.set !== "function") {
             logger.error("Database client is not available for createApplication.");
             throw new Error("Database not available");
         }
@@ -358,7 +358,7 @@ export async function updateApplication(client, guildId, applicationId, updates)
 export async function getUserApplications(client, guildId, userId) {
     const userKey = getUserApplicationsKey(guildId, userId);
     try {
-        if (!client.db || typeof client.db.get !== "function") {
+        if (!client?.db || typeof client.db.get !== "function") {
             logger.error("Database client is not available for getUserApplications.");
             return [];
         }
@@ -391,7 +391,7 @@ export async function getApplications(client, guildId, filters = {}) {
     } = filters;
     
     try {
-        if (!client.db || typeof client.db.list !== "function") {
+        if (!client?.db || typeof client.db.list !== "function") {
             logger.error("Database client is not available for getApplications.");
             return [];
         }
@@ -439,7 +439,7 @@ export async function getApplications(client, guildId, filters = {}) {
 // ==========================================
 
 export async function getJoinToCreateConfig(client, guildId) {
-    if (!client.db) {
+    if (!client?.db) {
         logger.warn('Database not available for getJoinToCreateConfig');
         return {
             enabled: false,
@@ -649,7 +649,7 @@ export async function createGiveaway(client, giveawayData) {
     } = giveawayData;
 
     try {
-        if (client.pgPool) {
+        if (client?.pgPool) {
             const query = `
                 INSERT INTO giveaways (guild_id, channel_id, message_id, host_id, prize, winners_count, ends_at, requirements, status)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -705,7 +705,7 @@ export async function createGiveaway(client, giveawayData) {
 
 export async function getGiveaway(client, guildId, messageId) {
     try {
-        if (client.pgPool) {
+        if (client?.pgPool) {
             const query = `SELECT * FROM giveaways WHERE guild_id = $1 AND message_id = $2;`;
             const result = await client.pgPool.query(query, [guildId, messageId]);
             return result.rows[0] || null;
@@ -722,7 +722,7 @@ export async function getGiveaway(client, guildId, messageId) {
 
 export async function getActiveGiveaways(client, guildId) {
     try {
-        if (client.pgPool) {
+        if (client?.pgPool) {
             const query = `SELECT * FROM giveaways WHERE guild_id = $1 AND status = 'active';`;
             const result = await client.pgPool.query(query, [guildId]);
             return result.rows;
@@ -743,7 +743,7 @@ export async function getActiveGiveaways(client, guildId) {
 
 export async function endGiveaway(client, guildId, messageId, winners = []) {
     try {
-        if (client.pgPool) {
+        if (client?.pgPool) {
             const query = `
                 UPDATE giveaways
                 SET status = 'ended', winners = $1, ended_at = NOW()
@@ -778,7 +778,7 @@ export async function endGiveaway(client, guildId, messageId, winners = []) {
 
 export async function addGiveawayParticipant(client, guildId, messageId, userId) {
     try {
-        if (client.pgPool) {
+        if (client?.pgPool) {
             const query = `
                 INSERT INTO giveaway_participants (guild_id, message_id, user_id)
                 VALUES ($1, $2, $3)
@@ -810,7 +810,7 @@ export async function addGiveawayParticipant(client, guildId, messageId, userId)
 
 export async function removeGiveawayParticipant(client, guildId, messageId, userId) {
     try {
-        if (client.pgPool) {
+        if (client?.pgPool) {
             const query = `
                 DELETE FROM giveaway_participants
                 WHERE guild_id = $1 AND message_id = $2 AND user_id = $3;
@@ -865,7 +865,7 @@ export function buildGoodbyeDefaults() {
 }
 
 export async function getWelcomeConfig(client, guildId) {
-    if (!client.db) {
+    if (!client?.db) {
         logger.warn('Database not available for getWelcomeConfig');
         return buildWelcomeDefaults();
     }
@@ -884,7 +884,7 @@ export async function getWelcomeConfig(client, guildId) {
 }
 
 export async function saveWelcomeConfig(client, guildId, config) {
-    if (!client.db) return false;
+    if (!client?.db) return false;
 
     const key = getWelcomeConfigKey(guildId);
     try {
@@ -900,7 +900,7 @@ export async function saveWelcomeConfig(client, guildId, config) {
 }
 
 export async function getGoodbyeConfig(client, guildId) {
-    if (!client.db) {
+    if (!client?.db) {
         logger.warn('Database not available for getGoodbyeConfig');
         return buildGoodbyeDefaults();
     }
@@ -919,7 +919,7 @@ export async function getGoodbyeConfig(client, guildId) {
 }
 
 export async function saveGoodbyeConfig(client, guildId, config) {
-    if (!client.db) return false;
+    if (!client?.db) return false;
 
     const key = getGoodbyeConfigKey(guildId);
     try {
@@ -1009,7 +1009,7 @@ export async function getLevelingConfig(client, guildId) {
     };
 
     try {
-        if (!client.db || typeof client.db.get !== "function") {
+        if (!client?.db || typeof client.db.get !== "function") {
             return defaultConfig;
         }
 
@@ -1025,7 +1025,7 @@ export async function getLevelingConfig(client, guildId) {
 export async function saveLevelingConfig(client, guildId, config) {
     const key = getLevelingKey(guildId);
     try {
-        if (!client.db || typeof client.db.set !== "function") {
+        if (!client?.db || typeof client.db.set !== "function") {
             logger.error("Database client is not available for saveLevelingConfig.");
             return false;
         }
@@ -1057,7 +1057,7 @@ export async function getUserLevelData(client, guildId, userId) {
     };
 
     try {
-        if (!client.db || typeof client.db.get !== "function") {
+        if (!client?.db || typeof client.db.get !== "function") {
             return defaultData;
         }
 
@@ -1086,7 +1086,7 @@ export async function getUserLevelData(client, guildId, userId) {
 export async function saveUserLevelData(client, guildId, userId, data) {
     const key = getUserLevelKey(guildId, userId);
     try {
-        if (!client.db || typeof client.db.set !== "function") {
+        if (!client?.db || typeof client.db.set !== "function") {
             logger.error("Database client is not available for saveUserLevelData.");
             return false;
         }
@@ -1111,7 +1111,7 @@ export async function saveUserLevelData(client, guildId, userId, data) {
 
 export async function getLeaderboard(client, guildId, limit = 10) {
     try {
-        if (!client.db || typeof client.db.list !== "function") {
+        if (!client?.db || typeof client.db.list !== "function") {
             logger.error("Database client is not available for getLeaderboard.");
             return [];
         }
@@ -1174,7 +1174,7 @@ export async function getLeaderboard(client, guildId, limit = 10) {
 export async function addWarn(client, guildId, userId, warnData) {
     const key = getWarnKey(guildId, userId);
     try {
-        if (!client.db || typeof client.db.get !== "function") {
+        if (!client?.db || typeof client.db.get !== "function") {
             logger.error("Database client is not available for addWarn.");
             return null;
         }
@@ -1204,7 +1204,7 @@ export async function addWarn(client, guildId, userId, warnData) {
 export async function getWarns(client, guildId, userId) {
     const key = getWarnKey(guildId, userId);
     try {
-        if (!client.db || typeof client.db.get !== "function") {
+        if (!client?.db || typeof client.db.get !== "function") {
             return [];
         }
 
@@ -1238,7 +1238,7 @@ export async function removeWarn(client, guildId, userId, warnId) {
 export async function clearWarns(client, guildId, userId) {
     const key = getWarnKey(guildId, userId);
     try {
-        if (!client.db || typeof client.db.delete !== "function") {
+        if (!client?.db || typeof client.db.delete !== "function") {
             return false;
         }
 
