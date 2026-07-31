@@ -9,38 +9,33 @@ import {
     AttachmentBuilder 
 } from 'discord.js';
 
-// Usamos las utilidades internas del sistema de árbol que ya existen en tu proyecto
-import { buildTreeLayout } from '../../family/utils/treeLayout.js';
-import { getTreeSettings, updateTreeSettings } from '../../family/utils/treeSettings.js';
-import { renderTreeCanvas } from '../../family/utils/treeRenderer.js';
-import { getFamily } from '../../utils/families.js';
+// ⚠️ Cambia esta ruta si tu comando principal de árbol se llama diferente (ej: './tree.js' o './familytree.js')
+import { renderTree } from './tree.js'; 
+import { getFamily, updateTreeSettings } from '../../utils/families.js';
 
 export default {
     name: 'customizetree',
     description: 'Personaliza los colores del árbol genealógico en vivo',
     
     async execute(interaction) {
-        // 1. Respuesta pública (NO ephemeral) para que todos la vean en el chat
+        // Respuesta pública (NO ephemeral) para que lo vean todos
         await interaction.deferReply({ ephemeral: false });
 
         const userId = interaction.user.id;
         const guild = interaction.guild;
 
-        // Función que genera la imagen actualizada y los controles
+        // Función que regenera la imagen y la interfaz
         const generateTreeResponse = async () => {
             const family = await getFamily(userId);
-            const settings = await getTreeSettings(userId);
             
-            // Construir el layout y renderizar el Canvas
-            const layout = await buildTreeLayout(family, guild, settings);
-            const imageBuffer = await renderTreeCanvas(layout, settings);
-            
+            // Llamamos a la función de renderizado principal
+            const imageBuffer = await renderTree(guild, family, userId);
             const attachment = new AttachmentBuilder(imageBuffer, { name: 'family-tree.png' });
 
-            // Ruleta / Menú desplegable de colores predefinidos
+            // Menú "Ruleta / Paleta" de colores
             const colorSelectMenu = new StringSelectMenuBuilder()
                 .setCustomId('select_tree_color')
-                .setPlaceholder('🎨 Selecciona un color para tus tarjetas...')
+                .setPlaceholder('🎨 Selecciona un color para tu tarjeta...')
                 .addOptions([
                     { label: 'Azul Real', value: '#1d4ed8', emoji: '🟦' },
                     { label: 'Rojo Carmesí', value: '#dc2626', emoji: '🟥' },
@@ -51,7 +46,7 @@ export default {
                     { label: 'Oscuro Elegante', value: '#111111', emoji: '⬛' }
                 ]);
 
-            // Botón para introducir un código HEX manual (#ffffff)
+            // Botón código HEX manual (#ffffff)
             const customHexButton = new ButtonBuilder()
                 .setCustomId('btn_custom_hex')
                 .setLabel('Escribir código #HEX')
@@ -68,32 +63,30 @@ export default {
             };
         };
 
-        // Renderizado inicial
+        // Primera carga
         const initialPayload = await generateTreeResponse();
         const responseMessage = await interaction.editReply(initialPayload);
 
-        // 2. Mantener la sesión activa de personalización (5 minutos)
+        // Mantenemos activo el menú por 5 minutos
         const collector = responseMessage.createMessageComponentCollector({
             time: 300000 
         });
 
         collector.on('collect', async (i) => {
-            // Solo el dueño del árbol puede modificar los colores
             if (i.user.id !== userId) {
-                return i.reply({ content: '❌ Solo el dueño del árbol puede personalizarlo.', ephemeral: true });
+                return i.reply({ content: '❌ Solo el dueño del árbol puede cambiar los colores.', ephemeral: true });
             }
 
-            // A) Cambio directo mediante la Ruleta / Selector de Colores
+            // Cambiar mediante menú de colores
             if (i.customId === 'select_tree_color') {
                 const selectedColor = i.values[0];
                 await updateTreeSettings(userId, { userBg: selectedColor });
 
-                // Actualizar la imagen al instante sin cerrar el menú
                 const updatedPayload = await generateTreeResponse();
                 await i.update(updatedPayload);
             }
 
-            // B) Código Hexadecimal personalizado mediante un Modal
+            // Cambiar mediante código HEX manual
             if (i.customId === 'btn_custom_hex') {
                 const modal = new ModalBuilder()
                     .setCustomId('modal_hex_input')
@@ -101,7 +94,7 @@ export default {
 
                 const hexInput = new TextInputBuilder()
                     .setCustomId('hex_value')
-                    .setLabel('Código Hexadecimal (Ej: #ff5500 o #ffffff)')
+                    .setLabel('Código Hexadecimal (Ej: #ff5500)')
                     .setStyle(TextInputStyle.Short)
                     .setPlaceholder('#1d4ed8')
                     .setMaxLength(7)
@@ -121,17 +114,14 @@ export default {
                         const updatedPayload = await generateTreeResponse();
                         await modalSubmit.update(updatedPayload);
                     } else {
-                        await modalSubmit.reply({ content: '❌ Código Hex inválido. Ejemplo válido: `#ff0000`', ephemeral: true });
+                        await modalSubmit.reply({ content: '❌ Código Hex inválido.', ephemeral: true });
                     }
-                } catch (err) {
-                    // Tiempo de espera agotado en el modal
-                }
+                } catch (err) {}
             }
         });
 
         collector.on('end', async () => {
             try {
-                // Quitar botones al vencer el tiempo para evitar spam
                 await interaction.editReply({ components: [] });
             } catch (e) {}
         });
