@@ -6,7 +6,8 @@ import {
     ModalBuilder, 
     TextInputBuilder, 
     TextInputStyle,
-    AttachmentBuilder 
+    AttachmentBuilder,
+    MessageFlags 
 } from 'discord.js';
 
 import { getUserFamilyData } from '../../utils/families.js';
@@ -15,7 +16,7 @@ import { renderFamilyTree } from '../../family/render/treeRenderer.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('customizetree')
-        .setDescription('Ajusta el color exacto de tu tarjeta, familiares, líneas y fondo.'),
+        .setDescription('Personaliza colores, formas y estilo de líneas de tu árbol familiar.'),
 
     async execute(interaction) {
         try {
@@ -36,7 +37,7 @@ export default {
             if (!hasFamily) {
                 return interaction.reply({
                     content: `❌ No tienes una familia registrada.`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -45,100 +46,158 @@ export default {
 
             await interaction.deferReply({ ephemeral: false });
 
+            // Inicializar configuraciones por defecto si no existen
             if (!family.settings) family.settings = {};
-
-            // Valores por defecto si no existen
             if (!family.settings.userBg) family.settings.userBg = '#1d4ed8';
             if (!family.settings.nodeBg) family.settings.nodeBg = '#111111';
             if (!family.settings.lineColor) family.settings.lineColor = '#ffffff';
             if (!family.settings.bg) family.settings.bg = '#0d0f12';
+            if (!family.settings.textColor) family.settings.textColor = '#ffffff';
+            if (!family.settings.lineStyle) family.settings.lineStyle = 'curved'; // 'curved' | 'straight'
+            if (!family.settings.cardShape) family.settings.cardShape = 'rounded'; // 'rounded' | 'square' | 'circle'
 
-            // Elemento activo
-            let activeTarget = 'userBg';
-
-            const targetLabels = {
-                'userBg': 'Mi Tarjeta',
-                'nodeBg': 'Otras Tarjetas',
-                'lineColor': 'Líneas y Bordes',
-                'bg': 'Fondo'
-            };
+            // Pestaña activa por defecto
+            let activeTab = 'userCard'; 
 
             const generateTreePayload = async () => {
                 const imageBuffer = await renderFamilyTree(interaction.guild, family);
                 const attachment = new AttachmentBuilder(imageBuffer, { name: 'arbol-familiar.png' });
 
-                // Botones para elegir qué elemento modificar
-                const btnUser = new ButtonBuilder()
-                    .setCustomId('target_userBg')
+                // Row 1: Pestañas de Selección
+                const btnTabUser = new ButtonBuilder()
+                    .setCustomId('ctree_tab_userCard')
                     .setLabel('Mi Tarjeta')
-                    .setStyle(activeTarget === 'userBg' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+                    .setStyle(activeTab === 'userCard' ? ButtonStyle.Primary : ButtonStyle.Secondary);
 
-                const btnOthers = new ButtonBuilder()
-                    .setCustomId('target_nodeBg')
+                const btnTabOthers = new ButtonBuilder()
+                    .setCustomId('ctree_tab_otherCards')
                     .setLabel('Otras Tarjetas')
-                    .setStyle(activeTarget === 'nodeBg' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+                    .setStyle(activeTab === 'otherCards' ? ButtonStyle.Primary : ButtonStyle.Secondary);
 
-                const btnLines = new ButtonBuilder()
-                    .setCustomId('target_lineColor')
+                const btnTabLines = new ButtonBuilder()
+                    .setCustomId('ctree_tab_lines')
                     .setLabel('Líneas/Bordes')
-                    .setStyle(activeTarget === 'lineColor' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+                    .setStyle(activeTab === 'lines' ? ButtonStyle.Primary : ButtonStyle.Secondary);
 
-                const btnBg = new ButtonBuilder()
-                    .setCustomId('target_bg')
+                const btnTabBg = new ButtonBuilder()
+                    .setCustomId('ctree_tab_bg')
                     .setLabel('Fondo')
-                    .setStyle(activeTarget === 'bg' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+                    .setStyle(activeTab === 'bg' ? ButtonStyle.Primary : ButtonStyle.Secondary);
 
-                // Botón para cambiar el valor/color exacto del objetivo seleccionado
-                const btnSetColor = new ButtonBuilder()
-                    .setCustomId('btn_open_color_picker')
-                    .setLabel(`🎚️ Ajustar Color de: ${targetLabels[activeTarget]}`)
-                    .setStyle(ButtonStyle.Success);
+                const btnTabNames = new ButtonBuilder()
+                    .setCustomId('ctree_tab_names')
+                    .setLabel('Nombres')
+                    .setStyle(activeTab === 'names' ? ButtonStyle.Primary : ButtonStyle.Secondary);
 
-                const row1 = new ActionRowBuilder().addComponents(btnUser, btnOthers, btnLines, btnBg);
-                const row2 = new ActionRowBuilder().addComponents(btnSetColor);
+                const rowTabs = new ActionRowBuilder().addComponents(btnTabUser, btnTabOthers, btnTabLines, btnTabBg, btnTabNames);
 
-                const currentColor = family.settings[activeTarget];
+                // Row 2: Botones de Acción según la pestaña activa
+                const actionButtons = [];
+
+                if (activeTab === 'userCard') {
+                    actionButtons.push(
+                        new ButtonBuilder()
+                            .setCustomId('ctree_action_color_userBg')
+                            .setLabel(`🎨 Color de Mi Tarjeta (${family.settings.userBg})`)
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('ctree_action_toggle_shape')
+                            .setLabel(`📐 Forma: ${family.settings.cardShape === 'rounded' ? 'Redondeada' : family.settings.cardShape === 'square' ? 'Cuadrada' : 'Circular'}`)
+                            .setStyle(ButtonStyle.Secondary)
+                    );
+                } else if (activeTab === 'otherCards') {
+                    actionButtons.push(
+                        new ButtonBuilder()
+                            .setCustomId('ctree_action_color_nodeBg')
+                            .setLabel(`🎨 Color Otras Tarjetas (${family.settings.nodeBg})`)
+                            .setStyle(ButtonStyle.Success)
+                    );
+                } else if (activeTab === 'lines') {
+                    actionButtons.push(
+                        new ButtonBuilder()
+                            .setCustomId('ctree_action_color_lineColor')
+                            .setLabel(`🎨 Color de Líneas (${family.settings.lineColor})`)
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId('ctree_action_toggle_linestyle')
+                            .setLabel(`🔀 Estilo: ${family.settings.lineStyle === 'curved' ? 'Curva (Curvy)' : 'Directa (Recta)'}`)
+                            .setStyle(ButtonStyle.Secondary)
+                    );
+                } else if (activeTab === 'bg') {
+                    actionButtons.push(
+                        new ButtonBuilder()
+                            .setCustomId('ctree_action_color_bg')
+                            .setLabel(`🎨 Color de Fondo (${family.settings.bg})`)
+                            .setStyle(ButtonStyle.Success)
+                    );
+                } else if (activeTab === 'names') {
+                    actionButtons.push(
+                        new ButtonBuilder()
+                            .setCustomId('ctree_action_color_textColor')
+                            .setLabel(`🎨 Color de Nombres (${family.settings.textColor})`)
+                            .setStyle(ButtonStyle.Success)
+                    );
+                }
+
+                const rowActions = new ActionRowBuilder().addComponents(actionButtons);
 
                 return {
-                    content: `🎚️ **Modificando:** \`${targetLabels[activeTarget]}\` | **Color Actual:** \`${currentColor}\``,
+                    content: `⚙️ **Ajustes de Árbol Genealógico**`,
                     files: [attachment],
-                    components: [row1, row2]
+                    components: [rowTabs, rowActions]
                 };
             };
 
             const initialPayload = await generateTreePayload();
             const responseMessage = await interaction.editReply(initialPayload);
 
+            const filter = i => i.customId.startsWith('ctree_');
             const collector = responseMessage.createMessageComponentCollector({
+                filter,
                 time: 300000 
             });
 
             collector.on('collect', async (i) => {
                 if (i.user.id !== targetUser.id) {
-                    return i.reply({ content: '❌ Solo el dueño del árbol puede editarlo.', ephemeral: true });
+                    return i.reply({ content: '❌ Solo el dueño del árbol puede editarlo.', flags: MessageFlags.Ephemeral });
                 }
 
-                // Cambiar el objetivo a editar
-                if (i.customId.startsWith('target_')) {
-                    activeTarget = i.customId.replace('target_', '');
+                // Cambio de Pestañas
+                if (i.customId.startsWith('ctree_tab_')) {
+                    activeTab = i.customId.replace('ctree_tab_', '');
                     const updatedPayload = await generateTreePayload();
                     await i.update(updatedPayload);
                 }
 
-                // Abrir la entrada para cambiar el valor/tono exacto
-                if (i.customId === 'btn_open_color_picker') {
-                    const modal = new ModalBuilder()
-                        .setCustomId('modal_color_picker')
-                        .setTitle(`Color para ${targetLabels[activeTarget]}`);
+                // Alternar estilo de líneas (Curvas vs Rectas)
+                if (i.customId === 'ctree_action_toggle_linestyle') {
+                    family.settings.lineStyle = family.settings.lineStyle === 'curved' ? 'straight' : 'curved';
+                    const updatedPayload = await generateTreePayload();
+                    await i.update(updatedPayload);
+                }
 
-                    const currentColor = family.settings[activeTarget] || '#111111';
+                // Alternar forma de las tarjetas (Redondeada -> Cuadrada -> Circular)
+                if (i.customId === 'ctree_action_toggle_shape') {
+                    const currentShape = family.settings.cardShape;
+                    family.settings.cardShape = currentShape === 'rounded' ? 'square' : currentShape === 'square' ? 'circle' : 'rounded';
+                    const updatedPayload = await generateTreePayload();
+                    await i.update(updatedPayload);
+                }
+
+                // Cambiar colores mediante Modal
+                if (i.customId.startsWith('ctree_action_color_')) {
+                    const targetSetting = i.customId.replace('ctree_action_color_', '');
+                    const currentColor = family.settings[targetSetting] || '#ffffff';
+
+                    const modal = new ModalBuilder()
+                        .setCustomId('ctree_modal_color')
+                        .setTitle('Cambiar Color (#HEX)');
 
                     const colorInput = new TextInputBuilder()
-                        .setCustomId('input_color_val')
-                        .setLabel(`Código de color HEX (Actual: ${currentColor})`)
+                        .setCustomId('input_hex')
+                        .setLabel(`Código Hexadecimal (Actual: ${currentColor})`)
                         .setStyle(TextInputStyle.Short)
                         .setValue(currentColor)
-                        .setPlaceholder('#000000')
                         .setMaxLength(7)
                         .setMinLength(4)
                         .setRequired(true);
@@ -147,19 +206,22 @@ export default {
                     await i.showModal(modal);
 
                     try {
-                        const modalSubmit = await i.awaitModalSubmit({ time: 60000 });
-                        const newColor = modalSubmit.fields.getTextInputValue('input_color_val');
+                        const modalSubmit = await i.awaitModalSubmit({ 
+                            filter: m => m.customId === 'ctree_modal_color' && m.user.id === targetUser.id,
+                            time: 60000 
+                        });
+
+                        const newColor = modalSubmit.fields.getTextInputValue('input_hex');
 
                         if (/^#([0-9A-F]{3}){1,2}$/i.test(newColor)) {
-                            family.settings[activeTarget] = newColor;
-
+                            family.settings[targetSetting] = newColor;
                             const updatedPayload = await generateTreePayload();
                             await modalSubmit.update(updatedPayload);
                         } else {
-                            await modalSubmit.reply({ content: '❌ Código de color inválido (ejemplo correcto: `#1a1a1a`).', ephemeral: true });
+                            await modalSubmit.reply({ content: '❌ Código de color inválido. Ejemplo: `#ff0000`', flags: MessageFlags.Ephemeral });
                         }
                     } catch (err) {
-                        // Timeout
+                        // Timeout modal
                     }
                 }
             });
@@ -175,7 +237,7 @@ export default {
             if (interaction.deferred) {
                 await interaction.editReply({ content: "❌ Error personalizando el árbol: " + error.message });
             } else {
-                await interaction.reply({ content: "❌ Error personalizando el árbol: " + error.message, ephemeral: true });
+                await interaction.reply({ content: "❌ Error personalizando el árbol: " + error.message, flags: MessageFlags.Ephemeral });
             }
         }
     }
