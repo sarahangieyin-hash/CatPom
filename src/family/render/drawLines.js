@@ -30,27 +30,35 @@ export async function drawLines(ctx, layout) {
     for (const conn of connections) {
         ctx.beginPath();
 
-        if (conn.type === 'partner') {
-            const fromNode = nodes.find(n => n.id === conn.fromNodeId);
-            const toNode = nodes.find(n => n.id === conn.toNodeId);
-            if (!fromNode || !toNode) continue;
+        if (conn.type === 'partners-group') {
+            const rootNode = nodes.find(n => n.id === conn.fromNodeId);
+            if (!rootNode) continue;
 
-            const fromCenterX = fromNode.x + NODE_WIDTH / 2;
-            const toCenterX = toNode.x + NODE_WIDTH / 2;
-            const midY = fromNode.y + NODE_HEIGHT / 2;
-            const midX = (fromCenterX + toCenterX) / 2;
+            let prevNode = rootNode;
+            const midY = rootNode.y + NODE_HEIGHT / 2;
 
-            // Dibuja la línea horizontal que une a la pareja
-            ctx.moveTo(fromCenterX, midY);
-            ctx.lineTo(toCenterX, midY);
-            ctx.stroke(); // Ejecutamos este trazo para la línea
+            for (const pId of conn.partnerIds) {
+                const pNode = nodes.find(n => n.id === pId);
+                if (!pNode) continue;
 
-            // Dibuja el anillo exactamente en el centro
-            if (ringImage) {
-                const iconSize = 28;
-                ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
+                const prevCenterX = prevNode.x + NODE_WIDTH / 2;
+                const pCenterX = pNode.x + NODE_WIDTH / 2;
+                const midX = (prevCenterX + pCenterX) / 2;
+
+                // Línea horizontal entre este par de cónyuges
+                ctx.moveTo(prevCenterX, midY);
+                ctx.lineTo(pCenterX, midY);
+                ctx.stroke();
+
+                // Anillo exactamente en el punto medio entre ellos
+                if (ringImage) {
+                    const iconSize = 26;
+                    ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
+                }
+
+                prevNode = pNode;
             }
-            continue; // Aquí sí va bien porque ya hicimos el stroke de la pareja
+            continue;
         } 
         else if (conn.type === 'parent-child-direct') {
             const fromNode = nodes.find(n => n.id === conn.fromNodeId);
@@ -77,10 +85,9 @@ export async function drawLines(ctx, layout) {
                 const rootCenterX = rootNode.x + NODE_WIDTH / 2;
                 const partnerCenterX = partnerNode.x + NODE_WIDTH / 2;
                 
-                // Punto medio exacto entre ti y tu pareja (donde está el anillo)
                 const coupleMidX = (rootCenterX + partnerCenterX) / 2;
                 
-                const coupleY = rootNode.y + NODE_HEIGHT / 2; // Altura del centro de la pareja
+                const coupleY = rootNode.y + NODE_HEIGHT;
                 const childTopY = childNode.y;
                 const midY = (coupleY + childTopY) / 2;
                 const childCenterX = childNode.x + NODE_WIDTH / 2;
