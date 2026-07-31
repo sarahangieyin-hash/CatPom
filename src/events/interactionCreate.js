@@ -3,7 +3,7 @@ console.log("USANDO ESTE interactionCreate");
 import { Events, EmbedBuilder, MessageFlags } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
-import { addRelation } from '../utils/families.js';
+import { addRelation, getUserFamilyData, saveFamilyData } from '../utils/families.js';
 
 export default {
     name: Events.InteractionCreate,
@@ -102,6 +102,93 @@ export default {
                         embeds: [denyEmbed],
                         components: []
                     });
+                }
+
+                /*
+                    MANEJADORES DE MATRIMONIO MÚLTIPLE / AMPLIACIÓN
+                */
+                if (customId === 'expand_marriage_accept' || customId === 'expand_marriage_reject') {
+                    const [authorId, targetId] = args;
+
+                    if (customId === 'expand_marriage_reject') {
+                        return interaction.update({
+                            content: `❌ La pareja actual ha rechazado la ampliación de la unión múltiple.`,
+                            components: []
+                        });
+                    }
+
+                    if (customId === 'expand_marriage_accept') {
+                        await interaction.update({
+                            content: `✅ Has autorizado la ampliación. Enviando propuesta formal al nuevo integrante...`,
+                            components: []
+                        });
+
+                        const authorFamily = await getUserFamilyData(interaction.guild.id, authorId);
+                        const currentGroup = [authorId, ...(authorFamily.spouses || [])];
+                        const groupString = currentGroup.join(':');
+
+                        const acceptBtn = {
+                            type: 2,
+                            style: 3,
+                            label: 'Aceptar Matrimonio Múltiple',
+                            custom_id: `multimarry_accept:${groupString}:${targetId}`
+                        };
+
+                        const rejectBtn = {
+                            type: 2,
+                            style: 4,
+                            label: 'Rechazar',
+                            custom_id: `multimarry_reject:${groupString}:${targetId}`
+                        };
+
+                        const row = {
+                            type: 1,
+                            components: [acceptBtn, rejectBtn]
+                        };
+
+                        const mentions = currentGroup.map(id => `<@${id}>`).join(', ');
+
+                        return interaction.followUp({
+                            content: `💍 <@${targetId}>, el grupo actual (${mentions}) te ha propuesto unirte a su matrimonio múltiple. ¿Aceptas?`,
+                            components: [row]
+                        });
+                    }
+                }
+
+                if (customId === 'multimarry_accept' || customId === 'multimarry_reject') {
+                    const targetId = args.pop();
+                    const groupIds = args;
+
+                    if (interaction.user.id !== targetId) {
+                        return interaction.reply({ content: '❌ Esta propuesta no es para ti.', flags: MessageFlags.Ephemeral });
+                    }
+
+                    if (customId === 'multimarry_reject') {
+                        return interaction.update({
+                            content: `❌ <@${targetId}> ha rechazado unirse al matrimonio múltiple.`,
+                            components: []
+                        });
+                    }
+
+                    if (customId === 'multimarry_accept') {
+                        const allMembers = [...groupIds, targetId];
+
+                        for (const memberId of allMembers) {
+                            const memberFamily = await getUserFamilyData(interaction.guild.id, memberId);
+                            if (!memberFamily.spouses) memberFamily.spouses = [];
+
+                            memberFamily.spouses = allMembers.filter(id => id !== memberId);
+
+                            await saveFamilyData(interaction.guild.id, memberId, memberFamily);
+                        }
+
+                        const allMentions = allMembers.map(id => `<@${id}>`).join(', ');
+
+                        return interaction.update({
+                            content: `🎉 ¡Felicidades! Se ha actualizado el matrimonio múltiple con éxito. Ahora participan: ${allMentions}. ¡Todos están casados con todos! 💞`,
+                            components: []
+                        });
+                    }
                 }
 
                 const button = client.buttons?.get(customId);
