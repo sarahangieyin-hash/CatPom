@@ -16,7 +16,7 @@ import { renderFamilyTree } from '../../family/render/treeRenderer.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('customizetree')
-        .setDescription('Personaliza colores, formas y estilo de líneas de tu árbol familiar.'),
+        .setDescription('Personaliza completamente los colores, textos y dirección de tu árbol familiar.'),
 
     async execute(interaction) {
         try {
@@ -36,7 +36,7 @@ export default {
 
             if (!hasFamily) {
                 return interaction.reply({
-                    content: `❌ No tienes una familia registrada.`,
+                    content: `❌ No tienes una familia registrada para personalizar.`,
                     flags: MessageFlags.Ephemeral
                 });
             }
@@ -46,105 +46,51 @@ export default {
 
             await interaction.deferReply({ ephemeral: false });
 
-            // Inicializar configuraciones por defecto si no existen
+            // Configuraciones por defecto si no están inicializadas
             if (!family.settings) family.settings = {};
             if (!family.settings.userBg) family.settings.userBg = '#1d4ed8';
+            if (!family.settings.userText) family.settings.userText = '#ffffff';
             if (!family.settings.nodeBg) family.settings.nodeBg = '#111111';
-            if (!family.settings.lineColor) family.settings.lineColor = '#ffffff';
-            if (!family.settings.bg) family.settings.bg = '#0d0f12';
-            if (!family.settings.textColor) family.settings.textColor = '#ffffff';
-            if (!family.settings.lineStyle) family.settings.lineStyle = 'curved'; // 'curved' | 'straight'
-            if (!family.settings.cardShape) family.settings.cardShape = 'rounded'; // 'rounded' | 'square' | 'circle'
-
-            // Pestaña activa por defecto
-            let activeTab = 'userCard'; 
+            if (!family.settings.nodeText) family.settings.nodeText = '#ffffff';
+            if (!family.settings.lineColor) family.settings.lineColor = '#000000';
+            if (!family.settings.bg) family.settings.bg = '#ffffff';
+            if (!family.settings.direction) family.settings.direction = 'TB'; // 'TB' = Vertical, 'LR' = Horizontal
 
             const generateTreePayload = async () => {
                 const imageBuffer = await renderFamilyTree(interaction.guild, family);
                 const attachment = new AttachmentBuilder(imageBuffer, { name: 'arbol-familiar.png' });
 
-                // Row 1: Pestañas de Selección
-                const btnTabUser = new ButtonBuilder()
-                    .setCustomId('ctree_tab_userCard')
-                    .setLabel('Mi Tarjeta')
-                    .setStyle(activeTab === 'userCard' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+                const isVertical = family.settings.direction === 'TB';
 
-                const btnTabOthers = new ButtonBuilder()
-                    .setCustomId('ctree_tab_otherCards')
-                    .setLabel('Otras Tarjetas')
-                    .setStyle(activeTab === 'otherCards' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+                // Botones de personalización
+                const btnColors = new ButtonBuilder()
+                    .setCustomId('ctree_btn_colors')
+                    .setLabel('🎨 Cambiar Colores (#HEX)')
+                    .setStyle(ButtonStyle.Primary);
 
-                const btnTabLines = new ButtonBuilder()
-                    .setCustomId('ctree_tab_lines')
-                    .setLabel('Líneas/Bordes')
-                    .setStyle(activeTab === 'lines' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+                const btnDirection = new ButtonBuilder()
+                    .setCustomId('ctree_btn_direction')
+                    .setLabel(`🧭 Dirección: ${isVertical ? 'Vertical (Arriba a Abajo)' : 'Horizontal (Izquierda a Derecha)'}`)
+                    .setStyle(ButtonStyle.Secondary);
 
-                const btnTabBg = new ButtonBuilder()
-                    .setCustomId('ctree_tab_bg')
-                    .setLabel('Fondo')
-                    .setStyle(activeTab === 'bg' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+                const rowButtons = new ActionRowBuilder().addComponents(btnColors, btnDirection);
 
-                const btnTabNames = new ButtonBuilder()
-                    .setCustomId('ctree_tab_names')
-                    .setLabel('Nombres')
-                    .setStyle(activeTab === 'names' ? ButtonStyle.Primary : ButtonStyle.Secondary);
+                const contentText = 
+`🎨 **Personalización del Árbol Familiar**
+Configura los colores y la dirección con la que se generará tu árbol.
 
-                const rowTabs = new ActionRowBuilder().addComponents(btnTabUser, btnTabOthers, btnTabLines, btnTabBg, btnTabNames);
-
-                // Row 2: Botones de Acción según la pestaña activa
-                const actionButtons = [];
-
-                if (activeTab === 'userCard') {
-                    actionButtons.push(
-                        new ButtonBuilder()
-                            .setCustomId('ctree_action_color_userBg')
-                            .setLabel(`🎨 Color de Mi Tarjeta (${family.settings.userBg})`)
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('ctree_action_toggle_shape')
-                            .setLabel(`📐 Forma: ${family.settings.cardShape === 'rounded' ? 'Redondeada' : family.settings.cardShape === 'square' ? 'Cuadrada' : 'Circular'}`)
-                            .setStyle(ButtonStyle.Secondary)
-                    );
-                } else if (activeTab === 'otherCards') {
-                    actionButtons.push(
-                        new ButtonBuilder()
-                            .setCustomId('ctree_action_color_nodeBg')
-                            .setLabel(`🎨 Color Otras Tarjetas (${family.settings.nodeBg})`)
-                            .setStyle(ButtonStyle.Success)
-                    );
-                } else if (activeTab === 'lines') {
-                    actionButtons.push(
-                        new ButtonBuilder()
-                            .setCustomId('ctree_action_color_lineColor')
-                            .setLabel(`🎨 Color de Líneas (${family.settings.lineColor})`)
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('ctree_action_toggle_linestyle')
-                            .setLabel(`🔀 Estilo: ${family.settings.lineStyle === 'curved' ? 'Curva (Curvy)' : 'Directa (Recta)'}`)
-                            .setStyle(ButtonStyle.Secondary)
-                    );
-                } else if (activeTab === 'bg') {
-                    actionButtons.push(
-                        new ButtonBuilder()
-                            .setCustomId('ctree_action_color_bg')
-                            .setLabel(`🎨 Color de Fondo (${family.settings.bg})`)
-                            .setStyle(ButtonStyle.Success)
-                    );
-                } else if (activeTab === 'names') {
-                    actionButtons.push(
-                        new ButtonBuilder()
-                            .setCustomId('ctree_action_color_textColor')
-                            .setLabel(`🎨 Color de Nombres (${family.settings.textColor})`)
-                            .setStyle(ButtonStyle.Success)
-                    );
-                }
-
-                const rowActions = new ActionRowBuilder().addComponents(actionButtons);
+👤 **Tu Caja (Fondo):** \`${family.settings.userBg}\`
+📝 **Tu Texto:** \`${family.settings.userText}\`
+👥 **Cajas Familiares:** \`${family.settings.nodeBg}\`
+📄 **Texto Familiar:** \`${family.settings.nodeText}\`
+✏️ **Líneas de Unión:** \`${family.settings.lineColor}\`
+🖼️ **Fondo del Canvas:** \`${family.settings.bg}\`
+🧭 **Dirección del Árbol:** \`${isVertical ? 'Vertical (Arriba a Abajo)' : 'Horizontal (Izquierda a Derecha)'}\``;
 
                 return {
-                    content: `⚙️ **Ajustes de Árbol Genealógico**`,
+                    content: contentText,
                     files: [attachment],
-                    components: [rowTabs, rowActions]
+                    components: [rowButtons]
                 };
             };
 
@@ -162,64 +108,91 @@ export default {
                     return i.reply({ content: '❌ Solo el dueño del árbol puede editarlo.', flags: MessageFlags.Ephemeral });
                 }
 
-                // Cambio de Pestañas
-                if (i.customId.startsWith('ctree_tab_')) {
-                    activeTab = i.customId.replace('ctree_tab_', '');
+                // Cambiar orientación (Vertical / Horizontal)
+                if (i.customId === 'ctree_btn_direction') {
+                    family.settings.direction = family.settings.direction === 'TB' ? 'LR' : 'TB';
                     const updatedPayload = await generateTreePayload();
                     await i.update(updatedPayload);
                 }
 
-                // Alternar estilo de líneas (Curvas vs Rectas)
-                if (i.customId === 'ctree_action_toggle_linestyle') {
-                    family.settings.lineStyle = family.settings.lineStyle === 'curved' ? 'straight' : 'curved';
-                    const updatedPayload = await generateTreePayload();
-                    await i.update(updatedPayload);
-                }
-
-                // Alternar forma de las tarjetas (Redondeada -> Cuadrada -> Circular)
-                if (i.customId === 'ctree_action_toggle_shape') {
-                    const currentShape = family.settings.cardShape;
-                    family.settings.cardShape = currentShape === 'rounded' ? 'square' : currentShape === 'square' ? 'circle' : 'rounded';
-                    const updatedPayload = await generateTreePayload();
-                    await i.update(updatedPayload);
-                }
-
-                // Cambiar colores mediante Modal
-                if (i.customId.startsWith('ctree_action_color_')) {
-                    const targetSetting = i.customId.replace('ctree_action_color_', '');
-                    const currentColor = family.settings[targetSetting] || '#ffffff';
-
+                // Abrir el Modal con todos los valores
+                if (i.customId === 'ctree_btn_colors') {
                     const modal = new ModalBuilder()
-                        .setCustomId('ctree_modal_color')
-                        .setTitle('Cambiar Color (#HEX)');
+                        .setCustomId('ctree_modal_all_colors')
+                        .setTitle('Ajustar Colores (#HEX)');
 
-                    const colorInput = new TextInputBuilder()
-                        .setCustomId('input_hex')
-                        .setLabel(`Código Hexadecimal (Actual: ${currentColor})`)
+                    const inputUserBg = new TextInputBuilder()
+                        .setCustomId('in_userBg')
+                        .setLabel('Tu Caja (Fondo)')
                         .setStyle(TextInputStyle.Short)
-                        .setValue(currentColor)
+                        .setValue(family.settings.userBg)
                         .setMaxLength(7)
-                        .setMinLength(4)
                         .setRequired(true);
 
-                    modal.addComponents(new ActionRowBuilder().addComponents(colorInput));
+                    const inputUserText = new TextInputBuilder()
+                        .setCustomId('in_userText')
+                        .setLabel('Tu Texto')
+                        .setStyle(TextInputStyle.Short)
+                        .setValue(family.settings.userText)
+                        .setMaxLength(7)
+                        .setRequired(true);
+
+                    const inputNodeBg = new TextInputBuilder()
+                        .setCustomId('in_nodeBg')
+                        .setLabel('Cajas Familiares (Fondo)')
+                        .setStyle(TextInputStyle.Short)
+                        .setValue(family.settings.nodeBg)
+                        .setMaxLength(7)
+                        .setRequired(true);
+
+                    const inputNodeText = new TextInputBuilder()
+                        .setCustomId('in_nodeText')
+                        .setLabel('Texto Familiar')
+                        .setStyle(TextInputStyle.Short)
+                        .setValue(family.settings.nodeText)
+                        .setMaxLength(7)
+                        .setRequired(true);
+
+                    const inputLineColor = new TextInputBuilder()
+                        .setCustomId('in_lineColor')
+                        .setLabel('Líneas de Unión')
+                        .setStyle(TextInputStyle.Short)
+                        .setValue(family.settings.lineColor)
+                        .setMaxLength(7)
+                        .setRequired(true);
+
+                    modal.addComponents(
+                        new ActionRowBuilder().addComponents(inputUserBg),
+                        new ActionRowBuilder().addComponents(inputUserText),
+                        new ActionRowBuilder().addComponents(inputNodeBg),
+                        new ActionRowBuilder().addComponents(inputNodeText),
+                        new ActionRowBuilder().addComponents(inputLineColor)
+                    );
+
                     await i.showModal(modal);
 
                     try {
                         const modalSubmit = await i.awaitModalSubmit({ 
-                            filter: m => m.customId === 'ctree_modal_color' && m.user.id === targetUser.id,
+                            filter: m => m.customId === 'ctree_modal_all_colors' && m.user.id === targetUser.id,
                             time: 60000 
                         });
 
-                        const newColor = modalSubmit.fields.getTextInputValue('input_hex');
+                        const hexRegex = /^#([0-9A-F]{3}){1,2}$/i;
 
-                        if (/^#([0-9A-F]{3}){1,2}$/i.test(newColor)) {
-                            family.settings[targetSetting] = newColor;
-                            const updatedPayload = await generateTreePayload();
-                            await modalSubmit.update(updatedPayload);
-                        } else {
-                            await modalSubmit.reply({ content: '❌ Código de color inválido. Ejemplo: `#ff0000`', flags: MessageFlags.Ephemeral });
-                        }
+                        const newUbg = modalSubmit.fields.getTextInputValue('in_userBg');
+                        const newUtxt = modalSubmit.fields.getTextInputValue('in_userText');
+                        const newNbg = modalSubmit.fields.getTextInputValue('in_nodeBg');
+                        const newNtxt = modalSubmit.fields.getTextInputValue('in_nodeText');
+                        const newLcol = modalSubmit.fields.getTextInputValue('in_lineColor');
+
+                        if (hexRegex.test(newUbg)) family.settings.userBg = newUbg;
+                        if (hexRegex.test(newUtxt)) family.settings.userText = newUtxt;
+                        if (hexRegex.test(newNbg)) family.settings.nodeBg = newNbg;
+                        if (hexRegex.test(newNtxt)) family.settings.nodeText = newNtxt;
+                        if (hexRegex.test(newLcol)) family.settings.lineColor = newLcol;
+
+                        const updatedPayload = await generateTreePayload();
+                        await modalSubmit.update(updatedPayload);
                     } catch (err) {
                         // Timeout modal
                     }
