@@ -60,7 +60,6 @@ export async function calculateLayout(guild, family) {
             if (pNode && !level1Nodes.includes(pNode)) level1Nodes.push(pNode);
         }
 
-        // Centrar simétricamente el nivel 1 (Tú + Pareja/s)
         const totalL1Width = level1Nodes.length * NODE_WIDTH + (level1Nodes.length - 1) * HORIZONTAL_GAP;
         let startX = -totalL1Width / 2;
 
@@ -70,7 +69,6 @@ export async function calculateLayout(guild, family) {
             startX += NODE_WIDTH + HORIZONTAL_GAP;
         });
 
-        // Nivel 0: Padres (si hay 1, se alinea exactamente encima de ti)
         const level0Nodes = parentIds.map(id => nodesMap.get(id)).filter(Boolean);
         if (level0Nodes.length === 1) {
             level0Nodes[0].x = rootNode.x;
@@ -85,7 +83,6 @@ export async function calculateLayout(guild, family) {
             });
         }
 
-        // Nivel 2: Hijos
         const level2Nodes = childIds.map(id => nodesMap.get(id)).filter(Boolean);
         if (level2Nodes.length > 0) {
             const totalL2Width = level2Nodes.length * NODE_WIDTH + (level2Nodes.length - 1) * HORIZONTAL_GAP;
@@ -98,7 +95,7 @@ export async function calculateLayout(guild, family) {
         }
     }
 
-    // Conexiones
+    // Conexiones de padres
     if (parentIds.length > 0) {
         if (parentIds.length === 1) {
             connections.push({
@@ -109,18 +106,17 @@ export async function calculateLayout(guild, family) {
         }
     }
 
+    // Conexión de pareja unificada (en lugar de una por cada cónyuge suelto)
     const partners = [...spouseIds, ...loverIds];
-    partners.forEach(sId => {
-        const sNode = nodesMap.get(sId);
-        if (sNode) {
-            connections.push({
-                fromNodeId: rootNode.id,
-                toNodeId: sId,
-                type: 'partner'
-            });
-        }
-    });
+    if (partners.length > 0) {
+        connections.push({
+            fromNodeId: rootNode.id,
+            partnerIds: partners,
+            type: 'partners-group'
+        });
+    }
 
+    // Conexiones de hijos
     childIds.forEach(cId => {
         if (partners.length > 0) {
             connections.push({
