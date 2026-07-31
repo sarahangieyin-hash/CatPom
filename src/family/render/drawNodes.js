@@ -5,25 +5,48 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Registrar fuente estándar si existe
+// Intentar registrar fuente estándar si existe
 try {
     registerFont(
         path.join(__dirname, '../../assets/fonts/DejaVuSans.ttf'),
         { family: 'DejaVuCustom' }
     );
 } catch (e) {
-    // Si no existe, usará la fuente por defecto del sistema (Sans-serif)
+    // Si no está, usará la tipografía del sistema
+}
+
+/**
+ * Dibuja un rectángulo con bordes redondeados en Canvas
+ */
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
 }
 
 export async function drawNodes(ctx, layout) {
     const drawn = new Set();
     const targetUserId = layout.targetUserId || layout.userId;
 
+    // Ajuste de calidad y antialiasing para la fuente
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+
     for (const node of layout.nodes) {
+        // Solo procesar personas
         if (!['member', 'child', 'parent', 'sibling'].includes(node.type)) {
             continue;
         }
 
+        // Validar ID de usuario
         if (typeof node.id !== 'string' || !/^\d+$/.test(node.id)) {
             continue;
         }
@@ -31,7 +54,7 @@ export async function drawNodes(ctx, layout) {
         if (drawn.has(node.id)) continue;
         drawn.add(node.id);
 
-        // Obtener el nombre del usuario
+        // Obtener apodo o nombre de usuario
         let username = String(node.id);
         try {
             const member = await layout.guild.members.fetch(node.id);
@@ -44,42 +67,39 @@ export async function drawNodes(ctx, layout) {
             .replace(/[^a-zA-Z0-9_\- ]/g, '')
             .slice(0, 20);
 
-        // Ajuste de texto y caja estilo Graphviz / MarriageBot
-        ctx.font = '18px "DejaVuCustom", "Helvetica", "Arial", sans-serif';
-        const textWidth = ctx.measureText(safeName || 'User').width;
+        // 🎨 TIPOGRAFÍA ESTILIZADA
+        // Usamos una pila de fuentes modernas y limpias
+        ctx.font = '600 16px "Segoe UI", "Inter", "Helvetica Neue", "DejaVuCustom", sans-serif';
 
-        const boxWidth = Math.max(140, textWidth + 40);
-        const boxHeight = 50; // Cajas más estilizadas y rectangulares
+        const textWidth = ctx.measureText(safeName || 'User').width;
+        const boxWidth = Math.max(140, textWidth + 36);
+        const boxHeight = 46;
+        const cornerRadius = 10; // Redondeado de esquinas
 
         const isMainUser = node.id === targetUserId;
 
-        // 🎨 ESTILO MARRIAGEBOT:
-        // Fondo blanco/crema claro
-        ctx.fillStyle = isMainUser ? '#eef2ff' : '#ffffff';
+        const left = node.x - boxWidth / 2;
+        const top = node.y - boxHeight / 2;
 
-        // Dibujar el rectángulo
-        ctx.fillRect(
-            node.x - boxWidth / 2,
-            node.y - boxHeight / 2,
-            boxWidth,
-            boxHeight
-        );
+        /*
+            🎨 DISEÑO DE TARJETAS:
+            - Normales: Fondo negro (#111111), borde negro fino, texto blanco.
+            - Usuario principal (Tú): Fondo azul fuerte (#1d4ed8), borde negro fino, texto blanco.
+        */
 
-        // Borde
-        ctx.strokeStyle = isMainUser ? '#4f46e5' : '#333333'; // Borde morado si eres tú, gris si no
-        ctx.lineWidth = isMainUser ? 3 : 1.5;
+        // 1. DIBUJAR CAJA REDONDEADA (Fondo)
+        ctx.fillStyle = isMainUser ? '#1d4ed8' : '#111111';
+        drawRoundedRect(ctx, left, top, boxWidth, boxHeight, cornerRadius);
+        ctx.fill();
 
-        ctx.strokeRect(
-            node.x - boxWidth / 2,
-            node.y - boxHeight / 2,
-            boxWidth,
-            boxHeight
-        );
+        // 2. DIBUJAR BORDE FINO NEGRO
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5;
+        drawRoundedRect(ctx, left, top, boxWidth, boxHeight, cornerRadius);
+        ctx.stroke();
 
-        // Nombre del usuario
-        ctx.fillStyle = isMainUser ? '#312e81' : '#111827';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(safeName || 'User', node.x, node.y);
+        // 3. DIBUJAR TEXTO (Siempre blanco y nítido)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(safeName || 'User', node.x, node.y + 1);
     }
 }
