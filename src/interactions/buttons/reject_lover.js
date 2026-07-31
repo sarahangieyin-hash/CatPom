@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { 
     getFamilyRequest, 
     deleteFamilyRequest 
-} from '../family/requests/familyRequests.js';
+} from '../../family/requests/familyRequests.js';
 
 export default {
     customId: 'reject_lover',
