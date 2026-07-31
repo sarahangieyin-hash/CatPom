@@ -16,28 +16,14 @@ const __dirname = path.dirname(__filename);
 
 const CATEGORY_SELECT_ID = "help-category-select";
 const ALL_COMMANDS_ID = "help-all-commands";
-const BUG_REPORT_BUTTON_ID = "help-bug-report";
 const HELP_MENU_TIMEOUT_MS = 5 * 60 * 1000;
 
+// Mapeo ajustado a tus 4 categorías reales
 const CATEGORY_ICONS = {
     Core: "ℹ️",
-    Moderation: "🛡️",
     Economy: "💰",
-    Music: "🎵",
+    Family: "🌳",
     Fun: "🎮",
-    Leveling: "📊",
-    Utility: "🔧",
-    Ticket: "🎫",
-    Welcome: "👋",
-    Giveaway: "🎉",
-    Counter: "🔢",
-    Tools: "🛠️",
-    Search: "🔍",
-    "Reaction Roles": "🎭",
-    Community: "👥",
-    Birthday: "🎂",
-    "Join To Create": "🔌",
-    Verification: "✅",
 };
 
 function formatCategoryName(rawCategory) {
@@ -60,8 +46,8 @@ export async function createInitialHelpMenu(clientOrInteraction) {
 
     const options = [
         {
-            label: "📋 All Commands",
-            description: "Browse every available command in a single list",
+            label: "📋 Todos los Comandos",
+            description: "Ver la lista completa de comandos registrados",
             value: ALL_COMMANDS_ID,
         },
         ...categoryDirs.map((category) => {
@@ -69,7 +55,7 @@ export async function createInitialHelpMenu(clientOrInteraction) {
             const icon = CATEGORY_ICONS[categoryName] || "🔍";
             return {
                 label: `${icon} ${categoryName}`,
-                description: `View commands in the ${categoryName} category`,
+                description: `Explorar comandos de la categoría ${categoryName}`,
                 value: category,
             };
         }),
@@ -80,66 +66,48 @@ export async function createInitialHelpMenu(clientOrInteraction) {
     const avatarUrl = botUser?.displayAvatarURL ? botUser.displayAvatarURL({ size: 1024 }) : null;
 
     const embed = createEmbed({
-        title: `📖 ${botName} Help`,
-        description: 'Set up your server, pick what to enable, then browse commands below.',
+        title: `📖 Menú de Ayuda — ${botName}`,
+        description: 'Usa el menú desplegable de abajo para explorar las funciones disponibles.',
         color: 'primary',
         thumbnail: avatarUrl,
         fields: [
             {
-                name: '🚀 Getting Started',
-                value: [
-                    '**1. Launch setup** — Run `/configwizard` to configure prefix, mod role, and logs.',
-                    '**2. Enable systems** — Use `/commands dashboard` to turn categories on or off.',
-                    '**3. Browse commands** — Use the menu below to view categories and commands.',
-                ].join('\n'),
+                name: '🌳 Familia',
+                value: 'Crea tu árbol genealógico, casate, adopta hijos o gestiona tu lista de amantes (`/tree`, `/marry`, `/adopt`, `/lover`).',
                 inline: false,
             },
             {
-                name: 'ℹ️ How It Works',
-                value: [
-                    '• Dashboard commands manage each feature visually',
-                    '• Settings are saved per server',
-                    '• Slash commands and prefixes both work once enabled',
-                ].join('\n'),
+                name: '💰 Economía',
+                value: 'Gana monedas, consulta tus saldos y participa en el mercado del servidor.',
                 inline: false,
             },
             {
-                name: '\u200B',
-                value: `-# ${botName} is [open source](https://youtu.be/1jCZX8s3bJE?si=NPOYx-vxVE1I5vJK)`,
+                name: '🎮 Diversión',
+                value: 'Juegos e interacciones para pasar el rato con la comunidad.',
+                inline: false,
+            },
+            {
+                name: 'ℹ️ Core / Ajustes',
+                value: 'Comandos base de información y configuración del bot.',
                 inline: false,
             },
         ],
     });
 
     embed.setFooter({ 
-        text: "Made with ❤️" 
+        text: `${botName} • Menú Interactivo` 
     });
     embed.setTimestamp();
 
-    const bugReportButton = new ButtonBuilder()
-        .setCustomId(BUG_REPORT_BUTTON_ID)
-        .setLabel("Report Bug")
-        .setStyle(ButtonStyle.Danger);
-
-    const supportButton = new ButtonBuilder()
-        .setLabel("Support Server")
-        .setURL("https://discord.gg/QnWNz2dKCE")
-        .setStyle(ButtonStyle.Link);
-
     const selectRow = createSelectMenu(
         CATEGORY_SELECT_ID,
-        "Select to view the commands",
+        "Selecciona una categoría...",
         options,
     );
 
-    const buttonRow = new ActionRowBuilder().addComponents([
-        bugReportButton,
-        supportButton,
-    ]);
-
     return {
         embeds: [embed],
-        components: [buttonRow, selectRow],
+        components: [selectRow],
     };
 }
 
@@ -147,12 +115,11 @@ export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
         .setName("help")
-        .setDescription("Displays the help menu with all available commands"),
+        .setDescription("Muestra el menú de ayuda interactivo"),
 
     async execute(interaction, guildConfig, client) {
         await InteractionHelper.safeDefer(interaction);
         
-        // Se envía interaction o client asegurando que no rompa si alguno es undefined
         const { embeds, components } = await createInitialHelpMenu(client || interaction);
 
         await InteractionHelper.safeEditReply(interaction, {
@@ -167,8 +134,8 @@ export default {
                 }
 
                 const closedEmbed = createEmbed({
-                    title: "Help menu closed",
-                    description: "Help menu has been closed, use /help again.",
+                    title: "🔒 Menú expirado",
+                    description: "El menú de ayuda ha caducado. Vuelve a ejecutar `/help` si lo necesitas.",
                     color: "secondary",
                 });
 
@@ -177,7 +144,7 @@ export default {
                     components: [],
                 });
             } catch (error) {
-                // Silencioso
+                // Silencioso si expira
             }
         }, HELP_MENU_TIMEOUT_MS);
     },
