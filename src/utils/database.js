@@ -1,11 +1,12 @@
 import logger from '../utils/logger.js';
 
 // ==========================================
-// HELPER FUNCTIONS & KEY GENERATORS
+// 1. HELPER FUNCTIONS & KEY GENERATORS
 // ==========================================
 
 export function unwrapReplitData(data) {
-    if (data && typeof data === 'object' && 'value' in data) {
+    if (data === null || data === undefined) return data;
+    if (typeof data === 'object' && 'value' in data) {
         return data.value;
     }
     return data;
@@ -31,6 +32,38 @@ export function getJoinToCreateConfigKey(guildId) {
     return `guild:${guildId}:jointocreate:config`;
 }
 
+export function getWelcomeConfigKey(guildId) {
+    return `guild:${guildId}:welcome:config`;
+}
+
+export function getGoodbyeConfigKey(guildId) {
+    return `guild:${guildId}:goodbye:config`;
+}
+
+export function getLevelingKey(guildId) {
+    return `guild:${guildId}:leveling:config`;
+}
+
+export function getUserLevelKey(guildId, userId) {
+    return `guild:${guildId}:leveling:user:${userId}`;
+}
+
+export function getUserLevelPrefix(guildId) {
+    return `guild:${guildId}:leveling:user:`;
+}
+
+export function getWarnKey(guildId, userId) {
+    return `guild:${guildId}:warns:${userId}`;
+}
+
+export function generateCaseId() {
+    return `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 4)}`;
+}
+
+// ==========================================
+// 2. APPLICATIONS MODULE & CLEANUP
+// ==========================================
+
 export function buildApplicationSettingsDefaults() {
     return {
         pendingApplicationRetentionDays: 30,
@@ -38,10 +71,6 @@ export function buildApplicationSettingsDefaults() {
         logChannelId: null
     };
 }
-
-// ==========================================
-// APPLICATION SETTINGS & RETENTION
-// ==========================================
 
 export async function getApplicationSettings(client, guildId) {
     if (!client.db) {
@@ -162,7 +191,6 @@ export async function cleanupExpiredApplications(client, guildId) {
         const now = Date.now();
         let removed = 0;
 
-        // Procesamiento en paralelos/lotes para evitar cuellos de botella
         const apps = await Promise.all(
             applicationKeys.map(async (key) => {
                 const app = unwrapReplitData(await client.db.get(key, null));
@@ -187,9 +215,6 @@ export async function cleanupExpiredApplications(client, guildId) {
         return { removed: 0, scanned: 0 };
     }
 }
-// ==========================================
-// APPLICATION ROLE SETTINGS
-// ==========================================
 
 export async function getApplicationRoleSettings(client, guildId, roleId) {
     try {
@@ -237,10 +262,6 @@ export async function deleteApplicationRoleSettings(client, guildId, roleId) {
         return false;
     }
 }
-
-// ==========================================
-// APPLICATION CRUD OPERATIONS
-// ==========================================
 
 export async function createApplication(client, application) {
     const { guildId, userId } = application;
@@ -399,7 +420,7 @@ export async function getApplications(client, guildId, filters = {}) {
 }
 
 // ==========================================
-// JOIN TO CREATE CONFIG & TEMPORARY CHANNELS
+// 3. JOIN TO CREATE CONFIG & TEMPORARY CHANNELS
 // ==========================================
 
 export async function getJoinToCreateConfig(client, guildId) {
@@ -596,11 +617,8 @@ export function formatChannelName(template, variables = {}) {
     return formatted || 'Voice Channel';
 }
 
-export function generateCaseId() {
-    return `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 4)}`;
-}
 // ==========================================
-// GIVEAWAYS MODULE (SQL + KV FALLBACK)
+// 4. GIVEAWAYS MODULE
 // ==========================================
 
 export async function createGiveaway(client, giveawayData) {
@@ -616,7 +634,6 @@ export async function createGiveaway(client, giveawayData) {
     } = giveawayData;
 
     try {
-        // Intento en base de datos relacional (PostgreSQL) si está disponible
         if (client.pgPool) {
             const query = `
                 INSERT INTO giveaways (guild_id, channel_id, message_id, host_id, prize, winners_count, ends_at, requirements, status)
@@ -638,7 +655,6 @@ export async function createGiveaway(client, giveawayData) {
             return result.rows[0];
         }
 
-        // Fallback a KV Store
         const giveawayId = messageId;
         const key = `guild:${guildId}:giveaways:${giveawayId}`;
         const record = {
@@ -658,7 +674,6 @@ export async function createGiveaway(client, giveawayData) {
 
         await client.db.set(key, record);
 
-        // Actualizar índice de sorteos activos del servidor
         const indexKey = `guild:${guildId}:giveaways:active_list`;
         const activeList = unwrapReplitData(await client.db.get(indexKey, [])) || [];
         if (!activeList.includes(giveawayId)) {
@@ -734,7 +749,6 @@ export async function endGiveaway(client, guildId, messageId, winners = []) {
         const key = `guild:${guildId}:giveaways:${messageId}`;
         await client.db.set(key, giveaway);
 
-        // Remover de la lista activa
         const indexKey = `guild:${guildId}:giveaways:active_list`;
         const activeIds = unwrapReplitData(await client.db.get(indexKey, [])) || [];
         const updatedList = activeIds.filter(id => id !== messageId);
@@ -803,17 +817,10 @@ export async function removeGiveawayParticipant(client, guildId, messageId, user
         return false;
     }
 }
-// ==========================================
-// WELCOME & GOODBYE MESSAGES MODULE
-// ==========================================
 
-export function getWelcomeConfigKey(guildId) {
-    return `guild:${guildId}:welcome:config`;
-}
-
-export function getGoodbyeConfigKey(guildId) {
-    return `guild:${guildId}:goodbye:config`;
-}
+// ==========================================
+// 5. WELCOME & GOODBYE MODULE
+// ==========================================
 
 export function buildWelcomeDefaults() {
     return {
@@ -912,10 +919,6 @@ export async function saveGoodbyeConfig(client, guildId, config) {
     }
 }
 
-// ==========================================
-// AUTO-ROLES & WELCOME HELPERS
-// ==========================================
-
 export async function addAutoRole(client, guildId, roleId) {
     try {
         const config = await getWelcomeConfig(client, guildId);
@@ -971,21 +974,10 @@ export function formatWelcomeVariables(template, member) {
 
     return formatted;
 }
+
 // ==========================================
-// LEVELING SYSTEM MODULE (XP & LEADERBOARD)
+// 6. LEVELING SYSTEM MODULE
 // ==========================================
-
-export function getLevelingKey(guildId) {
-    return `guild:${guildId}:leveling:config`;
-}
-
-export function getUserLevelKey(guildId, userId) {
-    return `guild:${guildId}:leveling:user:${userId}`;
-}
-
-export function getUserLevelPrefix(guildId) {
-    return `guild:${guildId}:leveling:user:`;
-}
 
 export async function getLevelingConfig(client, guildId) {
     const key = getLevelingKey(guildId);
@@ -1159,13 +1151,10 @@ export async function getLeaderboard(client, guildId, limit = 10) {
         return [];
     }
 }
-// ==========================================
-// WARNS & MODERATION MODULE
-// ==========================================
 
-export function getWarnKey(guildId, userId) {
-    return `guild:${guildId}:warns:${userId}`;
-}
+// ==========================================
+// 7. WARNS & MODERATION MODULE
+// ==========================================
 
 export async function addWarn(client, guildId, userId, warnData) {
     const key = getWarnKey(guildId, userId);
@@ -1245,94 +1234,3 @@ export async function clearWarns(client, guildId, userId) {
         return false;
     }
 }
-
-// ==========================================
-// EXPIRED CLEANUP
-// ==========================================
-// ==========================================
-// WARNS & MODERATION MODULE
-// ==========================================
-
-export function getWarnKey(guildId, userId) {
-    return `guild:${guildId}:warns:${userId}`;
-}
-
-export async function addWarn(client, guildId, userId, warnData) {
-    const key = getWarnKey(guildId, userId);
-    try {
-        if (!client.db || typeof client.db.get !== "function") {
-            logger.error("Database client is not available for addWarn.");
-            return null;
-        }
-
-        const existingRaw = await client.db.get(key, []);
-        const existingWarns = unwrapReplitData(existingRaw) || [];
-        const warnsArray = Array.isArray(existingWarns) ? [...existingWarns] : [];
-
-        const warnId = generateCaseId();
-        const newWarn = {
-            id: warnId,
-            reason: warnData.reason || "Sin razón especificada",
-            moderatorId: warnData.moderatorId,
-            timestamp: Date.now()
-        };
-
-        warnsArray.push(newWarn);
-        await client.db.set(key, warnsArray);
-
-        return newWarn;
-    } catch (error) {
-        logger.error(`Error adding warn to user ${userId} in guild ${guildId}:`, error);
-        return null;
-    }
-}
-
-export async function getWarns(client, guildId, userId) {
-    const key = getWarnKey(guildId, userId);
-    try {
-        if (!client.db || typeof client.db.get !== "function") {
-            return [];
-        }
-
-        const rawData = await client.db.get(key, []);
-        const warns = unwrapReplitData(rawData);
-        return Array.isArray(warns) ? warns : [];
-    } catch (error) {
-        logger.error(`Error getting warns for user ${userId} in guild ${guildId}:`, error);
-        return [];
-    }
-}
-
-export async function removeWarn(client, guildId, userId, warnId) {
-    const key = getWarnKey(guildId, userId);
-    try {
-        const warns = await getWarns(client, guildId, userId);
-        const filtered = warns.filter(w => w.id !== warnId);
-
-        if (warns.length === filtered.length) {
-            return false;
-        }
-
-        await client.db.set(key, filtered);
-        return true;
-    } catch (error) {
-        logger.error(`Error removing warn ${warnId} for user ${userId} in guild ${guildId}:`, error);
-        return false;
-    }
-}
-
-export async function clearWarns(client, guildId, userId) {
-    const key = getWarnKey(guildId, userId);
-    try {
-        if (!client.db || typeof client.db.delete !== "function") {
-            return false;
-        }
-
-        await client.db.delete(key);
-        return true;
-    } catch (error) {
-        logger.error(`Error clearing warns for user ${userId} in guild ${guildId}:`, error);
-        return false;
-    }
-}
-
