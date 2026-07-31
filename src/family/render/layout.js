@@ -9,10 +9,13 @@ export async function calculateLayout(guild, family) {
     const rawMembers = family.members || family.spouses || [];
     const membersList = Array.isArray(rawMembers) ? rawMembers : [];
     
+    // Identificar el usuario principal
+    const targetUserId = family.targetUser || family.userId || family.id;
+    
     // Asegurar que el usuario objetivo siempre esté en los miembros principales si el array viene vacío
-    const members = membersList.length > 0 
+    let members = membersList.length > 0 
         ? membersList.map(m => typeof m === 'object' ? m.id : m) 
-        : (family.targetUser ? [family.targetUser] : []);
+        : (targetUserId ? [targetUserId] : []);
 
     const children = normalize(family.children);
     const parents = normalize(family.parents);
@@ -120,6 +123,16 @@ export async function calculateLayout(guild, family) {
             y: centerY
         });
     });
+
+    // 🛡️ GARANTÍA ANTI-CRASH: Si la estructura aún no tiene ningún nodo, agregamos 1 por defecto
+    if (nodes.length === 0 && targetUserId) {
+        nodes.push({
+            id: targetUserId,
+            type: 'member',
+            x: 0,
+            y: centerY
+        });
+    }
 
     return {
         guild,
