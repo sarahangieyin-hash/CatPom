@@ -89,11 +89,11 @@ class CatPom extends Client {
                 await initializeDatabase();
 
             this.db =
-                dbInstance.db;
+                dbInstance.db || dbInstance;
 
-            // 🎯 CONEXIÓN GLOBAL A BASE DE DATOS
-            global.db = dbInstance.db;
-            global.pgPool = dbInstance.db?.db?.pool || dbInstance.db?.pool || dbInstance.db;
+            // 🎯 ASIGNACIÓN GLOBAL CORRECTA DE LA BASE DE DATOS Y DEL POOL DE POSTGRESQL
+            global.db = dbInstance.db || dbInstance;
+            global.pgPool = dbInstance.db?.pool || dbInstance.db?.db?.pool || dbInstance.pool || dbInstance;
 
             startupLog(
                 'Loading commands...'
