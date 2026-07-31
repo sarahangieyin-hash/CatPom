@@ -60,7 +60,6 @@ function saveSettings(data) {
     }
 }
 
-// Configuración por defecto para los estilos del árbol
 export const DEFAULT_TREE_SETTINGS = {
     userBg: '#1d4ed8',
     userText: '#ffffff',
@@ -82,7 +81,7 @@ export async function saveTreeSettings(userId, newSettings) {
     return saveSettings(settings);
 }
 
-// --- MANEJO DE BASE DE DATOS POSTGRESQL ---
+// --- BASE DE DATOS POSTGRESQL ---
 
 async function ensureDbTable() {
     if (!pgPool) return false;
