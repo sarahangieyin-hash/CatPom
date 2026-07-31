@@ -65,6 +65,7 @@ export default {
 
         const embed = new EmbedBuilder()
             .setTitle('💍 Solicitud de unión')
+            .setColor('#ff69b4')
             .setDescription(
                 `${interaction.user} quiere formar una unión con:\n\n` +
                 personas.map(user => `💍 ${user}`).join('\n')
