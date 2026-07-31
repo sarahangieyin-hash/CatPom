@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { getUserFamilyData, deleteRelation } from '../../utils/families.js';
+import { getUserFamilyData, removeRelation } from '../../utils/families.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -14,16 +14,14 @@ export default {
 
         if (!family.spouses || family.spouses.length === 0) {
             return interaction.reply({
-                content: '❌ Actualmente no estás casada/o con nadie.',
+                content: '❌ Actualmente no estás casado/a con nadie.',
                 ephemeral: true
             });
         }
 
-        // Obtener la pareja actual
         const spouseId = family.spouses[0];
 
-        // Eliminar la relación de matrimonio
-        await deleteRelation(guildId, userId, spouseId, 'marriage');
+        await removeRelation(guildId, userId, spouseId, 'marriage');
 
         return interaction.reply({
             content: `💔 Te has divorciado correctamente de <@${spouseId}>.`
