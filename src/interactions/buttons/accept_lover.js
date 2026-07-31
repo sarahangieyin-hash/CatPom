@@ -2,8 +2,8 @@ import { EmbedBuilder } from 'discord.js';
 import { 
     getFamilyRequest, 
     deleteFamilyRequest 
-} from '../family/requests/familyRequests.js';
-import { addRelation } from '../utils/families.js';
+} from '../../family/requests/familyRequests.js';
+import { addRelation } from '../../utils/families.js';
 
 export default {
     customId: 'accept_lover',
