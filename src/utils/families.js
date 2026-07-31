@@ -4,30 +4,19 @@ import { fileURLToPath } from 'url';
 
 // 🎯 ACCESO DIRECTO A LA INSTANCIA DE POSTGRESQL DE LA APP
 async function getDbPool() {
-    // Si ya existe en el objeto global de la app
-    if (global.pgPool) return global.pgPool;
-    if (global.db) return global.db;
+    // 1. Revisa si el pool fue expuesto en global por app.js
+    if (global.pgPool && typeof global.pgPool.query === 'function') {
+        return global.pgPool;
+    }
 
-    const possiblePaths = [
-        '../../database/index.js',
-        '../../database/db.js',
-        '../../db/index.js',
-        '../../database.js',
-        '../database/index.js'
-    ];
-
-    for (const p of possiblePaths) {
-        try {
-            const module = await import(p);
-            const pool = module.default || module.pool || module.db || module.pgPool;
-            if (pool && (typeof pool.query === 'function' || typeof pool.execute === 'function')) {
-                global.pgPool = pool; // Guardar globalmente para reutilizar
-                return pool;
-            }
-        } catch (e) {
-            // Sigue intentando
+    // 2. Revisa si la base de datos está guardada en global.db
+    if (global.db) {
+        const pool = global.db.db?.pool || global.db.pool || global.db;
+        if (pool && typeof pool.query === 'function') {
+            return pool;
         }
     }
+
     return null;
 }
 
