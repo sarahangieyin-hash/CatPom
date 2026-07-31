@@ -2,34 +2,32 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-let pgPool = null;
+// 🎯 ACCESO DIRECTO A LA INSTANCIA DE POSTGRESQL DE LA APP
+async function getDbPool() {
+    // Si ya existe en el objeto global de la app
+    if (global.pgPool) return global.pgPool;
+    if (global.db) return global.db;
 
-// 🎯 BÚSQUEDA ROBUSTA DE LA BASE DE DATOS
-async function getPool() {
-    if (pgPool) return pgPool;
-
-    const pathsToTry = [
-        '../database/index.js',
-        '../database/db.js',
-        '../db/index.js',
-        '../database.js',
-        '../../database/index.js'
+    const possiblePaths = [
+        '../../database/index.js',
+        '../../database/db.js',
+        '../../db/index.js',
+        '../../database.js',
+        '../database/index.js'
     ];
 
-    for (const dbPath of pathsToTry) {
+    for (const p of possiblePaths) {
         try {
-            const dbModule = await import(dbPath);
-            pgPool = dbModule.default || dbModule.pool || dbModule.db || dbModule;
-            if (pgPool && typeof pgPool.query === 'function') {
-                console.log(`✅ [families.js] Módulo Postgres conectado desde: ${dbPath}`);
-                return pgPool;
+            const module = await import(p);
+            const pool = module.default || module.pool || module.db || module.pgPool;
+            if (pool && (typeof pool.query === 'function' || typeof pool.execute === 'function')) {
+                global.pgPool = pool; // Guardar globalmente para reutilizar
+                return pool;
             }
         } catch (e) {
-            // Sigue buscando la ruta correcta
+            // Sigue intentando
         }
     }
-
-    console.error("❌ [families.js] NO SE PUDO ENCONTRAR LA CONEXIÓN A POSTGRESQL");
     return null;
 }
 
@@ -79,11 +77,11 @@ export async function saveTreeSettings(userId, newSettings) {
     return saveSettings(settings);
 }
 
-// --- FUNCIONES DE BASE DE DATOS POSTGRESQL ---
+// --- OPERACIONES EN BASE DE DATOS ---
 
-async function ensureDbTable() {
-    const pool = await getPool();
-    if (!pool) return false;
+async function ensureTable() {
+    const pool = await getDbPool();
+    if (!pool) return;
     try {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS family_relations (
@@ -95,38 +93,39 @@ async function ensureDbTable() {
                 created_at BIGINT NOT NULL
             );
         `);
-        return true;
     } catch (err) {
-        console.error("❌ Error creando tabla family_relations:", err);
-        return false;
+        console.error("❌ Error verificando/creando tabla family_relations:", err.message);
     }
 }
 
-ensureDbTable();
-
 export async function getGuildRelations(guildId) {
-    const pool = await getPool();
-    if (!pool) return [];
+    const pool = await getDbPool();
+    if (!pool) {
+        console.error("❌ [getGuildRelations] No hay conexión a PostgreSQL.");
+        return [];
+    }
     try {
+        await ensureTable();
         const res = await pool.query(
             `SELECT u1, u2, type, created_at AS "createdAt" FROM family_relations WHERE guild_id = $1`,
             [guildId]
         );
-        return res.rows;
+        return res.rows || [];
     } catch (e) {
-        console.error("❌ Error leyendo relaciones de la BD:", e);
+        console.error("❌ Error consultando relaciones:", e.message);
         return [];
     }
 }
 
 export async function addRelation(guildId, u1, u2, type) {
-    const pool = await getPool();
+    const pool = await getDbPool();
     if (!pool) {
-        console.error("❌ [addRelation] Falló: No hay conexión a PostgreSQL.");
+        console.error("❌ [addRelation] No se pudo obtener el pool de PostgreSQL.");
         return false;
     }
 
     try {
+        await ensureTable();
         const relations = await getGuildRelations(guildId);
         
         const exists = relations.some(r => 
@@ -139,17 +138,17 @@ export async function addRelation(guildId, u1, u2, type) {
                 `INSERT INTO family_relations (guild_id, u1, u2, type, created_at) VALUES ($1, $2, $3, $4, $5)`,
                 [guildId, u1, u2, type, Date.now()]
             );
-            console.log(`✅ [addRelation] Relación guardada con éxito: ${u1} -> ${u2} (${type})`);
+            console.log(`✅ [BD SUCCESS] Relación guardada: ${u1} -> ${u2} (${type})`);
         }
         return true;
     } catch (e) {
-        console.error("❌ Error insertando relación en la BD:", e);
+        console.error("❌ Error al insertar relación en PostgreSQL:", e.message);
         return false;
     }
 }
 
 export async function removeRelation(guildId, u1, u2, type) {
-    const pool = await getPool();
+    const pool = await getDbPool();
     if (!pool) return false;
     try {
         await pool.query(
@@ -161,7 +160,7 @@ export async function removeRelation(guildId, u1, u2, type) {
         );
         return true;
     } catch (e) {
-        console.error("❌ Error eliminando relación de la BD:", e);
+        console.error("❌ Error borrando relación:", e.message);
         return false;
     }
 }
