@@ -1,21 +1,10 @@
-import {
-    SlashCommandBuilder
-} from 'discord.js';
-
-import {
-    getFamilyByMember,
-    updateFamily
-} from '../../utils/families.js';
-
+import { SlashCommandBuilder } from 'discord.js';
+import { addRelation, getUserFamilyData } from '../../utils/families.js';
 
 export default {
-
     data: new SlashCommandBuilder()
-
         .setName('parent')
-
         .setDescription('Añade un padre o madre.')
-
         .addUserOption(option =>
             option
                 .setName('persona')
@@ -23,102 +12,27 @@ export default {
                 .setRequired(true)
         ),
 
-
-
     async execute(interaction) {
+        const parent = interaction.options.getUser('persona');
 
-
-        const parent =
-            interaction.options.getUser('persona');
-
-
-
-        const family =
-            await getFamilyByMember(
-
-                interaction.guild.id,
-
-                interaction.user.id
-
-            );
-
-
-
-        if (!family) {
-
+        if (parent.id === interaction.user.id) {
             return interaction.reply({
-
-                content:
-                    '❌ Necesitas pertenecer a una familia.',
-
+                content: '❌ No puedes añadirte a ti mismo como tu propio padre/madre.',
                 ephemeral: true
-
             });
-
         }
 
+        const currentFamily = await getUserFamilyData(interaction.guild.id, interaction.user.id);
 
-
-        if (
-            !family.parents
-        ) {
-
-            family.parents = [];
-
-        }
-
-
-
-        if (
-            family.parents.includes(
-                parent.id
-            )
-        ) {
-
+        if (currentFamily.parents.includes(parent.id)) {
             return interaction.reply({
-
-                content:
-                    '❌ Esa persona ya es tu padre/madre.',
-
+                content: '❌ Esa persona ya es tu padre/madre.',
                 ephemeral: true
-
             });
-
         }
 
+        await addRelation(interaction.guild.id, parent.id, interaction.user.id, 'parent_child');
 
-
-        family.parents.push({
-
-            id:
-                parent.id,
-
-            child:
-                interaction.user.id
-
-        });
-
-
-
-        await updateFamily(
-
-            interaction.guild.id,
-
-            family.id,
-
-            family
-
-        );
-
-
-
-        await interaction.reply(
-
-            `👨‍👩‍👧 ${parent} añadido como padre/madre.`
-
-        );
-
-
+        await interaction.reply(`👨‍👩‍👧 ${parent} añadido como padre/madre.`);
     }
-
 };
