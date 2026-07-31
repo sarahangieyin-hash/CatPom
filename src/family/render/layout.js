@@ -1,11 +1,8 @@
 const NODE_WIDTH = 120;
 const NODE_HEIGHT = 46; 
-const HORIZONTAL_GAP = 80; // Espacio holgado para que el anillo quepa perfecto
-const VERTICAL_GAP = 70;
 
 export async function calculateLayout(guild, family) {
     const rootId = family.userId || family.targetUser;
-    const direction = family.settings?.direction || 'TB';
 
     const fetchUser = async (id) => {
         try {
@@ -43,95 +40,61 @@ export async function calculateLayout(guild, family) {
     const parentIds = family.parents || [];
     const spouseIds = family.spouses || [];
     const loverIds = family.lovers || [];
-    const siblingIds = family.siblings || [];
     const childIds = family.children || [];
 
     for (const id of parentIds) await addNode(id, 0);
-    for (const id of siblingIds) await addNode(id, 1);
     for (const id of spouseIds) await addNode(id, 1);
     for (const id of loverIds) await addNode(id, 1);
     for (const id of childIds) await addNode(id, 2);
 
-    if (direction === 'TB') {
-        const partners = [...spouseIds, ...loverIds];
-        const level1Nodes = [rootNode];
-        
-        for (const pId of partners) {
-            const pNode = nodesMap.get(pId);
-            if (pNode && !level1Nodes.includes(pNode)) level1Nodes.push(pNode);
-        }
-
-        // Distribuir el nivel 1 simétricamente alrededor del centro 0
-        const totalL1Width = level1Nodes.length * NODE_WIDTH + (level1Nodes.length - 1) * HORIZONTAL_GAP;
-        let startX = -totalL1Width / 2;
-
-        level1Nodes.forEach((node) => {
-            node.x = startX;
-            node.y = 0;
-            startX += NODE_WIDTH + HORIZONTAL_GAP;
-        });
-
-        // Nivel 0: Si hay un solo padre, se alinea exactamente con el usuario principal (root)
-        const level0Nodes = parentIds.map(id => nodesMap.get(id)).filter(Boolean);
-        if (level0Nodes.length === 1) {
-            level0Nodes[0].x = rootNode.x;
-            level0Nodes[0].y = -(NODE_HEIGHT + VERTICAL_GAP);
-        } else if (level0Nodes.length > 0) {
-            const totalL0Width = level0Nodes.length * NODE_WIDTH + (level0Nodes.length - 1) * HORIZONTAL_GAP;
-            let startX0 = -totalL0Width / 2;
-            level0Nodes.forEach((node) => {
-                node.x = startX0;
-                node.y = -(NODE_HEIGHT + VERTICAL_GAP);
-                startX0 += NODE_WIDTH + HORIZONTAL_GAP;
-            });
-        }
-
-        // Nivel 2: Hijos
-        const level2Nodes = childIds.map(id => nodesMap.get(id)).filter(Boolean);
-        if (level2Nodes.length > 0) {
-            const totalL2Width = level2Nodes.length * NODE_WIDTH + (level2Nodes.length - 1) * HORIZONTAL_GAP;
-            let startX2 = -totalL2Width / 2;
-            level2Nodes.forEach((node) => {
-                node.x = startX2;
-                node.y = (NODE_HEIGHT + VERTICAL_GAP);
-                startX2 += NODE_WIDTH + HORIZONTAL_GAP;
-            });
-        }
-    }
-
-    // Conexiones
-    if (parentIds.length > 0) {
-        if (parentIds.length === 1) {
-            connections.push({
-                fromNodeId: parentIds[0],
-                toNodeId: rootNode.id,
-                type: 'parent-child-direct'
-            });
-        } else if (parentIds.length === 2) {
-            connections.push({
-                fromNodeId: parentIds[0],
-                toNodeId: parentIds[1],
-                type: 'parents-couple'
-            });
-            connections.push({
-                fromNodeId: rootNode.id,
-                toNodeId: 'parents-mid',
-                type: 'parent-child-dual',
-                parents: [parentIds[0], parentIds[1]]
-            });
-        }
-    }
+    // --- POSICIONAMIENTO GEOMÉTRICO FIJO Y PERFECTO ---
+    // Nivel 1 (Centro horizontal = 0)
+    rootNode.x = -130; // Tu nodo a la izquierda del centro exacto
+    rootNode.y = 0;
 
     const partners = [...spouseIds, ...loverIds];
-    partners.forEach(sId => {
-        const sNode = nodesMap.get(sId);
-        if (sNode) {
-            connections.push({
-                fromNodeId: rootNode.id,
-                toNodeId: sNode.id,
-                type: 'partner'
-            });
+    if (partners.length > 0) {
+        const partnerNode = nodesMap.get(partners[0]);
+        if (partnerNode) {
+            partnerNode.x = 130; // Tu pareja a la derecha simétrica
+            partnerNode.y = 0;
         }
+    }
+
+    // Nivel 0 (Padres - Yissela)
+    if (parentIds.length > 0) {
+        const parentNode = nodesMap.get(parentIds[0]);
+        if (parentNode) {
+            parentNode.x = rootNode.x; // Exactamente encima de ti
+            parentNode.y = -130;      // Arriba
+        }
+    }
+
+    // Nivel 2 (Hijos - Mike)
+    if (childIds.length > 0) {
+        const childNode = nodesMap.get(childIds[0]);
+        if (childNode) {
+            // Si hay pareja, se centra entre tú y tu pareja (x=0). Si no, debajo de ti.
+            childNode.x = partners.length > 0 ? 0 : rootNode.x;
+            childNode.y = 130; // Abajo
+        }
+    }
+
+    // --- CONEXIONES ---
+    if (parentIds.length > 0) {
+        connections.push({
+            fromNodeId: parentIds[0],
+            toNodeId: rootNode.id,
+            type: 'parent-child-direct'
+        });
+    }
+
+    partners.forEach(sId => {
+        connections.push({
+            fromNodeId: rootNode.id,
+            toNodeId: sId,
+            type: 'partner'
+        });
     });
 
     childIds.forEach(cId => {
