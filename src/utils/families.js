@@ -1,19 +1,18 @@
-import { QuickDB } from 'quick.db';
-const db = new QuickDB();
+import { getFromDb, setInDb } from './database/wrapper.js';
 
 /**
- * Obtiene todas las relaciones de la guild
+ * Obtiene todas las relaciones de la guild desde tu BD (Postgres/Wrapper)
  */
 export async function getGuildRelations(guildId) {
-    const data = await db.get(`relations_${guildId}`);
+    const data = await getFromDb(`relations_${guildId}`);
     return data || [];
 }
 
 /**
- * Guarda el array de relaciones
+ * Guarda el array de relaciones en tu BD (Postgres/Wrapper)
  */
 export async function saveGuildRelations(guildId, relations) {
-    await db.set(`relations_${guildId}`, relations);
+    await setInDb(`relations_${guildId}`, relations);
 }
 
 /**
