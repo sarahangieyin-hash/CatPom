@@ -8,7 +8,6 @@ export async function drawLines(ctx, layout) {
 
     const settings = family.settings || {};
     const lineColor = settings.lineColor || settings.lines || '#000000';
-    const direction = settings.direction || 'TB';
     
     const NODE_HEIGHT = 46;
     const NODE_WIDTH = 120;
@@ -35,15 +34,12 @@ export async function drawLines(ctx, layout) {
             const toNode = nodes.find(n => n.id === conn.toNodeId);
             if (!fromNode || !toNode) continue;
 
-            // El anillo se dibuja exactamente en el punto medio horizontal entre la derecha del nodo 1 y la izquierda del nodo 2
-            const rightOfFrom = fromNode.x + NODE_WIDTH;
-            const leftOfTo = toNode.x;
-            
-            const midX = (rightOfFrom + leftOfTo) / 2;
+            // El anillo se dibuja exactamente en X = 0 (punto medio exacto entre -130 y 130)
+            const midX = 0;
             const midY = fromNode.y + NODE_HEIGHT / 2;
 
             if (ringImage) {
-                const iconSize = 26;
+                const iconSize = 28;
                 ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
             }
             continue; 
@@ -53,40 +49,30 @@ export async function drawLines(ctx, layout) {
             const toNode = nodes.find(n => n.id === conn.toNodeId);
             if (!fromNode || !toNode) continue;
 
-            if (direction === 'TB') {
-                const startX = fromNode.x + NODE_WIDTH / 2;
-                const startY = fromNode.y + NODE_HEIGHT; // Borde inferior del padre
-                const endX = toNode.x + NODE_WIDTH / 2;
-                const endY = toNode.y;                  // Borde superior del hijo/usuario
+            const startX = fromNode.x + NODE_WIDTH / 2;
+            const startY = fromNode.y + NODE_HEIGHT; 
+            const endX = toNode.x + NODE_WIDTH / 2;
+            const endY = toNode.y;                  
 
-                ctx.moveTo(startX, startY);
-                ctx.lineTo(endX, endY);
-            }
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
         }
         else if (conn.type === 'family-child') {
             const rootNode = nodes.find(n => n.isRoot);
-            const partnerNode = nodes.find(n => n.id === conn.partnerId);
             const childNode = nodes.find(n => n.id === conn.toNodeId);
-            if (!rootNode || !partnerNode || !childNode) continue;
+            if (!rootNode || !childNode) continue;
 
-            if (direction === 'TB') {
-                const rootCenterX = rootNode.x + NODE_WIDTH / 2;
-                const partnerCenterX = partnerNode.x + NODE_WIDTH / 2;
-                
-                // Punto medio exacto entre los centros de ti y tu pareja
-                const coupleMidX = (rootCenterX + partnerCenterX) / 2;
-                
-                const coupleY = rootNode.y + NODE_HEIGHT; // Parte baja de vuestras cajas
-                const childTopY = childNode.y;            // Parte alta del hijo
-                const midY = (coupleY + childTopY) / 2;
-                
-                const childCenterX = childNode.x + NODE_WIDTH / 2;
+            // El enlace familiar nace del centro exacto (X = 0) donde está el anillo de la pareja
+            const coupleMidX = 0;
+            const coupleY = rootNode.y + NODE_HEIGHT; 
+            const childTopY = childNode.y;            
+            const midY = (coupleY + childTopY) / 2;
+            const childCenterX = childNode.x + NODE_WIDTH / 2;
 
-                ctx.moveTo(coupleMidX, coupleY);
-                ctx.lineTo(coupleMidX, midY);
-                ctx.lineTo(childCenterX, midY);
-                ctx.lineTo(childCenterX, childTopY);
-            }
+            ctx.moveTo(coupleMidX, coupleY);
+            ctx.lineTo(coupleMidX, midY);
+            ctx.lineTo(childCenterX, midY);
+            ctx.lineTo(childCenterX, childTopY);
         }
 
         ctx.stroke();
