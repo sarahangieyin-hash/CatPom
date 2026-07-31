@@ -1,6 +1,6 @@
-const NODE_WIDTH = 100;
-const NODE_HEIGHT = 100;
-const HORIZONTAL_GAP = 40;
+const NODE_WIDTH = 120;
+const NODE_HEIGHT = 46; // Sincronizado exactamente con el alto del dibujo de las tarjetas
+const HORIZONTAL_GAP = 50;
 const VERTICAL_GAP = 60;
 
 export async function calculateLayout(guild, family) {
@@ -75,21 +75,24 @@ export async function calculateLayout(guild, family) {
         });
     });
 
+    // Crear copias de valores de coordenadas sin usar referencias directas mutables
     if (parentIds.length > 0) {
         parentIds.forEach(pId => {
             const pNode = nodesMap.get(pId);
             if (pNode) {
                 connections.push({
-                    from: { x: pNode.x, y: pNode.y + NODE_HEIGHT / 2 },
-                    to: { x: rootNode.x, y: rootNode.y - NODE_HEIGHT / 2 }
+                    fromNodeId: pNode.id,
+                    toNodeId: rootNode.id,
+                    type: 'parent-child'
                 });
 
                 siblingIds.forEach(sId => {
                     const sNode = nodesMap.get(sId);
                     if (sNode) {
                         connections.push({
-                            from: { x: pNode.x, y: pNode.y + NODE_HEIGHT / 2 },
-                            to: { x: sNode.x, y: sNode.y - NODE_HEIGHT / 2 }
+                            fromNodeId: pNode.id,
+                            toNodeId: sNode.id,
+                            type: 'parent-child'
                         });
                     }
                 });
@@ -101,14 +104,9 @@ export async function calculateLayout(guild, family) {
         const sNode = nodesMap.get(sId);
         if (sNode) {
             connections.push({
-                from: { 
-                    x: rootNode.x + (sNode.x > rootNode.x ? NODE_WIDTH / 2 : -NODE_WIDTH / 2), 
-                    y: rootNode.y 
-                },
-                to: { 
-                    x: sNode.x + (sNode.x > rootNode.x ? -NODE_WIDTH / 2 : NODE_WIDTH / 2), 
-                    y: sNode.y 
-                }
+                fromNodeId: rootNode.id,
+                toNodeId: sNode.id,
+                type: 'partner'
             });
         }
     });
@@ -117,8 +115,9 @@ export async function calculateLayout(guild, family) {
         const cNode = nodesMap.get(cId);
         if (cNode) {
             connections.push({
-                from: { x: rootNode.x, y: rootNode.y + NODE_HEIGHT / 2 },
-                to: { x: cNode.x, y: cNode.y - NODE_HEIGHT / 2 }
+                fromNodeId: rootNode.id,
+                toNodeId: cNode.id,
+                type: 'parent-child'
             });
         }
     });
