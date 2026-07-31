@@ -73,12 +73,15 @@ class DatabaseWrapper {
         this.initialized = true;
     }
 
-    // Helper interno para garantizar que `this.db` NUNCA sea null
+    // Helper interno para garantizar que `this.db` NUNCA sea null y apunte a un handler válido
     ensureDatabaseReady() {
-        if (!this.db) {
-            // Intentar usar un pool global si existe, de lo contrario usar Memoria
-            if (global.pgPool || global.db) {
-                this.db = global.pgPool || global.db;
+        if (!this.db || typeof this.db.set !== 'function') {
+            if (pgDb && typeof pgDb.set === 'function') {
+                this.db = pgDb;
+                this.useFallback = false;
+                this.connectionType = 'postgresql';
+            } else if (global.db && typeof global.db.set === 'function') {
+                this.db = global.db;
             } else {
                 this.fallbackToMemory('AUTO_RECOVERY');
             }
