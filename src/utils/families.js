@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// 🎯 BÚSQUEDA DINÁMICA DEL MÓDULO DE BASE DE DATOS POSTGRESQL
 let pgPool = null;
 
 async function initDb() {
@@ -18,12 +17,10 @@ async function initDb() {
             const dbModule = await import(dbPath);
             pgPool = dbModule.default || dbModule.pool || dbModule.db || dbModule;
             if (pgPool) {
-                console.log(`✅ [families.js] Módulo de BD conectado con éxito desde: ${dbPath}`);
+                console.log(`✅ [families.js] BD conectada desde: ${dbPath}`);
                 break;
             }
-        } catch (e) {
-            // Continúa buscando la ruta correcta
-        }
+        } catch (e) {}
     }
 }
 
@@ -31,7 +28,6 @@ await initDb();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const dataDir = path.join(__dirname, '../../data');
 const settingsPath = path.join(dataDir, 'tree_settings.json');
 
@@ -41,11 +37,9 @@ if (!fs.existsSync(dataDir)) {
 
 function loadSettings() {
     try {
-        if (fs.existsSync(settingsPath)) {
-            return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
-        }
+        if (fs.existsSync(settingsPath)) return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
     } catch (e) {
-        console.error("Error al cargar tree_settings.json:", e);
+        console.error("Error cargando tree_settings.json:", e);
     }
     return {};
 }
@@ -55,7 +49,7 @@ function saveSettings(data) {
         fs.writeFileSync(settingsPath, JSON.stringify(data, null, 2), 'utf8');
         return true;
     } catch (e) {
-        console.error("Error al guardar tree_settings.json:", e);
+        console.error("Error guardando tree_settings.json:", e);
         return false;
     }
 }
@@ -81,7 +75,7 @@ export async function saveTreeSettings(userId, newSettings) {
     return saveSettings(settings);
 }
 
-// --- BASE DE DATOS POSTGRESQL ---
+// --- CONSULTAS POSTGRESQL ---
 
 async function ensureDbTable() {
     if (!pgPool) return false;
@@ -96,10 +90,9 @@ async function ensureDbTable() {
                 created_at BIGINT NOT NULL
             );
         `);
-        console.log("✅ [PostgreSQL] Tabla 'family_relations' lista y sincronizada.");
         return true;
     } catch (err) {
-        console.error("❌ [PostgreSQL] Error al crear/conectar la tabla family_relations:", err);
+        console.error("❌ Error en tabla family_relations:", err);
         return false;
     }
 }
@@ -115,48 +108,50 @@ export async function getGuildRelations(guildId) {
         );
         return res.rows;
     } catch (e) {
-        console.error("❌ ERROR LEYENDO RELACIONES DE POSTGRES:", e);
+        console.error("❌ Error leyendo relaciones:", e);
         return [];
     }
 }
 
 export async function addRelation(guildId, u1, u2, type) {
-    const relations = await getGuildRelations(guildId);
-    
-    const exists = relations.some(r => 
-        (r.type === type || (type === 'parent_child' && r.type === 'adoption')) && 
-        ((r.u1 === u1 && r.u2 === u2) || (r.u1 === u2 && r.u2 === u1))
-    );
+    if (!pgPool) return false;
+    try {
+        const relations = await getGuildRelations(guildId);
+        
+        // Evitar duplicados comprobando ambos sentidos
+        const exists = relations.some(r => 
+            ((r.u1 === u1 && r.u2 === u2) || (r.u1 === u2 && r.u2 === u1)) &&
+            (r.type === type || (type === 'parent_child' && r.type === 'adoption'))
+        );
 
-    if (!exists && pgPool) {
-        try {
+        if (!exists) {
             await pgPool.query(
                 `INSERT INTO family_relations (guild_id, u1, u2, type, created_at) VALUES ($1, $2, $3, $4, $5)`,
                 [guildId, u1, u2, type, Date.now()]
             );
-        } catch (e) {
-            console.error("❌ ERROR GUARDANDO RELACIÓN EN POSTGRES:", e);
         }
+        return true;
+    } catch (e) {
+        console.error("❌ Error agregando relación:", e);
+        return false;
     }
-    return true;
 }
 
 export async function removeRelation(guildId, u1, u2, type) {
-    if (pgPool) {
-        try {
-            await pgPool.query(
-                `DELETE FROM family_relations 
-                 WHERE guild_id = $1 
-                 AND (type = $2 OR type = 'adoption' OR type = 'parent_child')
-                 AND ((u1 = $3 AND u2 = $4) OR (u1 = $4 AND u2 = $3))`,
-                [guildId, type, u1, u2]
-            );
-        } catch (e) {
-            console.error("❌ ERROR ELIMINANDO RELACIÓN EN POSTGRES:", e);
-        }
+    if (!pgPool) return false;
+    try {
+        await pgPool.query(
+            `DELETE FROM family_relations 
+             WHERE guild_id = $1 
+             AND (type = $2 OR (type = 'adoption' AND $2 = 'parent_child'))
+             AND ((u1 = $3 AND u2 = $4) OR (u1 = $4 AND u2 = $3))`,
+            [guildId, type, u1, u2]
+        );
+        return true;
+    } catch (e) {
+        console.error("❌ Error eliminando relación:", e);
+        return false;
     }
-
-    return true;
 }
 
 export async function getUserFamilyData(guildId, userId) {
@@ -169,35 +164,31 @@ export async function getUserFamilyData(guildId, userId) {
     let lovers = [];
 
     for (const rel of relations) {
-        if (rel.type === 'marriage') {
+        const type = rel.type;
+        
+        if (type === 'marriage') {
             if (rel.u1 === userId) spouses.push(rel.u2);
             else if (rel.u2 === userId) spouses.push(rel.u1);
-        } else if (rel.type === 'parent_child' || rel.type === 'adoption') {
+        } 
+        else if (type === 'parent_child' || type === 'adoption') {
+            // u1 es Padre/Madre, u2 es Hijo/a
             if (rel.u2 === userId) parents.push(rel.u1);
             if (rel.u1 === userId) children.push(rel.u2);
-        } else if (rel.type === 'sibling') {
+        } 
+        else if (type === 'sibling') {
             if (rel.u1 === userId) siblings.push(rel.u2);
             else if (rel.u2 === userId) siblings.push(rel.u1);
-        } else if (rel.type === 'lover') {
+        } 
+        else if (type === 'lover') {
             if (rel.u1 === userId) lovers.push(rel.u2);
             else if (rel.u2 === userId) lovers.push(rel.u1);
-        }
-    }
-
-    const allParents = new Set(parents);
-    for (const parentId of parents) {
-        for (const rel of relations) {
-            if (rel.type === 'marriage') {
-                if (rel.u1 === parentId && rel.u2 !== userId) allParents.add(rel.u2);
-                else if (rel.u2 === parentId && rel.u1 !== userId) allParents.add(rel.u1);
-            }
         }
     }
 
     return {
         userId,
         spouses: Array.from(new Set(spouses)),
-        parents: Array.from(allParents),
+        parents: Array.from(new Set(parents)),
         children: Array.from(new Set(children)),
         siblings: Array.from(new Set(siblings)),
         lovers: Array.from(new Set(lovers))
