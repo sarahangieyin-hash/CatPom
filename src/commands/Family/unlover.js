@@ -1,115 +1,58 @@
-import {
-    SlashCommandBuilder
-} from 'discord.js';
-
-import {
-    getFamilyByMember,
-    updateFamily
-} from '../../utils/families.js';
-
+import { SlashCommandBuilder } from 'discord.js';
+import { getUserFamilyData, removeRelation } from '../../utils/families.js';
 
 export default {
-
     data: new SlashCommandBuilder()
-
         .setName('unlover')
-
-        .setDescription('Quita una relación de amante 🔥.')
-
+        .setDescription('Termina tu relación de amante con un usuario o con todos.')
         .addUserOption(option =>
             option
-                .setName('persona')
-                .setDescription('Persona amante')
-                .setRequired(true)
+                .setName('amante')
+                .setDescription('El amante del que te quieres separar (deja en blanco para terminar con todos)')
+                .setRequired(false)
         ),
 
-
-
     async execute(interaction) {
+        const guildId = interaction.guild.id;
+        const userId = interaction.user.id;
 
+        const family = await getUserFamilyData(guildId, userId);
 
-        const user =
-            interaction.options.getUser('persona');
-
-
-
-        const family =
-            await getFamilyByMember(
-
-                interaction.guild.id,
-
-                interaction.user.id
-
-            );
-
-
-
-        if (!family) {
-
+        if (!family.lovers || family.lovers.length === 0) {
             return interaction.reply({
-
-                content:
-                    '❌ No perteneces a ninguna unión.',
-
+                content: '❌ No tienes ningún amante registrado actualmente.',
                 ephemeral: true
-
             });
-
         }
 
+        const targetLover = interaction.options.getUser('amante');
 
+        if (targetLover) {
+            if (!family.lovers.includes(targetLover.id)) {
+                return interaction.reply({
+                    content: `❌ ${targetLover} no figura como tu amante.`,
+                    ephemeral: true
+                });
+            }
 
-        if (
-            !Array.isArray(
-                family.lovers
-            ) ||
-            !family.lovers.includes(
-                user.id
-            )
-        ) {
+            await removeRelation(guildId, userId, targetLover.id, 'lover');
 
             return interaction.reply({
-
-                content:
-                    '❌ Esa persona no aparece como amante.',
-
-                ephemeral: true
-
+                content: `💔 <@${userId}> y ${targetLover} ya no son amantes.`
             });
+        } else {
+            // Eliminar todos los amantes
+            const antiguosAmantes = [...family.lovers];
 
+            for (const loverId of antiguosAmantes) {
+                await removeRelation(guildId, userId, loverId, 'lover');
+            }
+
+            const listaAmantes = antiguosAmantes.map(id => `<@${id}>`).join(', ');
+
+            return interaction.reply({
+                content: `💔 <@${userId}> ha terminado su relación con todos sus amantes (${listaAmantes}).`
+            });
         }
-
-
-
-        family.lovers =
-            family.lovers.filter(
-
-                id =>
-                    id !== user.id
-
-            );
-
-
-
-        await updateFamily(
-
-            interaction.guild.id,
-
-            family.id,
-
-            family
-
-        );
-
-
-
-        await interaction.reply(
-
-            `🧊 ${user} ya no aparece como amante.`
-
-        );
-
-
     }
-
 };
