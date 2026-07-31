@@ -23,8 +23,9 @@ export default {
         }
 
         const family = await getUserFamilyData(interaction.guild.id, interaction.user.id);
+        const currentLovers = Array.isArray(family?.lovers) ? family.lovers : [];
 
-        if (family.lovers.includes(lover.id)) {
+        if (currentLovers.includes(lover.id)) {
             return interaction.reply({
                 content: '❌ Esa persona ya está registrada como tu amante.',
                 ephemeral: true
