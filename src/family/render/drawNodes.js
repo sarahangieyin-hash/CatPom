@@ -12,15 +12,15 @@ export async function drawNodes(ctx, layout) {
 
         const isRoot = node.isRoot || node.id === layout.family?.userId;
 
-        // Definir colores de fondo y texto
+        // Colores
         const bgColor = isRoot 
             ? (settings.userBg || '#1d4ed8') 
-            : (settings.nodeBg || '#111111');
+            : (settings.nodeBg || '#222222');
 
         const textColor = '#ffffff';
         const lineColor = settings.lines || '#000000';
 
-        // 1. Dibujar el cuadro con bordes redondeados
+        // 1. Dibujar el recuadro del nodo
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
@@ -42,18 +42,33 @@ export async function drawNodes(ctx, layout) {
         ctx.stroke();
         ctx.restore();
 
-        // 2. Dibujar el texto del nombre del usuario
+        // 2. Obtener y preparar el texto
+        let rawName = node.name || node.username || '';
+        
+        // Si el nombre contiene solo emojis o caracteres invisibles que rompen Canvas
+        if (!rawName || rawName.trim().length === 0) {
+            rawName = `User ${String(node.id || '').slice(-4)}`;
+        }
+
+        const displayName = rawName.length > 12 
+            ? rawName.substring(0, 10) + '...' 
+            : rawName;
+
+        // 3. Renderizado multi-capa del texto para visibilidad máxima
         ctx.save();
-        ctx.fillStyle = textColor;
         ctx.font = 'bold 13px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Obtener el nombre raw y truncarlo si es muy largo
-        const name = String(node.name || node.username || `User ${String(node.id || '').slice(-4)}`);
-        const truncatedName = name.length > 12 ? name.substring(0, 10) + '...' : name;
+        // Trazo exterior negro por si el fondo y la letra se confunden
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
+        ctx.strokeText(displayName, node.x, node.y);
 
-        ctx.fillText(truncatedName, node.x, node.y);
+        // Relleno blanco
+        ctx.fillStyle = textColor;
+        ctx.fillText(displayName, node.x, node.y);
+
         ctx.restore();
     }
 }
