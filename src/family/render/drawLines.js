@@ -35,9 +35,13 @@ export async function drawLines(ctx, layout) {
             const toNode = nodes.find(n => n.id === conn.toNodeId);
             if (!fromNode || !toNode) continue;
 
-            // Sin línea de unión, solo se calcula el punto medio para el icono del anillo
-            const midX = (fromNode.x + toNode.x) / 2;
-            const midY = (fromNode.y + toNode.y) / 2;
+            // Centro exacto de la tarjeta 1 y tarjeta 2 (sumando la mitad de su ancho)
+            const fromCenterX = fromNode.x + NODE_WIDTH / 2;
+            const toCenterX = toNode.x + NODE_WIDTH / 2;
+            
+            // Punto medio real entre ambos centros
+            const midX = (fromCenterX + toCenterX) / 2;
+            const midY = (fromNode.y + toNode.y + NODE_HEIGHT) / 2; // Alineado verticalmente al centro de las cajas
 
             if (ringImage) {
                 const iconSize = 26;
@@ -51,11 +55,11 @@ export async function drawLines(ctx, layout) {
             if (!p1 || !p2) continue;
 
             if (direction === 'TB') {
-                ctx.moveTo(p1.x + NODE_WIDTH / 2, p1.y);
-                ctx.lineTo(p2.x - NODE_WIDTH / 2, p2.y);
+                ctx.moveTo(p1.x + NODE_WIDTH / 2, p1.y + NODE_HEIGHT);
+                ctx.lineTo(p2.x + NODE_WIDTH / 2, p2.y + NODE_HEIGHT);
             } else {
-                ctx.moveTo(p1.x, p1.y + NODE_HEIGHT / 2);
-                ctx.lineTo(p2.x, p2.y - NODE_HEIGHT / 2);
+                ctx.moveTo(p1.x + NODE_WIDTH, p1.y + NODE_HEIGHT / 2);
+                ctx.lineTo(p2.x, p2.y + NODE_HEIGHT / 2);
             }
         }
         else if (conn.type === 'parent-child-direct') {
@@ -64,10 +68,10 @@ export async function drawLines(ctx, layout) {
             if (!fromNode || !toNode) continue;
 
             if (direction === 'TB') {
-                const startX = fromNode.x;
-                const startY = fromNode.y + NODE_HEIGHT / 2;
-                const endX = toNode.x;
-                const endY = toNode.y - NODE_HEIGHT / 2;
+                const startX = fromNode.x + NODE_WIDTH / 2;
+                const startY = fromNode.y + NODE_HEIGHT;
+                const endX = toNode.x + NODE_WIDTH / 2;
+                const endY = toNode.y;
 
                 if (Math.abs(startX - endX) < 5) {
                     ctx.moveTo(startX, startY);
@@ -80,10 +84,10 @@ export async function drawLines(ctx, layout) {
                     ctx.lineTo(endX, endY);
                 }
             } else {
-                const startX = fromNode.x + NODE_WIDTH / 2;
-                const startY = fromNode.y;
-                const endX = toNode.x - NODE_WIDTH / 2;
-                const endY = toNode.y;
+                const startX = fromNode.x + NODE_WIDTH;
+                const startY = fromNode.y + NODE_HEIGHT / 2;
+                const endX = toNode.x;
+                const endY = toNode.y + NODE_HEIGHT / 2;
 
                 if (Math.abs(startY - endY) < 5) {
                     ctx.moveTo(startX, startY);
@@ -104,15 +108,20 @@ export async function drawLines(ctx, layout) {
             if (!p1 || !p2 || !rootNode) continue;
 
             if (direction === 'TB') {
-                const midX = (p1.x + p2.x) / 2;
-                const parentsBottomY = p1.y + NODE_HEIGHT / 2;
-                const rootTopY = rootNode.y - NODE_HEIGHT / 2;
+                const p1CenterX = p1.x + NODE_WIDTH / 2;
+                const p2CenterX = p2.x + NODE_WIDTH / 2;
+                const midX = (p1CenterX + p2CenterX) / 2;
+                
+                const parentsBottomY = p1.y + NODE_HEIGHT;
+                const rootTopY = rootNode.y;
                 const midY = (parentsBottomY + rootTopY) / 2;
+
+                const rootCenterX = rootNode.x + NODE_WIDTH / 2;
 
                 ctx.moveTo(midX, parentsBottomY);
                 ctx.lineTo(midX, midY);
-                ctx.lineTo(rootNode.x, midY);
-                ctx.lineTo(rootNode.x, rootTopY);
+                ctx.lineTo(rootCenterX, midY);
+                ctx.lineTo(rootCenterX, rootTopY);
             }
         }
         else if (conn.type === 'family-child') {
@@ -122,15 +131,23 @@ export async function drawLines(ctx, layout) {
             if (!rootNode || !partnerNode || !childNode) continue;
 
             if (direction === 'TB') {
-                const coupleMidX = (rootNode.x + partnerNode.x) / 2;
-                const coupleY = rootNode.y + NODE_HEIGHT / 2;
-                const childTopY = childNode.y - NODE_HEIGHT / 2;
+                // Centros exactos de ti y de tu pareja
+                const rootCenterX = rootNode.x + NODE_WIDTH / 2;
+                const partnerCenterX = partnerNode.x + NODE_WIDTH / 2;
+                
+                // Punto medio exacto entre ambos perfiles
+                const coupleMidX = (rootCenterX + partnerCenterX) / 2;
+                
+                const coupleY = rootNode.y + NODE_HEIGHT;
+                const childTopY = childNode.y;
                 const midY = (coupleY + childTopY) / 2;
+                
+                const childCenterX = childNode.x + NODE_WIDTH / 2;
 
                 ctx.moveTo(coupleMidX, coupleY);
                 ctx.lineTo(coupleMidX, midY);
-                ctx.lineTo(childNode.x, midY);
-                ctx.lineTo(childNode.x, childTopY);
+                ctx.lineTo(childCenterX, midY);
+                ctx.lineTo(childCenterX, childTopY);
             }
         }
 
