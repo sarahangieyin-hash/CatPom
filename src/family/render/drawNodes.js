@@ -1,144 +1,92 @@
-import { 
-    SlashCommandBuilder, 
-    EmbedBuilder, 
-    ActionRowBuilder, 
-    ButtonBuilder, 
-    ButtonStyle, 
-    ModalBuilder, 
-    TextInputBuilder, 
-    TextInputStyle,
-    MessageFlags 
-} from 'discord.js';
+import { registerFont } from 'canvas';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-import { getTreeSettings, saveTreeSettings, DEFAULT_TREE_SETTINGS } from '../../utils/families.js';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-export default {
-    data: new SlashCommandBuilder()
-        .setName('customizetree')
-        .setDescription('Personaliza la apariencia y dirección de tu árbol familiar.'),
+try {
+    registerFont(
+        path.join(__dirname, '../../assets/fonts/DejaVuSans.ttf'),
+        { family: 'DejaVuCustom' }
+    );
+} catch (e) {}
 
-    async execute(interaction) {
-        const userId = interaction.user.id;
-        let settings = await getTreeSettings(userId);
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+}
 
-        const buildEmbed = (st) => {
-            return new EmbedBuilder()
-                .setTitle('🎨 Personalización del Árbol Familiar')
-                .setDescription('Configura los colores y la dirección con la que se generará tu árbol.')
-                .addFields(
-                    { name: '👤 Tu Caja (Fondo)', value: `\`${st.userBg}\``, inline: true },
-                    { name: '✍️ Tu Texto', value: `\`${st.userText}\``, inline: true },
-                    { name: '👥 Cajas Familiares', value: `\`${st.nodeBg}\``, inline: true },
-                    { name: '📝 Texto Familiar', value: `\`${st.nodeText}\``, inline: true },
-                    { name: '🔗 Líneas de Unión', value: `\`${st.lines}\``, inline: true },
-                    { name: '🖼️ Fondo del Canvas', value: `\`${st.background}\``, inline: true },
-                    { name: '📐 Dirección del Árbol', value: st.direction === 'TB' ? '⬇️ Vertical (Arriba a Abajo)' : '➡️ Horizontal (Izquierda a Derecha)', inline: false }
-                )
-                .setColor(st.userBg.startsWith('#') ? st.userBg : '#1d4ed8');
-        };
+export async function drawNodes(ctx, layout) {
+    const drawn = new Set();
+    const targetUserId = layout.targetUserId || layout.userId;
+    const settings = layout.settings || {};
 
-        const buildButtons = (st) => {
-            return new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId('tree_toggle_direction')
-                    .setLabel(`Dirección: ${st.direction === 'TB' ? 'Vertical ⬇️' : 'Horizontal ➡️'}`)
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('tree_edit_colors')
-                    .setLabel('Editar Colores 🎨')
-                    .setStyle(ButtonStyle.Success),
-                new ButtonBuilder()
-                    .setCustomId('tree_reset')
-                    .setLabel('Restablecer 🔄')
-                    .setStyle(ButtonStyle.Danger)
-            );
-        };
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
 
-        const response = await interaction.reply({
-            embeds: [buildEmbed(settings)],
-            components: [buildButtons(settings)],
-            flags: MessageFlags.Ephemeral
-        });
+    for (const node of layout.nodes) {
+        if (!['member', 'child', 'parent', 'sibling'].includes(node.type)) {
+            continue;
+        }
 
-        // Colector para los botones del panel
-        const collector = response.createMessageComponentCollector({ time: 120000 });
+        if (typeof node.id !== 'string' || !/^\d+$/.test(node.id)) {
+            continue;
+        }
 
-        collector.on('collect', async (i) => {
-            if (i.customId === 'tree_toggle_direction') {
-                const newDirection = settings.direction === 'TB' ? 'LR' : 'TB';
-                settings.direction = newDirection;
-                await saveTreeSettings(userId, { direction: newDirection });
+        if (drawn.has(node.id)) continue;
+        drawn.add(node.id);
 
-                await i.update({
-                    embeds: [buildEmbed(settings)],
-                    components: [buildButtons(settings)]
-                });
-            } else if (i.customId === 'tree_reset') {
-                settings = { ...DEFAULT_TREE_SETTINGS };
-                await saveTreeSettings(userId, settings);
+        let username = String(node.id);
+        try {
+            const member = await layout.guild.members.fetch(node.id);
+            username = member.displayName || member.user.username;
+        } catch {}
 
-                await i.update({
-                    embeds: [buildEmbed(settings)],
-                    components: [buildButtons(settings)]
-                });
-            } else if (i.customId === 'tree_edit_colors') {
-                // Desplegar Modal para ingresar códigos HEX
-                const modal = new ModalBuilder()
-                    .setCustomId('tree_colors_modal')
-                    .setTitle('Personalizar Colores (Códigos HEX)');
+        const safeName = username
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9_\- ]/g, '')
+            .slice(0, 20);
 
-                const userInput = new TextInputBuilder()
-                    .setCustomId('userBg')
-                    .setLabel('Tu Caja y Tu Texto (ej: #1d4ed8, #ffffff)')
-                    .setValue(`${settings.userBg}, ${settings.userText}`)
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+        ctx.font = '600 16px "Segoe UI", "Inter", "Helvetica Neue", "DejaVuCustom", sans-serif';
 
-                const nodeInput = new TextInputBuilder()
-                    .setCustomId('nodeBg')
-                    .setLabel('Cajas Usuarios y Texto (ej: #111111, #ffffff)')
-                    .setValue(`${settings.nodeBg}, ${settings.nodeText}`)
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+        const textWidth = ctx.measureText(safeName || 'User').width;
+        const boxWidth = Math.max(140, textWidth + 36);
+        const boxHeight = 46;
+        const cornerRadius = 10;
 
-                const linesInput = new TextInputBuilder()
-                    .setCustomId('lines')
-                    .setLabel('Líneas y Fondo (ej: #000000, #ffffff)')
-                    .setValue(`${settings.lines}, ${settings.background}`)
-                    .setStyle(TextInputStyle.Short)
-                    .setRequired(true);
+        const isMainUser = node.id === targetUserId;
 
-                modal.addComponents(
-                    new ActionRowBuilder().addComponents(userInput),
-                    new ActionRowBuilder().addComponents(nodeInput),
-                    new ActionRowBuilder().addComponents(linesInput)
-                );
+        const left = node.x - boxWidth / 2;
+        const top = node.y - boxHeight / 2;
 
-                await i.showModal(modal);
+        // Colors desde la personalización
+        const bgColor = isMainUser ? (settings.userBg || '#1d4ed8') : (settings.nodeBg || '#111111');
+        const textColor = isMainUser ? (settings.userText || '#ffffff') : (settings.nodeText || '#ffffff');
 
-                // Esperar envío del modal
-                try {
-                    const modalSubmit = await i.awaitModalSubmit({ time: 60000 });
+        // 1. Fondo de caja
+        ctx.fillStyle = bgColor;
+        drawRoundedRect(ctx, left, top, boxWidth, boxHeight, cornerRadius);
+        ctx.fill();
 
-                    const [uBg, uText] = modalSubmit.fields.getTextInputValue('userBg').split(',').map(s => s.trim());
-                    const [nBg, nText] = modalSubmit.fields.getTextInputValue('nodeBg').split(',').map(s => s.trim());
-                    const [lColor, bColor] = modalSubmit.fields.getTextInputValue('lines').split(',').map(s => s.trim());
+        // 2. Borde fino
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5;
+        drawRoundedRect(ctx, left, top, boxWidth, boxHeight, cornerRadius);
+        ctx.stroke();
 
-                    if (uBg) settings.userBg = uBg;
-                    if (uText) settings.userText = uText;
-                    if (nBg) settings.nodeBg = nBg;
-                    if (nText) settings.nodeText = nText;
-                    if (lColor) settings.lines = lColor;
-                    if (bColor) settings.background = bColor;
-
-                    await saveTreeSettings(userId, settings);
-
-                    await modalSubmit.update({
-                        embeds: [buildEmbed(settings)],
-                        components: [buildButtons(settings)]
-                    });
-                } catch {}
-            }
-        });
+        // 3. Texto
+        ctx.fillStyle = textColor;
+        ctx.fillText(safeName || 'User', node.x, node.y + 1);
     }
-};
+}
