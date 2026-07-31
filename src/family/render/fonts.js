@@ -1,15 +1,13 @@
 import { registerFont } from 'canvas';
 import path from 'path';
 
-// Registramos el archivo TTF que descargaste
+// Registrar físicamente la fuente desde src/assets/fonts/DejaVuSans.ttf
 try {
-    // Si DejaVuSans.ttf está en la misma carpeta que fonts.js:
-    registerFont(path.resolve('./DejaVuSans.ttf'), { family: 'DejaVuSans' });
-    
-    // NOTA: Si está dentro de una carpeta como "assets" o "fonts", usa su ruta correspondiente, por ejemplo:
-    // registerFont(path.resolve('./src/assets/DejaVuSans.ttf'), { family: 'DejaVuSans' });
+    const fontPath = path.join(process.cwd(), 'src', 'assets', 'fonts', 'DejaVuSans.ttf');
+    registerFont(fontPath, { family: 'DejaVuSans' });
+    console.log('✅ Fuente DejaVuSans registrada con éxito.');
 } catch (e) {
-    console.error('Error registrando DejaVuSans.ttf:', e);
+    console.error('❌ Error al registrar la fuente DejaVuSans:', e);
 }
 
 export const fonts = {
