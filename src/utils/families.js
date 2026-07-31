@@ -4,27 +4,34 @@ import { fileURLToPath } from 'url';
 
 let pgPool = null;
 
-async function initDb() {
+// 🎯 BÚSQUEDA ROBUSTA DE LA BASE DE DATOS
+async function getPool() {
+    if (pgPool) return pgPool;
+
     const pathsToTry = [
         '../database/index.js',
         '../database/db.js',
         '../db/index.js',
-        '../database.js'
+        '../database.js',
+        '../../database/index.js'
     ];
 
     for (const dbPath of pathsToTry) {
         try {
             const dbModule = await import(dbPath);
             pgPool = dbModule.default || dbModule.pool || dbModule.db || dbModule;
-            if (pgPool) {
-                console.log(`✅ [families.js] BD conectada desde: ${dbPath}`);
-                break;
+            if (pgPool && typeof pgPool.query === 'function') {
+                console.log(`✅ [families.js] Módulo Postgres conectado desde: ${dbPath}`);
+                return pgPool;
             }
-        } catch (e) {}
+        } catch (e) {
+            // Sigue buscando la ruta correcta
+        }
     }
-}
 
-await initDb();
+    console.error("❌ [families.js] NO SE PUDO ENCONTRAR LA CONEXIÓN A POSTGRESQL");
+    return null;
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,9 +45,7 @@ if (!fs.existsSync(dataDir)) {
 function loadSettings() {
     try {
         if (fs.existsSync(settingsPath)) return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
-    } catch (e) {
-        console.error("Error cargando tree_settings.json:", e);
-    }
+    } catch (e) {}
     return {};
 }
 
@@ -49,7 +54,6 @@ function saveSettings(data) {
         fs.writeFileSync(settingsPath, JSON.stringify(data, null, 2), 'utf8');
         return true;
     } catch (e) {
-        console.error("Error guardando tree_settings.json:", e);
         return false;
     }
 }
@@ -75,12 +79,13 @@ export async function saveTreeSettings(userId, newSettings) {
     return saveSettings(settings);
 }
 
-// --- CONSULTAS POSTGRESQL ---
+// --- FUNCIONES DE BASE DE DATOS POSTGRESQL ---
 
 async function ensureDbTable() {
-    if (!pgPool) return false;
+    const pool = await getPool();
+    if (!pool) return false;
     try {
-        await pgPool.query(`
+        await pool.query(`
             CREATE TABLE IF NOT EXISTS family_relations (
                 id SERIAL PRIMARY KEY,
                 guild_id VARCHAR(64) NOT NULL,
@@ -92,7 +97,7 @@ async function ensureDbTable() {
         `);
         return true;
     } catch (err) {
-        console.error("❌ Error en tabla family_relations:", err);
+        console.error("❌ Error creando tabla family_relations:", err);
         return false;
     }
 }
@@ -100,56 +105,63 @@ async function ensureDbTable() {
 ensureDbTable();
 
 export async function getGuildRelations(guildId) {
-    if (!pgPool) return [];
+    const pool = await getPool();
+    if (!pool) return [];
     try {
-        const res = await pgPool.query(
+        const res = await pool.query(
             `SELECT u1, u2, type, created_at AS "createdAt" FROM family_relations WHERE guild_id = $1`,
             [guildId]
         );
         return res.rows;
     } catch (e) {
-        console.error("❌ Error leyendo relaciones:", e);
+        console.error("❌ Error leyendo relaciones de la BD:", e);
         return [];
     }
 }
 
 export async function addRelation(guildId, u1, u2, type) {
-    if (!pgPool) return false;
+    const pool = await getPool();
+    if (!pool) {
+        console.error("❌ [addRelation] Falló: No hay conexión a PostgreSQL.");
+        return false;
+    }
+
     try {
         const relations = await getGuildRelations(guildId);
         
-        // Evitar duplicados comprobando ambos sentidos
         const exists = relations.some(r => 
             ((r.u1 === u1 && r.u2 === u2) || (r.u1 === u2 && r.u2 === u1)) &&
             (r.type === type || (type === 'parent_child' && r.type === 'adoption'))
         );
 
         if (!exists) {
-            await pgPool.query(
+            await pool.query(
                 `INSERT INTO family_relations (guild_id, u1, u2, type, created_at) VALUES ($1, $2, $3, $4, $5)`,
                 [guildId, u1, u2, type, Date.now()]
             );
+            console.log(`✅ [addRelation] Relación guardada con éxito: ${u1} -> ${u2} (${type})`);
         }
         return true;
     } catch (e) {
-        console.error("❌ Error agregando relación:", e);
+        console.error("❌ Error insertando relación en la BD:", e);
         return false;
     }
 }
 
 export async function removeRelation(guildId, u1, u2, type) {
-    if (!pgPool) return false;
+    const pool = await getPool();
+    if (!pool) return false;
     try {
-        await pgPool.query(
+        await pool.query(
             `DELETE FROM family_relations 
              WHERE guild_id = $1 
-             AND (type = $2 OR (type = 'adoption' AND $2 = 'parent_child'))
+             AND (type = $2 OR type = 'adoption' OR type = 'parent_child')
              AND ((u1 = $3 AND u2 = $4) OR (u1 = $4 AND u2 = $3))`,
             [guildId, type, u1, u2]
         );
         return true;
     } catch (e) {
-        console.error("❌ Error eliminando relación:", e);
+        console.error("❌ Error eliminando relación de la BD:", e);
         return false;
     }
 }
@@ -171,7 +183,6 @@ export async function getUserFamilyData(guildId, userId) {
             else if (rel.u2 === userId) spouses.push(rel.u1);
         } 
         else if (type === 'parent_child' || type === 'adoption') {
-            // u1 es Padre/Madre, u2 es Hijo/a
             if (rel.u2 === userId) parents.push(rel.u1);
             if (rel.u1 === userId) children.push(rel.u2);
         } 
