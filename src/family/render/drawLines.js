@@ -13,13 +13,12 @@ export async function drawLines(ctx, layout) {
     const NODE_HEIGHT = 46;
     const NODE_WIDTH = 120;
 
-    // Cargar el icono de pareja (anillo)
     let ringImage = null;
     try {
         const ringPath = path.resolve('src/assets/icons/ring.png');
         ringImage = await loadImage(ringPath);
     } catch (e) {
-        console.warn('No se pudo cargar el icono ring.png, se omitirá el icono de pareja.');
+        console.warn('No se pudo cargar el icono ring.png');
     }
 
     ctx.save();
@@ -36,34 +35,15 @@ export async function drawLines(ctx, layout) {
             const toNode = nodes.find(n => n.id === conn.toNodeId);
             if (!fromNode || !toNode) continue;
 
-            if (direction === 'TB') {
-                // Dibujar línea corta de unión o dejar espacio para el icono en el centro
-                const midX = (fromNode.x + toNode.x) / 2;
-                const midY = (fromNode.y + toNode.y) / 2;
+            // Sin línea de unión, solo se calcula el punto medio para el icono del anillo
+            const midX = (fromNode.x + toNode.x) / 2;
+            const midY = (fromNode.y + toNode.y) / 2;
 
-                ctx.moveTo(fromNode.x + (toNode.x > fromNode.x ? NODE_WIDTH / 2 : -NODE_WIDTH / 2), fromNode.y);
-                ctx.lineTo(toNode.x + (toNode.x > fromNode.x ? -NODE_WIDTH / 2 : NODE_WIDTH / 2), toNode.y);
-                ctx.stroke();
-
-                // Pintar el icono del anillo en el centro exacto de la pareja
-                if (ringImage) {
-                    const iconSize = 24;
-                    ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
-                }
-            } else {
-                const midX = (fromNode.x + toNode.x) / 2;
-                const midY = (fromNode.y + toNode.y) / 2;
-
-                ctx.moveTo(fromNode.x, fromNode.y + (toNode.y > fromNode.y ? NODE_HEIGHT / 2 : -NODE_HEIGHT / 2));
-                ctx.lineTo(toNode.x, toNode.y + (toNode.y > fromNode.y ? -NODE_HEIGHT / 2 : NODE_HEIGHT / 2));
-                ctx.stroke();
-
-                if (ringImage) {
-                    const iconSize = 24;
-                    ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
-                }
+            if (ringImage) {
+                const iconSize = 26;
+                ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
             }
-            continue; // Evita el stroke general al final para este tipo
+            continue; 
         } 
         else if (conn.type === 'parents-couple') {
             const p1 = nodes.find(n => n.id === conn.fromNodeId);
