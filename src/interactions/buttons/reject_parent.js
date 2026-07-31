@@ -1,4 +1,4 @@
-import { getFamilyRequestById, deleteFamilyRequest } from '../../family/requests/familyRequests.js';
+import { getFamilyRequest, deleteFamilyRequest } from '../../family/requests/familyRequests.js';
 
 export default {
     customId: 'reject_parent',
@@ -6,7 +6,7 @@ export default {
         const requestId = interaction.customId.split(':')[1];
         const guildId = interaction.guild.id;
 
-        const request = await getFamilyRequestById(guildId, requestId);
+        const request = await getFamilyRequest(guildId, requestId);
 
         if (!request) {
             return interaction.reply({
