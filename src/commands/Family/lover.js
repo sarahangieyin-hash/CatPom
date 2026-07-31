@@ -1,21 +1,10 @@
-import {
-    SlashCommandBuilder
-} from 'discord.js';
-
-import {
-    getFamilyByMember,
-    updateFamily
-} from '../../utils/families.js';
-
+import { SlashCommandBuilder } from 'discord.js';
+import { addRelation, getUserFamilyData } from '../../utils/families.js';
 
 export default {
-
     data: new SlashCommandBuilder()
-
         .setName('lover')
-
         .setDescription('Añade una relación de amante 🔥.')
-
         .addUserOption(option =>
             option
                 .setName('persona')
@@ -23,113 +12,27 @@ export default {
                 .setRequired(true)
         ),
 
-
-
     async execute(interaction) {
+        const lover = interaction.options.getUser('persona');
 
-
-        const user =
-            interaction.options.getUser('persona');
-
-
-
-        if (
-            user.id === interaction.user.id
-        ) {
-
+        if (lover.id === interaction.user.id) {
             return interaction.reply({
-
-                content:
-                    '❌ No puedes añadirse a ti mismo.',
-
+                content: '❌ No puedes añadirte a ti mismo.',
                 ephemeral: true
-
             });
-
         }
 
+        const family = await getUserFamilyData(interaction.guild.id, interaction.user.id);
 
-
-        const family =
-            await getFamilyByMember(
-
-                interaction.guild.id,
-
-                interaction.user.id
-
-            );
-
-
-
-        if (!family) {
-
+        if (family.lovers.includes(lover.id)) {
             return interaction.reply({
-
-                content:
-                    '❌ Necesitas pertenecer a una unión para tener amantes.',
-
+                content: '❌ Esa persona ya está registrada como tu amante.',
                 ephemeral: true
-
             });
-
         }
 
+        await addRelation(interaction.guild.id, interaction.user.id, lover.id, 'lover');
 
-
-        if (
-            !family.lovers
-        ) {
-
-            family.lovers = [];
-
-        }
-
-
-
-        if (
-            family.lovers.includes(
-                user.id
-            )
-        ) {
-
-            return interaction.reply({
-
-                content:
-                    '❌ Esa persona ya está registrada como amante.',
-
-                ephemeral: true
-
-            });
-
-        }
-
-
-
-        family.lovers.push(
-            user.id
-        );
-
-
-
-        await updateFamily(
-
-            interaction.guild.id,
-
-            family.id,
-
-            family
-
-        );
-
-
-
-        await interaction.reply(
-
-            `🔥 ${user} ha sido añadido como amante.`
-
-        );
-
-
+        await interaction.reply(`🔥 ${lover} ha sido añadido como amante.`);
     }
-
 };
