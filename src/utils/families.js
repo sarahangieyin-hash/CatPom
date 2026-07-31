@@ -2,10 +2,32 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// 🎯 Conexión directa a PostgreSQL (Misma BD que tu Economía)
-import db from '../database/index.js'; 
+// 🎯 BÚSQUEDA DINÁMICA DEL MÓDULO DE BASE DE DATOS POSTGRESQL
+let pgPool = null;
 
-const pgPool = db.pool || db.default || db;
+async function initDb() {
+    const pathsToTry = [
+        '../database/index.js',
+        '../database/db.js',
+        '../db/index.js',
+        '../database.js'
+    ];
+
+    for (const dbPath of pathsToTry) {
+        try {
+            const dbModule = await import(dbPath);
+            pgPool = dbModule.default || dbModule.pool || dbModule.db || dbModule;
+            if (pgPool) {
+                console.log(`✅ [families.js] Módulo de BD conectado con éxito desde: ${dbPath}`);
+                break;
+            }
+        } catch (e) {
+            // Continúa buscando la ruta correcta
+        }
+    }
+}
+
+await initDb();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,6 +85,7 @@ export async function saveTreeSettings(userId, newSettings) {
 // --- MANEJO DE BASE DE DATOS POSTGRESQL ---
 
 async function ensureDbTable() {
+    if (!pgPool) return false;
     try {
         await pgPool.query(`
             CREATE TABLE IF NOT EXISTS family_relations (
@@ -82,10 +105,10 @@ async function ensureDbTable() {
     }
 }
 
-// Inicializar tabla al arrancar
 ensureDbTable();
 
 export async function getGuildRelations(guildId) {
+    if (!pgPool) return [];
     try {
         const res = await pgPool.query(
             `SELECT u1, u2, type, created_at AS "createdAt" FROM family_relations WHERE guild_id = $1`,
@@ -106,7 +129,7 @@ export async function addRelation(guildId, u1, u2, type) {
         ((r.u1 === u1 && r.u2 === u2) || (r.u1 === u2 && r.u2 === u1))
     );
 
-    if (!exists) {
+    if (!exists && pgPool) {
         try {
             await pgPool.query(
                 `INSERT INTO family_relations (guild_id, u1, u2, type, created_at) VALUES ($1, $2, $3, $4, $5)`,
@@ -120,16 +143,18 @@ export async function addRelation(guildId, u1, u2, type) {
 }
 
 export async function removeRelation(guildId, u1, u2, type) {
-    try {
-        await pgPool.query(
-            `DELETE FROM family_relations 
-             WHERE guild_id = $1 
-             AND (type = $2 OR type = 'adoption' OR type = 'parent_child')
-             AND ((u1 = $3 AND u2 = $4) OR (u1 = $4 AND u2 = $3))`,
-            [guildId, type, u1, u2]
-        );
-    } catch (e) {
-        console.error("❌ ERROR ELIMINANDO RELACIÓN EN POSTGRES:", e);
+    if (pgPool) {
+        try {
+            await pgPool.query(
+                `DELETE FROM family_relations 
+                 WHERE guild_id = $1 
+                 AND (type = $2 OR type = 'adoption' OR type = 'parent_child')
+                 AND ((u1 = $3 AND u2 = $4) OR (u1 = $4 AND u2 = $3))`,
+                [guildId, type, u1, u2]
+            );
+        } catch (e) {
+            console.error("❌ ERROR ELIMINANDO RELACIÓN EN POSTGRES:", e);
+        }
     }
 
     return true;
