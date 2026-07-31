@@ -2,30 +2,42 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// 🎯 BÚSQUEDA INTELIGENTE DEL POOL O ADAPTADOR DE BASE DE DATOS
+// 🎯 BÚSQUEDA AUTOMÁTICA E INTELIGENTE DE POSTGRESQL EN MEMORIA GLOBAL
 async function getDbPool() {
-    // 1. Revisar variables globales exportadas
-    const candidates = [
-        global.pgPool,
-        global.db,
-        global.db?.pool,
-        global.db?.db,
-        global.db?.db?.pool,
-        global.db?.client,
-        global.db?.postgresPool
-    ];
-
-    for (const cand of candidates) {
-        if (cand && (typeof cand.query === 'function' || typeof cand.execute === 'function')) {
-            return cand;
+    // 1. Probar llaves directas habituales
+    const knownKeys = ['pgPool', 'db', 'database', 'postgres', 'pool', 'client', 'sql'];
+    for (const key of knownKeys) {
+        const obj = global[key];
+        if (obj) {
+            if (typeof obj.query === 'function') return obj;
+            if (obj.pool && typeof obj.pool.query === 'function') return obj.pool;
+            if (obj.db && typeof obj.db.query === 'function') return obj.db;
+            if (obj.db?.pool && typeof obj.db.pool.query === 'function') return obj.db.pool;
         }
     }
 
-    // 2. Si es un wrapper propio del bot, intentar invocar su query interno
-    if (global.db && typeof global.db.query === 'function') {
-        return global.db;
+    // 2. Escanear TODAS las propiedades del entorno global para ubicar la conexión
+    for (const key of Object.keys(global)) {
+        if (key.startsWith('_') || key.startsWith('v8') || key === 'global') continue;
+        
+        const val = global[key];
+        if (val && typeof val === 'object') {
+            if (typeof val.query === 'function' || typeof val.execute === 'function') {
+                return val;
+            }
+            if (val.pool && typeof val.pool.query === 'function') {
+                return val.pool;
+            }
+            if (val.db && typeof val.db.query === 'function') {
+                return val.db;
+            }
+            if (val.db?.pool && typeof val.db.pool.query === 'function') {
+                return val.db.pool;
+            }
+        }
     }
 
+    console.error("❌ [DB Diagnostic] No se encontró la conexión. Claves presentes en global:", Object.keys(global));
     return null;
 }
 
