@@ -35,16 +35,15 @@ export async function drawLines(ctx, layout) {
             const toNode = nodes.find(n => n.id === conn.toNodeId);
             if (!fromNode || !toNode) continue;
 
-            // Centro exacto de la tarjeta 1 y tarjeta 2 (sumando la mitad de su ancho)
+            // Coordenadas reales de los centros de los nodos
             const fromCenterX = fromNode.x + NODE_WIDTH / 2;
             const toCenterX = toNode.x + NODE_WIDTH / 2;
             
-            // Punto medio real entre ambos centros
             const midX = (fromCenterX + toCenterX) / 2;
-            const midY = (fromNode.y + toNode.y + NODE_HEIGHT) / 2; // Alineado verticalmente al centro de las cajas
+            const midY = fromNode.y + NODE_HEIGHT / 2; // Exactamente a media altura de los nodos
 
             if (ringImage) {
-                const iconSize = 26;
+                const iconSize = 24;
                 ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
             }
             continue; 
@@ -55,11 +54,11 @@ export async function drawLines(ctx, layout) {
             if (!p1 || !p2) continue;
 
             if (direction === 'TB') {
-                ctx.moveTo(p1.x + NODE_WIDTH / 2, p1.y + NODE_HEIGHT);
-                ctx.lineTo(p2.x + NODE_WIDTH / 2, p2.y + NODE_HEIGHT);
-            } else {
-                ctx.moveTo(p1.x + NODE_WIDTH, p1.y + NODE_HEIGHT / 2);
-                ctx.lineTo(p2.x, p2.y + NODE_HEIGHT / 2);
+                const p1CenterX = p1.x + NODE_WIDTH / 2;
+                const p2CenterX = p2.x + NODE_WIDTH / 2;
+                const midY = p1.y + NODE_HEIGHT / 2;
+                ctx.moveTo(p1CenterX, midY);
+                ctx.lineTo(p2CenterX, midY);
             }
         }
         else if (conn.type === 'parent-child-direct') {
@@ -69,36 +68,13 @@ export async function drawLines(ctx, layout) {
 
             if (direction === 'TB') {
                 const startX = fromNode.x + NODE_WIDTH / 2;
-                const startY = fromNode.y + NODE_HEIGHT;
+                const startY = fromNode.y + NODE_HEIGHT; // Sale por debajo del padre
                 const endX = toNode.x + NODE_WIDTH / 2;
-                const endY = toNode.y;
+                const endY = toNode.y;                  // Entra por arriba del hijo/usuario
 
-                if (Math.abs(startX - endX) < 5) {
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(endX, endY);
-                } else {
-                    const midY = (startY + endY) / 2;
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(startX, midY);
-                    ctx.lineTo(endX, midY);
-                    ctx.lineTo(endX, endY);
-                }
-            } else {
-                const startX = fromNode.x + NODE_WIDTH;
-                const startY = fromNode.y + NODE_HEIGHT / 2;
-                const endX = toNode.x;
-                const endY = toNode.y + NODE_HEIGHT / 2;
-
-                if (Math.abs(startY - endY) < 5) {
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(endX, endY);
-                } else {
-                    const midX = (startX + endX) / 2;
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(midX, startY);
-                    ctx.lineTo(midX, endY);
-                    ctx.lineTo(endX, endY);
-                }
+                // Línea absolutamente recta si están centrados
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
             }
         }
         else if (conn.type === 'parent-child-dual') {
@@ -131,15 +107,14 @@ export async function drawLines(ctx, layout) {
             if (!rootNode || !partnerNode || !childNode) continue;
 
             if (direction === 'TB') {
-                // Centros exactos de ti y de tu pareja
                 const rootCenterX = rootNode.x + NODE_WIDTH / 2;
                 const partnerCenterX = partnerNode.x + NODE_WIDTH / 2;
                 
-                // Punto medio exacto entre ambos perfiles
+                // Punto medio exacto entre ti y tu pareja
                 const coupleMidX = (rootCenterX + partnerCenterX) / 2;
                 
-                const coupleY = rootNode.y + NODE_HEIGHT;
-                const childTopY = childNode.y;
+                const coupleY = rootNode.y + NODE_HEIGHT; // Abajo de vuestros nodos
+                const childTopY = childNode.y;            // Arriba del nodo del hijo
                 const midY = (coupleY + childTopY) / 2;
                 
                 const childCenterX = childNode.x + NODE_WIDTH / 2;
