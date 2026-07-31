@@ -19,7 +19,8 @@ export async function renderFamilyTree(guild, family) {
         throw new Error('No hay nodos para renderizar en el árbol.');
     }
 
-    const nodeSize = 100;
+    const nodeWidth = 120;
+    const nodeHeight = 46;
     const padding = 60;
 
     const minX = Math.min(...nodes.map(node => node.x));
@@ -30,48 +31,28 @@ export async function renderFamilyTree(guild, family) {
     const contentWidth = maxX - minX;
     const contentHeight = maxY - minY;
 
-    const width = Math.max(600, contentWidth + nodeSize + padding * 2);
-    const height = Math.max(450, contentHeight + nodeSize + padding * 2);
+    const width = Math.max(600, contentWidth + nodeWidth + padding * 2);
+    const height = Math.max(450, contentHeight + nodeHeight + padding * 2);
 
     const offsetX = width / 2 - (minX + maxX) / 2;
     const offsetY = height / 2 - (minY + maxY) / 2;
 
-    // Desplazar nodos
+    // Ajustar posiciones de los nodos
     layout.nodes.forEach(node => {
         node.x += offsetX;
         node.y += offsetY;
     });
-
-    // Desplazar líneas y puntos intermedios para sincronizarlos con los nodos
-    if (layout.connections && Array.isArray(layout.connections)) {
-        layout.connections.forEach(conn => {
-            if (conn.from) {
-                conn.from.x += offsetX;
-                conn.from.y += offsetY;
-            }
-            if (conn.to) {
-                conn.to.x += offsetX;
-                conn.to.y += offsetY;
-            }
-            if (conn.points && Array.isArray(conn.points)) {
-                conn.points.forEach(pt => {
-                    pt.x += offsetX;
-                    pt.y += offsetY;
-                });
-            }
-        });
-    }
 
     const canvas = createCanvas(width * scale, height * scale);
     const ctx = canvas.getContext('2d');
 
     ctx.scale(scale, scale);
 
-    // Fondo base
+    // Fondo del lienzo
     ctx.fillStyle = settings.background || '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    // Renderizar: 1. Líneas de parentesco, 2. Uniones de matrimonio, 3. Nodos de usuario
+    // Dibujar en orden: 1. Líneas, 2. Íconos de Matrimonio/Pareja, 3. Tarjetas de Usuario
     await drawLines(ctx, layout);
     await drawMarriage(ctx, layout);
     await drawNodes(ctx, layout);
