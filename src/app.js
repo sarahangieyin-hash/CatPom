@@ -63,6 +63,7 @@ class CatPom extends Client {
         };
 
         this.db = null;
+        this.pgPool = null;
 
         this.rest = new REST({
 
@@ -85,15 +86,18 @@ class CatPom extends Client {
                 'Initializing database...'
             );
 
+            // 🎯 PASAMOS `this` PARA QUE LA INICIALIZACIÓN LEA EL CLIENTE CORRECTAMENTE
             const dbInstance =
-                await initializeDatabase();
+                await initializeDatabase(this);
 
-            this.db =
-                dbInstance.db || dbInstance;
+            if (dbInstance) {
+                this.db = dbInstance.db || dbInstance;
+                this.pgPool = dbInstance.pgPool || dbInstance.db?.pool || dbInstance.pool || dbInstance;
 
-            // 🎯 ASIGNACIÓN GLOBAL CORRECTA DE LA BASE DE DATOS Y DEL POOL DE POSTGRESQL
-            global.db = dbInstance.db || dbInstance;
-            global.pgPool = dbInstance.db?.pool || dbInstance.db?.db?.pool || dbInstance.pool || dbInstance;
+                // 🎯 ASIGNACIÓN GLOBAL DE LA BASE DE DATOS Y POOL PARA EL SISTEMA DE FAMILIA
+                global.db = this.db;
+                global.pgPool = this.pgPool;
+            }
 
             startupLog(
                 'Loading commands...'
@@ -349,7 +353,11 @@ class CatPom extends Client {
 
             }
 
-            if(this.db?.db?.pool){
+            if(this.pgPool && typeof this.pgPool.end === 'function'){
+
+                await this.pgPool.end();
+
+            } else if(this.db?.db?.pool){
 
                 await this.db.db.pool.end();
 
