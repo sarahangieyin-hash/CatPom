@@ -4,11 +4,11 @@ import { getUserFamilyData, removeRelation } from '../../utils/families.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('renunciar')
-        .setDescription('Renuncia a tus padres o a un padre/madre en específico.')
+        .setDescription('Renuncia a uno o a todos tus hijos.')
         .addUserOption(option =>
             option
-                .setName('padre')
-                .setDescription('Padre o madre a los que deseas renunciar')
+                .setName('hijo')
+                .setDescription('El hijo al que deseas renunciar (deja en blanco para renunciar a todos)')
                 .setRequired(false)
         ),
 
@@ -18,40 +18,42 @@ export default {
 
         const family = await getUserFamilyData(guildId, userId);
 
-        if (!family.parents || family.parents.length === 0) {
+        if (!family.children || family.children.length === 0) {
             return interaction.reply({
-                content: '❌ No tienes ningún padre o madre registrado/a.',
+                content: '❌ No tienes ningún hijo registrado a quien renunciar.',
                 ephemeral: true
             });
         }
 
-        const targetParent = interaction.options.getUser('padre');
-        let parentIdToRemove;
+        const targetChild = interaction.options.getUser('hijo');
 
-        if (targetParent) {
-            if (!family.parents.includes(targetParent.id)) {
+        if (targetChild) {
+            // Renunciar a un hijo en específico
+            if (!family.children.includes(targetChild.id)) {
                 return interaction.reply({
-                    content: `❌ ${targetParent} no está registrado/a como tu padre/madre.`,
+                    content: `❌ ${targetChild} no figura como tu hijo/a.`,
                     ephemeral: true
                 });
             }
-            parentIdToRemove = targetParent.id;
+
+            await removeRelation(guildId, userId, targetChild.id, 'parent_child');
+
+            return interaction.reply({
+                content: `🚪 <@${userId}> ha renunciado a la relación filial con ${targetChild}.`
+            });
         } else {
-            if (family.parents.length === 1) {
-                parentIdToRemove = family.parents[0];
-            } else {
-                return interaction.reply({
-                    content: '❌ Tienes más de un padre/madre registrado. Por favor, especifica de quién quieres renunciar usando la opción `padre`.',
-                    ephemeral: true
-                });
+            // Renunciar a TODOS los hijos
+            const hijosAntiguos = [...family.children];
+
+            for (const childId of hijosAntiguos) {
+                await removeRelation(guildId, userId, childId, 'parent_child');
             }
+
+            const listaHijos = hijosAntiguos.map(id => `<@${id}>`).join(', ');
+
+            return interaction.reply({
+                content: `🚪 <@${userId}> ha renunciado a todos sus hijos (${listaHijos}).`
+            });
         }
-
-        // Eliminar la relación de parentesco (parent_child donde u1 es el padre y u2 es el hijo)
-        await removeRelation(guildId, parentIdToRemove, userId, 'parent_child');
-
-        await interaction.reply({
-            content: `🚪 <@${userId}> ha renunciado a la relación filial con <@${parentIdToRemove}>.`
-        });
     }
 };
