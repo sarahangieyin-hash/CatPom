@@ -21,7 +21,7 @@ export async function drawNodes(ctx, layout) {
         const textColor = '#ffffff';
         const lineColor = settings.lines || '#ffffff';
 
-        // 1. Dibujar la tarjeta redondeada
+        // 1. Dibujar el recuadro del nodo
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
@@ -43,26 +43,17 @@ export async function drawNodes(ctx, layout) {
         ctx.stroke();
         ctx.restore();
 
-        // 2. Dibujar el texto limpio
+        // 2. Dibujar el texto usando la fuente DejaVuSans
         ctx.save();
         ctx.fillStyle = textColor;
-        ctx.font = fonts.name || 'bold 13px sans-serif';
+        ctx.font = fonts.name || 'bold 13px "DejaVuSans", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Obtener el nombre y eliminar caracteres/emojis no soportados por el Canvas del servidor
-        let rawName = node.name || node.username || '';
-        let cleanName = rawName.replace(/[^\x20-\x7E\xA0-\xFF]/g, '').trim();
+        const name = String(node.name || node.username || `User ${String(node.id || '').slice(-4)}`);
+        const truncatedName = name.length > 12 ? name.substring(0, 10) + '...' : name;
 
-        if (!cleanName) {
-            cleanName = `User ${String(node.id || '').slice(-4)}`;
-        }
-
-        const displayName = cleanName.length > 12 
-            ? cleanName.substring(0, 10) + '...' 
-            : cleanName;
-
-        ctx.fillText(displayName, node.x, node.y);
+        ctx.fillText(truncatedName, node.x, node.y);
         ctx.restore();
     }
 }
