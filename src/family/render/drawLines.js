@@ -35,31 +35,19 @@ export async function drawLines(ctx, layout) {
             const toNode = nodes.find(n => n.id === conn.toNodeId);
             if (!fromNode || !toNode) continue;
 
-            const fromCenterX = fromNode.x + NODE_WIDTH / 2;
-            const toCenterX = toNode.x + NODE_WIDTH / 2;
+            // El anillo se dibuja exactamente en el punto medio horizontal entre la derecha del nodo 1 y la izquierda del nodo 2
+            const rightOfFrom = fromNode.x + NODE_WIDTH;
+            const leftOfTo = toNode.x;
             
-            const midX = (fromCenterX + toCenterX) / 2;
+            const midX = (rightOfFrom + leftOfTo) / 2;
             const midY = fromNode.y + NODE_HEIGHT / 2;
 
             if (ringImage) {
-                const iconSize = 24;
+                const iconSize = 26;
                 ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
             }
             continue; 
         } 
-        else if (conn.type === 'parents-couple') {
-            const p1 = nodes.find(n => n.id === conn.fromNodeId);
-            const p2 = nodes.find(n => n.id === conn.toNodeId);
-            if (!p1 || !p2) continue;
-
-            if (direction === 'TB') {
-                const p1CenterX = p1.x + NODE_WIDTH / 2;
-                const p2CenterX = p2.x + NODE_WIDTH / 2;
-                const midY = p1.y + NODE_HEIGHT / 2;
-                ctx.moveTo(p1CenterX, midY);
-                ctx.lineTo(p2CenterX, midY);
-            }
-        }
         else if (conn.type === 'parent-child-direct') {
             const fromNode = nodes.find(n => n.id === conn.fromNodeId);
             const toNode = nodes.find(n => n.id === conn.toNodeId);
@@ -67,34 +55,12 @@ export async function drawLines(ctx, layout) {
 
             if (direction === 'TB') {
                 const startX = fromNode.x + NODE_WIDTH / 2;
-                const startY = fromNode.y + NODE_HEIGHT; // Sale por debajo del padre
+                const startY = fromNode.y + NODE_HEIGHT; // Borde inferior del padre
                 const endX = toNode.x + NODE_WIDTH / 2;
-                const endY = toNode.y;                  // Entra por arriba del hijo/usuario
+                const endY = toNode.y;                  // Borde superior del hijo/usuario
 
                 ctx.moveTo(startX, startY);
                 ctx.lineTo(endX, endY);
-            }
-        }
-        else if (conn.type === 'parent-child-dual') {
-            const p1 = nodes.find(n => n.id === conn.parents[0]);
-            const p2 = nodes.find(n => n.parents[1]);
-            const rootNode = nodes.find(n => n.isRoot);
-            if (!p1 || !p2 || !rootNode) continue;
-
-            if (direction === 'TB') {
-                const p1CenterX = p1.x + NODE_WIDTH / 2;
-                const p2CenterX = p2.x + NODE_WIDTH / 2;
-                const midX = (p1CenterX + p2CenterX) / 2;
-                
-                const parentsBottomY = p1.y + NODE_HEIGHT;
-                const rootTopY = rootNode.y;
-                const midY = (parentsBottomY + rootTopY) / 2;
-                const rootCenterX = rootNode.x + NODE_WIDTH / 2;
-
-                ctx.moveTo(midX, parentsBottomY);
-                ctx.lineTo(midX, midY);
-                ctx.lineTo(rootCenterX, midY);
-                ctx.lineTo(rootCenterX, rootTopY);
             }
         }
         else if (conn.type === 'family-child') {
@@ -107,12 +73,13 @@ export async function drawLines(ctx, layout) {
                 const rootCenterX = rootNode.x + NODE_WIDTH / 2;
                 const partnerCenterX = partnerNode.x + NODE_WIDTH / 2;
                 
-                // Punto medio exacto entre tú y tu esposa
+                // Punto medio exacto entre los centros de ti y tu pareja
                 const coupleMidX = (rootCenterX + partnerCenterX) / 2;
                 
-                const coupleY = rootNode.y + NODE_HEIGHT;
-                const childTopY = childNode.y;
+                const coupleY = rootNode.y + NODE_HEIGHT; // Parte baja de vuestras cajas
+                const childTopY = childNode.y;            // Parte alta del hijo
                 const midY = (coupleY + childTopY) / 2;
+                
                 const childCenterX = childNode.x + NODE_WIDTH / 2;
 
                 ctx.moveTo(coupleMidX, coupleY);
