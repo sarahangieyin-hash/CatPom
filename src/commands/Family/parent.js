@@ -53,7 +53,7 @@ export default {
         // Generar un ID único para la solicitud
         const requestId = `parent_${Date.now()}_${sender.id}`;
 
-        // Guardar la solicitud (Pasando la ID como 2º parámetro y los datos como 3º)
+        // Guardar la solicitud pasando correctamente el requestId como String
         await createFamilyRequest(guildId, requestId, {
             type: 'parent_child',
             u1: targetUser.id,
