@@ -46,7 +46,6 @@ export default {
 
             await interaction.deferReply({ ephemeral: false });
 
-            // Configuraciones por defecto si no están inicializadas
             if (!family.settings) family.settings = {};
             if (!family.settings.userBg) family.settings.userBg = '#1d4ed8';
             if (!family.settings.userText) family.settings.userText = '#ffffff';
@@ -54,7 +53,7 @@ export default {
             if (!family.settings.nodeText) family.settings.nodeText = '#ffffff';
             if (!family.settings.lineColor) family.settings.lineColor = '#000000';
             if (!family.settings.bg) family.settings.bg = '#ffffff';
-            if (!family.settings.direction) family.settings.direction = 'TB'; // 'TB' = Vertical, 'LR' = Horizontal
+            if (!family.settings.direction) family.settings.direction = 'TB';
 
             const generateTreePayload = async () => {
                 const imageBuffer = await renderFamilyTree(interaction.guild, family);
@@ -62,7 +61,6 @@ export default {
 
                 const isVertical = family.settings.direction === 'TB';
 
-                // Botones de personalización
                 const btnColors = new ButtonBuilder()
                     .setCustomId('ctree_btn_colors')
                     .setLabel('🎨 Cambiar Colores (#HEX)')
@@ -108,14 +106,12 @@ Configura los colores y la dirección con la que se generará tu árbol.
                     return i.reply({ content: '❌ Solo el dueño del árbol puede editarlo.', flags: MessageFlags.Ephemeral });
                 }
 
-                // Cambiar orientación (Vertical / Horizontal)
                 if (i.customId === 'ctree_btn_direction') {
                     family.settings.direction = family.settings.direction === 'TB' ? 'LR' : 'TB';
                     const updatedPayload = await generateTreePayload();
                     await i.update(updatedPayload);
                 }
 
-                // Abrir el Modal con todos los valores
                 if (i.customId === 'ctree_btn_colors') {
                     const modal = new ModalBuilder()
                         .setCustomId('ctree_modal_all_colors')
@@ -193,9 +189,7 @@ Configura los colores y la dirección con la que se generará tu árbol.
 
                         const updatedPayload = await generateTreePayload();
                         await modalSubmit.update(updatedPayload);
-                    } catch (err) {
-                        // Timeout modal
-                    }
+                    } catch (err) {}
                 }
             });
 
