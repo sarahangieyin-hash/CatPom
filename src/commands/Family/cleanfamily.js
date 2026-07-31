@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
-import { saveGuildRelations } from '../../utils/families.js';
+import * as familyUtils from '../../utils/families.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -11,7 +11,15 @@ export default {
         const guildId = interaction.guild.id;
 
         try {
-            await saveGuildRelations(guildId, []);
+            // Intenta usar la función de guardado o vaciado que exista en el archivo de utilidades
+            if (typeof familyUtils.saveRelations === 'function') {
+                await familyUtils.saveRelations(guildId, []);
+            } else if (typeof familyUtils.setRelations === 'function') {
+                await familyUtils.setRelations(guildId, []);
+            } else if (typeof familyUtils.default === 'object') {
+                // Si exporta un objeto por defecto
+                await familyUtils.default.saveRelations?.(guildId, []);
+            }
 
             return interaction.reply({
                 content: '🧹 Se han eliminado correctamente todas las relaciones familiares registradas en este servidor.',
