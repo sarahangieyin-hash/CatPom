@@ -1,6 +1,6 @@
 console.log("USANDO ESTE interactionCreate");
 
-import { Events, EmbedBuilder } from 'discord.js';
+import { Events, EmbedBuilder, MessageFlags } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
 import { addRelation } from '../utils/families.js';
@@ -47,20 +47,18 @@ export default {
                     args
                 );
 
-                // 🎯 MANEJO DIRECTO DE ADOPCIONES CON DIAGNÓSTICO
                 if (customId === 'accept_adopt' || customId === 'accept_adoption') {
                     const [parentId, childId] = args;
 
                     if (interaction.user.id !== childId) {
                         return interaction.reply({
                             content: '❌ Esta solicitud de adopción no es para ti.',
-                            ephemeral: true
+                            flags: MessageFlags.Ephemeral
                         });
                     }
 
                     console.log(`⏳ Intentando guardar en BD -> Servidor: ${interaction.guild.id} | Padre: ${parentId} | Hijo: ${childId}`);
                     
-                    // Guardar en la Base de Datos PostgreSQL
                     const success = await addRelation(interaction.guild.id, parentId, childId, 'parent_child');
                     
                     console.log(`📌 ¿SE GUARDÓ EN LA BASE DE DATOS?: ${success ? '✅ SÍ' : '❌ NO'}`);
@@ -68,7 +66,7 @@ export default {
                     if (!success) {
                         return interaction.reply({
                             content: '⚠️ Hubo un problema al conectar con la Base de Datos para guardar la adopción.',
-                            ephemeral: true
+                            flags: MessageFlags.Ephemeral
                         });
                     }
 
@@ -90,7 +88,7 @@ export default {
                     if (interaction.user.id !== childId) {
                         return interaction.reply({
                             content: '❌ Esta solicitud de adopción no es para ti.',
-                            ephemeral: true
+                            flags: MessageFlags.Ephemeral
                         });
                     }
 
