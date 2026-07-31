@@ -1,151 +1,59 @@
-import {
-    SlashCommandBuilder
-} from 'discord.js';
-
-import {
-    getFamilyByMember,
-    updateFamily
-} from '../../utils/families.js';
-
+import { SlashCommandBuilder } from 'discord.js';
+import { getUserFamilyData, removeRelation } from '../../utils/families.js';
 
 export default {
-
     data: new SlashCommandBuilder()
-
         .setName('unparent')
-
-        .setDescription('Abandona tu familia de sangre.'),
-
+        .setDescription('Quita a tus padres o a un padre/madre en específico.')
+        .addUserOption(option =>
+            option
+                .setName('padre')
+                .setDescription('Padre o madre del que te quieres desvincular (deja en blanco para quitar todos)')
+                .setRequired(false)
+        ),
 
     async execute(interaction) {
+        const guildId = interaction.guild.id;
+        const userId = interaction.user.id;
 
+        const family = await getUserFamilyData(guildId, userId);
 
-        const userId =
-            interaction.user.id;
+        if (!family.parents || family.parents.length === 0) {
+            return interaction.reply({
+                content: '❌ No tienes ningún padre o madre registrado/a.',
+                ephemeral: true
+            });
+        }
 
+        const targetParent = interaction.options.getUser('padre');
 
-        const family =
-            await getFamilyByMember(
+        if (targetParent) {
+            // Desvincularse de un padre en específico
+            if (!family.parents.includes(targetParent.id)) {
+                return interaction.reply({
+                    content: `❌ ${targetParent} no figura como tu padre/madre.`,
+                    ephemeral: true
+                });
+            }
 
-                interaction.guild.id,
-
-                userId
-
-            );
-
-
-        if (!family) {
+            await removeRelation(guildId, targetParent.id, userId, 'parent_child');
 
             return interaction.reply({
-
-                content:
-                    '❌ No perteneces a ninguna familia.',
-
-                ephemeral: true
-
+                content: `🚪 <@${userId}> se ha desvinculado de ${targetParent}.`
             });
+        } else {
+            // Desvincularse de TODOS los padres
+            const antiguosPadres = [...family.parents];
 
+            for (const parentId of antiguosPadres) {
+                await removeRelation(guildId, parentId, userId, 'parent_child');
+            }
+
+            const listaPadres = antiguosPadres.map(id => `<@${id}>`).join(', ');
+
+            return interaction.reply({
+                content: `🚪 <@${userId}> se ha desvinculado de todos sus padres (${listaPadres}).`
+            });
         }
-
-
-
-        // Quitar relación con padres
-
-        family.parents =
-            (family.parents || []).filter(
-
-                parent =>
-                    parent.id !== userId
-
-            );
-
-
-
-        // Quitar relación como hijo
-
-        family.children =
-            (family.children || []).filter(
-
-                child =>
-                    child.id !== userId
-
-            );
-
-
-
-        // Quitar hermanos
-
-        family.siblings =
-            (family.siblings || []).filter(
-
-                sibling =>
-                    sibling.id !== userId
-
-            );
-
-
-
-        // Mantener:
-        // - lovers 💍🔥
-        // - tus propios hijos 👶
-
-
-
-        // Quitar al usuario de miembros
-        // solo si no tiene hijos ni pareja
-
-        const hasChildren =
-            family.children.some(
-
-                child =>
-                    child.parent === userId
-
-            );
-
-
-        const hasLovers =
-            (family.lovers || []).includes(
-                userId
-            );
-
-
-        if (
-            !hasChildren &&
-            !hasLovers
-        ) {
-
-            family.members =
-                family.members.filter(
-
-                    id =>
-                        id !== userId
-
-                );
-
-        }
-
-
-
-        await updateFamily(
-
-            interaction.guild.id,
-
-            family.id,
-
-            family
-
-        );
-
-
-
-        await interaction.reply({
-
-            content:
-                '🚪 Has abandonado tu familia de sangre. Tus hijos y parejas siguen contigo.',
-
-        });
-
-
     }
-
 };
