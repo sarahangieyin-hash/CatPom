@@ -68,7 +68,7 @@ export async function calculateLayout(guild, family) {
 
         if (direction === 'TB') {
             const totalRowWidth = rowCount * NODE_WIDTH + (rowCount - 1) * HORIZONTAL_GAP;
-            const startX = -totalRowWidth / 2 + NODE_WIDTH / 2;
+            const startX = -totalRowWidth / 2;
             const yPos = (level - 1) * (NODE_HEIGHT + VERTICAL_GAP);
 
             rowNodes.forEach((node, idx) => {
@@ -77,7 +77,7 @@ export async function calculateLayout(guild, family) {
             });
         } else {
             const totalRowHeight = rowCount * NODE_HEIGHT + (rowCount - 1) * VERTICAL_GAP;
-            const startY = -totalRowHeight / 2 + NODE_HEIGHT / 2;
+            const startY = -totalRowHeight / 2;
             const xPos = (level - 1) * (NODE_WIDTH + HORIZONTAL_GAP);
 
             rowNodes.forEach((node, idx) => {
@@ -87,7 +87,7 @@ export async function calculateLayout(guild, family) {
         }
     });
 
-    // Conexiones de Padres según la cantidad
+    // Conexiones de Padres
     if (parentIds.length > 0) {
         if (parentIds.length === 1) {
             connections.push({
@@ -108,7 +108,6 @@ export async function calculateLayout(guild, family) {
                 parents: [parentIds[0], parentIds[1]]
             });
         } else {
-            // Si hay 3 o más padres, unimos la fila de padres horizontalmente y el del medio conecta directo con el root
             for (let i = 0; i < parentIds.length - 1; i++) {
                 connections.push({
                     fromNodeId: parentIds[i],
@@ -116,7 +115,6 @@ export async function calculateLayout(guild, family) {
                     type: 'parents-couple'
                 });
             }
-            // El padre del medio es el índice central
             const midIndex = Math.floor(parentIds.length / 2);
             connections.push({
                 fromNodeId: parentIds[midIndex],
@@ -139,7 +137,7 @@ export async function calculateLayout(guild, family) {
         }
     });
 
-    // Conexiones de Hijos (compartidos con la primera pareja o directos)
+    // Conexiones de Hijos
     childIds.forEach(cId => {
         if (partners.length > 0) {
             connections.push({
