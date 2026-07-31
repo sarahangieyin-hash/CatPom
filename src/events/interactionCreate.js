@@ -105,22 +105,22 @@ export default {
                 }
 
                 /*
-                    MANEJADORES DE MATRIMONIO MÚLTIPLE / AMPLIACIÓN
+                    MANEJADOR DE AMPLIACIÓN DE MATRIMONIO (Paso 1: Permiso de la pareja actual)
                 */
                 if (customId === 'expand_marriage_accept' || customId === 'expand_marriage_reject') {
                     const [authorId, targetId] = args;
 
                     if (customId === 'expand_marriage_reject') {
                         return interaction.update({
-                            content: `❌ La pareja actual ha rechazado la ampliación de la unión múltiple.`,
+                            content: `❌ La pareja actual ha rechazado la ampliación de la unión.`,
                             components: []
                         });
                     }
 
                     if (customId === 'expand_marriage_accept') {
-                        // Actualizamos este mensaje para cerrarlo y dejar constancia
+                        // Actualizamos este mensaje para cerrarlo y que no queden botones activos aquí
                         await interaction.update({
-                            content: `✅ Has autorizado la ampliación de la unión.`,
+                            content: `✅ Has autorizado la ampliación. Enviando propuesta formal al nuevo integrante...`,
                             components: []
                         });
 
@@ -128,6 +128,7 @@ export default {
                         const currentGroup = [authorId, ...(authorFamily.spouses || [])];
                         const groupString = currentGroup.join(':');
 
+                        // Creamos los botones para el nuevo integrante usando dos puntos para el args del interactionCreate
                         const acceptBtn = {
                             type: 2,
                             style: 3,
@@ -149,7 +150,7 @@ export default {
 
                         const mentions = currentGroup.map(id => `<@${id}>`).join(', ');
 
-                        // Enviamos un followUp para que la nueva persona reciba un mensaje nuevo con botones activos
+                        // Enviamos un mensaje NUEVO (followUp) con los botones intactos para la tercera persona
                         return interaction.followUp({
                             content: `💍 <@${targetId}>, el grupo actual (${mentions}) te ha propuesto unirte a su matrimonio múltiple. ¿Aceptas?`,
                             components: [row]
@@ -157,6 +158,9 @@ export default {
                     }
                 }
 
+                /*
+                    MANEJADOR FINAL DE MATRIMONIO MÚLTIPLE (Paso 2: Respuesta del nuevo integrante)
+                */
                 if (customId === 'multimarry_accept' || customId === 'multimarry_reject') {
                     const targetId = args.pop();
                     const groupIds = args;
@@ -175,7 +179,7 @@ export default {
                     if (customId === 'multimarry_accept') {
                         const allMembers = [...groupIds, targetId];
 
-                        // Añadir o actualizar las relaciones cruzadas mediante addRelation para garantizar la persistencia de relaciones
+                        // Guardar las relaciones de forma cruzada para que todos estén casados con todos
                         for (let i = 0; i < allMembers.length; i++) {
                             for (let j = i + 1; j < allMembers.length; j++) {
                                 await addRelation(interaction.guild.id, allMembers[i], allMembers[j], 'marriage');
