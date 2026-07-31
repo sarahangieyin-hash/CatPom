@@ -1,61 +1,92 @@
 export async function drawLines(ctx, layout) {
-    const members = layout.nodes.filter(node => node.type === 'member');
-    const children = layout.nodes.filter(node => node.type === 'child');
-    const parents = layout.nodes.filter(node => node.type === 'parent');
-    const siblings = layout.nodes.filter(node => node.type === 'sibling');
-    const unions = layout.nodes.filter(node => node.type === 'union');
+    const nodes = layout.nodes;
+    if (!nodes || nodes.length === 0) return;
 
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#4b5563'; // Color gris estructurado elegante
+    ctx.lineWidth = 2;
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-    /*
-        PADRES 👨‍👩‍👧 -> Conectan con el miembro principal
-    */
-    if (parents.length && members.length) {
-        const main = members[0];
-        parents.forEach(parent => {
+    // 1. DIBUJAR LÍNEA DE MATRIMONIO / PAREJA PRINCIPAL 💍
+    const memberNodes = nodes.filter(n => n.type === 'member');
+    const unionNode = nodes.find(n => n.type === 'union');
+
+    if (memberNodes.length >= 2) {
+        ctx.beginPath();
+        ctx.moveTo(memberNodes[0].x, memberNodes[0].y);
+        ctx.lineTo(memberNodes[1].x, memberNodes[1].y);
+        ctx.stroke();
+    }
+
+    // 2. CONEXIONES DE HIJOS 👶
+    const childrenNodes = nodes.filter(n => n.type === 'child');
+
+    if (childrenNodes.length > 0) {
+        // El punto de origen para los hijos es el nodo de unión (si están casados) 
+        // o el primer miembro raíz si es soltero/a.
+        const parentOrigin = unionNode || memberNodes[0];
+
+        if (parentOrigin) {
+            // Calcular la altura media para la barra horizontal en "T"
+            const firstChildY = childrenNodes[0].y;
+            const midY = parentOrigin.y + (firstChildY - parentOrigin.y) / 2;
+
+            // Bajada vertical desde la pareja o padre hacia el punto medio
             ctx.beginPath();
-            ctx.moveTo(parent.x, parent.y + 60);
-            ctx.lineTo(main.x, main.y - 60);
+            ctx.moveTo(parentOrigin.x, parentOrigin.y);
+            ctx.lineTo(parentOrigin.x, midY);
+            ctx.stroke();
+
+            // Dibujar ramificación en "T" y bajada a cada hijo
+            childrenNodes.forEach(child => {
+                ctx.beginPath();
+                // De la línea central hacia la coordenada X del hijo
+                ctx.moveTo(parentOrigin.x, midY);
+                ctx.lineTo(child.x, midY);
+                // Bajada vertical hacia la caja del hijo
+                ctx.lineTo(child.x, child.y - 25); 
+                ctx.stroke();
+            });
+        }
+    }
+
+    // 3. CONEXIONES DE PADRES 👨‍👩‍👧
+    const parentNodes = nodes.filter(n => n.type === 'parent');
+    const rootUserNode = memberNodes[0];
+
+    if (parentNodes.length > 0 && rootUserNode) {
+        const midY = rootUserNode.y - (rootUserNode.y - parentNodes[0].y) / 2;
+
+        // Subida vertical desde el usuario principal
+        ctx.beginPath();
+        ctx.moveTo(rootUserNode.x, rootUserNode.y);
+        ctx.lineTo(rootUserNode.x, midY);
+        ctx.stroke();
+
+        // Ramificación en "T" hacia los padres
+        parentNodes.forEach(parent => {
+            ctx.beginPath();
+            ctx.moveTo(rootUserNode.x, midY);
+            ctx.lineTo(parent.x, midY);
+            ctx.lineTo(parent.x, parent.y + 25); // Conecta con la parte inferior de la caja del padre
             ctx.stroke();
         });
     }
 
-    /*
-        HIJOS 👶 -> Salen de sus padres o de la unión
-    */
-    children.forEach(child => {
-        let origin = null;
+    // 4. CONEXIONES DE AMANTES / LOVERS 💖 (Línea punteada)
+    const loversNodes = nodes.filter(n => n.type === 'lover');
+    if (loversNodes.length > 0 && rootUserNode) {
+        ctx.save();
+        ctx.setLineDash([6, 6]); // Estilo punteado
+        ctx.strokeStyle = '#ec4899'; // Tono rosado
 
-        if (child.parent) {
-            origin = members.find(member => member.id === child.parent);
-        }
-        if (!origin && unions.length) {
-            origin = unions[0];
-        }
-        if (!origin && members.length) {
-            origin = members[0];
-        }
-
-        if (!origin) return;
-
-        ctx.beginPath();
-        ctx.moveTo(origin.x, origin.y + 40);
-        ctx.lineTo(child.x, child.y - 60);
-        ctx.stroke();
-    });
-
-    /*
-        HERMANOS 👥 -> Conectan con el miembro principal
-    */
-    if (siblings.length && members.length) {
-        const main = members[0];
-        siblings.forEach(sibling => {
+        loversNodes.forEach(lover => {
             ctx.beginPath();
-            ctx.moveTo(sibling.x, sibling.y);
-            ctx.lineTo(main.x, main.y);
+            ctx.moveTo(rootUserNode.x, rootUserNode.y);
+            ctx.lineTo(lover.x, lover.y);
             ctx.stroke();
         });
+
+        ctx.restore(); // Restaurar estilo de línea continua normal
     }
 }
