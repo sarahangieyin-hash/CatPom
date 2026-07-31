@@ -151,6 +151,7 @@ export async function calculateLayout(guild, family) {
         children,
         parents,
         siblings,
-        lovers
+        lovers,
+        targetUserId
     };
 }
