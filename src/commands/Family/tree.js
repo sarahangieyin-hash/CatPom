@@ -5,13 +5,21 @@ import { renderFamilyTree } from '../../family/render/treeRenderer.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('tree')
-        .setDescription('Muestra el árbol familiar.'),
+        .setDescription('Muestra la imagen del árbol familiar.')
+        .addUserOption(option =>
+            option
+                .setName('usuario')
+                .setDescription('El usuario del que quieres ver el árbol')
+                .setRequired(false)
+        ),
 
     async execute(interaction) {
         try {
+            const targetUser = interaction.options?.getUser('usuario') || interaction.user;
+
             const family = await getUserFamilyData(
                 interaction.guild.id,
-                interaction.user.id
+                targetUser.id
             );
 
             const hasFamily =
@@ -23,15 +31,13 @@ export default {
 
             if (!hasFamily) {
                 return interaction.reply({
-                    content: '❌ No tienes familia registrada.',
+                    content: `❌ ${targetUser.id === interaction.user.id ? 'No tienes' : 'El usuario no tiene'} familia registrada.`,
                     flags: MessageFlags.Ephemeral
                 });
             }
 
-            // ⚠️ FIX: Inyectamos explícitamente el usuario raíz en el objeto family
-            // para que el renderizador sepa a quién debe dibujar en el centro
-            family.userId = interaction.user.id;
-            family.rootUser = interaction.user;
+            family.userId = targetUser.id;
+            family.rootUser = targetUser;
 
             await interaction.deferReply();
 
