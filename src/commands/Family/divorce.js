@@ -1,206 +1,58 @@
-import {
-    SlashCommandBuilder
-} from 'discord.js';
-
-import {
-    getFamilyByMember,
-    updateFamily
-} from '../../utils/families.js';
-
-import {
-    setInDb
-} from '../../utils/database/wrapper.js';
-
+import { SlashCommandBuilder } from 'discord.js';
+import { getUserFamilyData, removeRelation } from '../../utils/families.js';
 
 export default {
-
     data: new SlashCommandBuilder()
-
         .setName('divorce')
-
-        .setDescription('Termina tu unión.'),
-
-
+        .setDescription('Divórciate de tu pareja actual.')
+        .addUserOption(option =>
+            option
+                .setName('pareja')
+                .setDescription('La pareja de la que te quieres divorciar')
+                .setRequired(false)
+        ),
 
     async execute(interaction) {
+        const guildId = interaction.guild.id;
+        const userId = interaction.user.id;
 
+        const family = await getUserFamilyData(guildId, userId);
 
-        await interaction.deferReply();
-
-
-
-        const guildId =
-            interaction.guild.id;
-
-
-        const userId =
-            interaction.user.id;
-
-
-
-        const family =
-            await getFamilyByMember(
-
-                guildId,
-
-                userId
-
-            );
-
-
-
-        if (!family) {
-
-            return interaction.editReply(
-                '❌ No perteneces a ninguna familia.'
-            );
-
+        if (!family.spouses || family.spouses.length === 0) {
+            return interaction.reply({
+                content: '❌ No estás casado/a con nadie actualmente.',
+                ephemeral: true
+            });
         }
 
+        const targetUser = interaction.options.getUser('pareja');
+        let spouseIdToDivorce;
 
-
-        const myChildren =
-            family.children?.filter(
-
-                child =>
-                    child.parent === userId
-
-            ) || [];
-
-
-
-        const otherMembers =
-            family.members.filter(
-
-                id =>
-                    id !== userId
-
-            );
-
-
-
-        /*
-            Quitamos al usuario de la unión
-        */
-
-        family.members =
-            otherMembers;
-
-
-
-        /*
-            Quitamos sus hijos de esta familia
-        */
-
-        family.children =
-            family.children.filter(
-
-                child =>
-                    child.parent !== userId
-
-            );
-
-
-
-        await updateFamily(
-
-            guildId,
-
-            family.id,
-
-            family
-
-        );
-
-
-
-        /*
-            Si tiene hijos adoptados,
-            crea una familia individual
-            solo para él y sus hijos
-        */
-
-        if (
-            myChildren.length > 0
-        ) {
-
-
-            const newFamily = {
-
-                id:
-                    Date.now().toString(),
-
-                members:
-                    [],
-
-                children:
-                    myChildren,
-
-                parents:
-                    [],
-
-                siblings:
-                    [],
-
-                lovers:
-                    [],
-
-                createdAt:
-                    Date.now()
-
-            };
-
-
-
-            await updateFamily(
-
-                guildId,
-
-                newFamily.id,
-
-                newFamily
-
-            );
-
-
-
-            await setInDb(
-
-                `familyMember:${guildId}:${userId}`,
-
-                newFamily.id
-
-            );
-
-
-
-            for (
-                const child of myChildren
-            ) {
-
-                await setInDb(
-
-                    `familyMember:${guildId}:${child.id}`,
-
-                    newFamily.id
-
-                );
-
+        if (targetUser) {
+            if (!family.spouses.includes(targetUser.id)) {
+                return interaction.reply({
+                    content: `❌ No estás casado/a con ${targetUser}.`,
+                    ephemeral: true
+                });
             }
-
-
+            spouseIdToDivorce = targetUser.id;
+        } else {
+            // Si no especifica usuario y solo tiene 1 pareja, la tomamos por defecto
+            if (family.spouses.length === 1) {
+                spouseIdToDivorce = family.spouses[0];
+            } else {
+                return interaction.reply({
+                    content: '❌ Tienes múltiples uniones. Por favor, especifica de quién te quieres divorciar usando la opción `pareja`.',
+                    ephemeral: true
+                });
+            }
         }
 
+        // Eliminar la relación de matrimonio (spouse)
+        await removeRelation(guildId, userId, spouseIdToDivorce, 'spouse');
 
-
-        await interaction.editReply({
-
-            content:
-                '💔 Has terminado la unión correctamente.'
-
+        await interaction.reply({
+            content: `💔 <@${userId}> y <@${spouseIdToDivorce}> se han divorciado.`
         });
-
-
     }
-
 };
