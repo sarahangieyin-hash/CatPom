@@ -1,9 +1,23 @@
 export async function calculateLayout(guild, family) {
-    const members = Array.isArray(family.members) ? family.members : [];
-    const children = Array.isArray(family.children) ? family.children : [];
-    const parents = Array.isArray(family.parents) ? family.parents : [];
-    const siblings = Array.isArray(family.siblings) ? family.siblings : [];
-    const lovers = Array.isArray(family.lovers) ? family.lovers : [];
+    // Normalizador seguro para aceptar objetos {id: ...} o strings 'ID'
+    const normalize = (list) => {
+        if (!Array.isArray(list)) return [];
+        return list.map(item => typeof item === 'object' ? item : { id: item }).filter(item => item && item.id);
+    };
+
+    // Sincronizar 'members' con 'spouses' por compatibilidad de nombres
+    const rawMembers = family.members || family.spouses || [];
+    const membersList = Array.isArray(rawMembers) ? rawMembers : [];
+    
+    // Asegurar que el usuario objetivo siempre esté en los miembros principales si el array viene vacío
+    const members = membersList.length > 0 
+        ? membersList.map(m => typeof m === 'object' ? m.id : m) 
+        : (family.targetUser ? [family.targetUser] : []);
+
+    const children = normalize(family.children);
+    const parents = normalize(family.parents);
+    const siblings = normalize(family.siblings);
+    const lovers = normalize(family.lovers);
 
     const nodes = [];
 
