@@ -2,19 +2,28 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// 🎯 ACCESO DIRECTO A LA INSTANCIA DE POSTGRESQL DE LA APP
+// 🎯 BÚSQUEDA INTELIGENTE DEL POOL O ADAPTADOR DE BASE DE DATOS
 async function getDbPool() {
-    // 1. Revisa si el pool fue expuesto en global por app.js
-    if (global.pgPool && typeof global.pgPool.query === 'function') {
-        return global.pgPool;
+    // 1. Revisar variables globales exportadas
+    const candidates = [
+        global.pgPool,
+        global.db,
+        global.db?.pool,
+        global.db?.db,
+        global.db?.db?.pool,
+        global.db?.client,
+        global.db?.postgresPool
+    ];
+
+    for (const cand of candidates) {
+        if (cand && (typeof cand.query === 'function' || typeof cand.execute === 'function')) {
+            return cand;
+        }
     }
 
-    // 2. Revisa si la base de datos está guardada en global.db
-    if (global.db) {
-        const pool = global.db.db?.pool || global.db.pool || global.db;
-        if (pool && typeof pool.query === 'function') {
-            return pool;
-        }
+    // 2. Si es un wrapper propio del bot, intentar invocar su query interno
+    if (global.db && typeof global.db.query === 'function') {
+        return global.db;
     }
 
     return null;
@@ -66,92 +75,87 @@ export async function saveTreeSettings(userId, newSettings) {
     return saveSettings(settings);
 }
 
-// --- OPERACIONES EN BASE DE DATOS ---
+// --- OPERACIONES DE BASE DE DATOS ---
+
+async function executeQuery(sql, params = []) {
+    const db = await getDbPool();
+    if (!db) {
+        console.error("❌ [DB Query] No se pudo encontrar una conexión válida a PostgreSQL.");
+        return null;
+    }
+
+    try {
+        if (typeof db.query === 'function') {
+            return await db.query(sql, params);
+        } else if (typeof db.execute === 'function') {
+            return await db.execute(sql, params);
+        }
+    } catch (err) {
+        console.error("❌ Error ejecutando consulta SQL:", err.message);
+        return null;
+    }
+}
 
 async function ensureTable() {
-    const pool = await getDbPool();
-    if (!pool) return;
-    try {
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS family_relations (
-                id SERIAL PRIMARY KEY,
-                guild_id VARCHAR(64) NOT NULL,
-                u1 VARCHAR(64) NOT NULL,
-                u2 VARCHAR(64) NOT NULL,
-                type VARCHAR(32) NOT NULL,
-                created_at BIGINT NOT NULL
-            );
-        `);
-    } catch (err) {
-        console.error("❌ Error verificando/creando tabla family_relations:", err.message);
-    }
+    await executeQuery(`
+        CREATE TABLE IF NOT EXISTS family_relations (
+            id SERIAL PRIMARY KEY,
+            guild_id VARCHAR(64) NOT NULL,
+            u1 VARCHAR(64) NOT NULL,
+            u2 VARCHAR(64) NOT NULL,
+            type VARCHAR(32) NOT NULL,
+            created_at BIGINT NOT NULL
+        );
+    `);
 }
 
 export async function getGuildRelations(guildId) {
-    const pool = await getDbPool();
-    if (!pool) {
-        console.error("❌ [getGuildRelations] No hay conexión a PostgreSQL.");
-        return [];
-    }
-    try {
-        await ensureTable();
-        const res = await pool.query(
-            `SELECT u1, u2, type, created_at AS "createdAt" FROM family_relations WHERE guild_id = $1`,
-            [guildId]
-        );
-        return res.rows || [];
-    } catch (e) {
-        console.error("❌ Error consultando relaciones:", e.message);
-        return [];
-    }
+    await ensureTable();
+    const res = await executeQuery(
+        `SELECT u1, u2, type, created_at AS "createdAt" FROM family_relations WHERE guild_id = $1`,
+        [guildId]
+    );
+
+    if (!res) return [];
+    return res.rows || res[0] || [];
 }
 
 export async function addRelation(guildId, u1, u2, type) {
-    const pool = await getDbPool();
-    if (!pool) {
-        console.error("❌ [addRelation] No se pudo obtener el pool de PostgreSQL.");
-        return false;
-    }
+    await ensureTable();
+    
+    const relations = await getGuildRelations(guildId);
+    
+    const exists = relations.some(r => 
+        ((r.u1 === u1 && r.u2 === u2) || (r.u1 === u2 && r.u2 === u1)) &&
+        (r.type === type || (type === 'parent_child' && r.type === 'adoption'))
+    );
 
-    try {
-        await ensureTable();
-        const relations = await getGuildRelations(guildId);
-        
-        const exists = relations.some(r => 
-            ((r.u1 === u1 && r.u2 === u2) || (r.u1 === u2 && r.u2 === u1)) &&
-            (r.type === type || (type === 'parent_child' && r.type === 'adoption'))
+    if (!exists) {
+        const res = await executeQuery(
+            `INSERT INTO family_relations (guild_id, u1, u2, type, created_at) VALUES ($1, $2, $3, $4, $5)`,
+            [guildId, u1, u2, type, Date.now()]
         );
 
-        if (!exists) {
-            await pool.query(
-                `INSERT INTO family_relations (guild_id, u1, u2, type, created_at) VALUES ($1, $2, $3, $4, $5)`,
-                [guildId, u1, u2, type, Date.now()]
-            );
+        if (res) {
             console.log(`✅ [BD SUCCESS] Relación guardada: ${u1} -> ${u2} (${type})`);
+            return true;
         }
-        return true;
-    } catch (e) {
-        console.error("❌ Error al insertar relación en PostgreSQL:", e.message);
         return false;
     }
+
+    return true;
 }
 
 export async function removeRelation(guildId, u1, u2, type) {
-    const pool = await getDbPool();
-    if (!pool) return false;
-    try {
-        await pool.query(
-            `DELETE FROM family_relations 
-             WHERE guild_id = $1 
-             AND (type = $2 OR type = 'adoption' OR type = 'parent_child')
-             AND ((u1 = $3 AND u2 = $4) OR (u1 = $4 AND u2 = $3))`,
-            [guildId, type, u1, u2]
-        );
-        return true;
-    } catch (e) {
-        console.error("❌ Error borrando relación:", e.message);
-        return false;
-    }
+    await ensureTable();
+    const res = await executeQuery(
+        `DELETE FROM family_relations 
+         WHERE guild_id = $1 
+         AND (type = $2 OR type = 'adoption' OR type = 'parent_child')
+         AND ((u1 = $3 AND u2 = $4) OR (u1 = $4 AND u2 = $3))`,
+        [guildId, type, u1, u2]
+    );
+    return Boolean(res);
 }
 
 export async function getUserFamilyData(guildId, userId) {
