@@ -1,71 +1,86 @@
-import {
-    SlashCommandBuilder,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle
+import { 
+    SlashCommandBuilder, 
+    ActionRowBuilder, 
+    ButtonBuilder, 
+    ButtonStyle, 
+    EmbedBuilder 
 } from 'discord.js';
+import { createFamilyRequest } from '../../family/requests/familyRequests.js';
+import { getUserFamilyData } from '../../utils/families.js';
 
 export default {
-
     data: new SlashCommandBuilder()
-
         .setName('adopt')
-
-        .setDescription('Solicita adoptar a una persona.')
-
+        .setDescription('Envía una propuesta de adopción a un usuario.')
         .addUserOption(option =>
             option
-                .setName('persona')
-                .setDescription('Persona que quieres adoptar')
+                .setName('usuario')
+                .setDescription('El usuario al que deseas adoptar como hijo/a')
                 .setRequired(true)
         ),
 
     async execute(interaction) {
+        const targetUser = interaction.options.getUser('usuario');
+        const guildId = interaction.guild.id;
+        const sender = interaction.user;
 
-        const child =
-            interaction.options.getUser('persona');
-
-        if (child.id === interaction.user.id) {
-
+        if (targetUser.id === sender.id) {
             return interaction.reply({
-
-                content: '❌ No puedes adoptarte a ti mismo.',
-
+                content: '❌ No puedes adoptarte a ti mismo/a.',
                 ephemeral: true
-
             });
-
         }
 
-        const row =
-            new ActionRowBuilder()
-                .addComponents(
+        if (targetUser.bot) {
+            return interaction.reply({
+                content: '❌ No puedes adoptar a un bot.',
+                ephemeral: true
+            });
+        }
 
-                    new ButtonBuilder()
-                        .setCustomId(
-                            `accept_adoption_${interaction.user.id}_${child.id}`
-                        )
-                        .setLabel('Aceptar')
-                        .setStyle(ButtonStyle.Success),
+        const childFamily = await getUserFamilyData(guildId, targetUser.id);
 
-                    new ButtonBuilder()
-                        .setCustomId(
-                            `reject_adoption_${interaction.user.id}_${child.id}`
-                        )
-                        .setLabel('Rechazar')
-                        .setStyle(ButtonStyle.Danger)
+        // 🚫 LÍMITE: Si el usuario objetivo ya tiene padre/madre registrado, no puede ser adoptado por otra persona
+        if (childFamily.parents && childFamily.parents.length >= 1) {
+            return interaction.reply({
+                content: `❌ ${targetUser} ya tiene un padre/madre registrado y no puede ser adoptado/a por otra persona.`,
+                ephemeral: true
+            });
+        }
 
-                );
+        const requestId = `adopt_${Date.now()}_${sender.id}`;
 
-        await interaction.reply({
-
-            content:
-                `👶 ${interaction.user} quiere adoptarte.\n\n${child}, ¿aceptas?`,
-
-            components: [row]
-
+        await createFamilyRequest(guildId, {
+            id: requestId,
+            type: 'parent_child',
+            u1: sender.id,       // Padre adoptivo
+            u2: targetUser.id,   // Hijo a adoptar
+            createdBy: sender.id,
+            targetUser: targetUser.id
         });
 
-    }
+        const buttons = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(`accept_adoption:${requestId}`)
+                .setLabel('Aceptar')
+                .setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+                .setCustomId(`reject_adoption:${requestId}`)
+                .setLabel('Rechazar')
+                .setStyle(ButtonStyle.Danger)
+        );
 
+        const embed = new EmbedBuilder()
+            .setTitle('👶 Solicitud de Adopción')
+            .setDescription(`¡Hola ${targetUser}! ${sender} quiere **adoptarte** como su hijo/a.\n\n¿Aceptas ser adoptado/a?`)
+            .setColor('#5865F2')
+            .setFooter({ text: 'Responde a la solicitud usando los botones.' })
+            .setTimestamp();
+
+        return interaction.reply({
+            content: `${targetUser}`,
+            embeds: [embed],
+            components: [buttons]
+        });
+    }
 };
