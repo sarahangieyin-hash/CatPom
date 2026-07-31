@@ -1,19 +1,30 @@
-import { getFromDb, setInDb } from '../database/postgres.js'; 
+import { QuickDB } from 'quick.db';
+const db = new QuickDB();
 
 /**
  * Obtiene todas las relaciones de un servidor.
  */
 export async function getGuildRelations(guildId) {
-    const data = await getFromDb(`family_${guildId}_relations`);
-    return Array.isArray(data) ? data : [];
+    try {
+        const data = await db.get(`family_${guildId}_relations`);
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Error obteniendo relaciones familiares:', error);
+        return [];
+    }
 }
 
 /**
  * Guarda las relaciones de un servidor.
  */
 export async function saveGuildRelations(guildId, relations) {
-    await setInDb(`family_${guildId}_relations`, relations);
-    return true;
+    try {
+        await db.set(`family_${guildId}_relations`, relations);
+        return true;
+    } catch (error) {
+        console.error('Error guardando relaciones familiares:', error);
+        return false;
+    }
 }
 
 /**
@@ -79,7 +90,7 @@ export async function getUserFamilyData(guildId, userId) {
         }
     }
 
-    // Incluir automáticamente a los cónyuges de tus padres como tus padres/madrastras
+    // Incluir automáticamente a las parejas de tus padres como parte de tus padres
     const allParents = new Set(parents);
     for (const parentId of parents) {
         for (const rel of relations) {
