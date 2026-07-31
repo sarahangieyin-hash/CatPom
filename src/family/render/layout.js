@@ -1,6 +1,6 @@
 const NODE_WIDTH = 120;
 const NODE_HEIGHT = 46; 
-const HORIZONTAL_GAP = 60;
+const HORIZONTAL_GAP = 80; // Espacio holgado para que el anillo quepa perfecto
 const VERTICAL_GAP = 70;
 
 export async function calculateLayout(guild, family) {
@@ -53,7 +53,6 @@ export async function calculateLayout(guild, family) {
     for (const id of childIds) await addNode(id, 2);
 
     if (direction === 'TB') {
-        // Nivel 1: Usuario principal y su pareja(s) distribuidos horizontalmente desde el centro
         const partners = [...spouseIds, ...loverIds];
         const level1Nodes = [rootNode];
         
@@ -62,6 +61,7 @@ export async function calculateLayout(guild, family) {
             if (pNode && !level1Nodes.includes(pNode)) level1Nodes.push(pNode);
         }
 
+        // Distribuir el nivel 1 simétricamente alrededor del centro 0
         const totalL1Width = level1Nodes.length * NODE_WIDTH + (level1Nodes.length - 1) * HORIZONTAL_GAP;
         let startX = -totalL1Width / 2;
 
@@ -71,10 +71,9 @@ export async function calculateLayout(guild, family) {
             startX += NODE_WIDTH + HORIZONTAL_GAP;
         });
 
-        // Nivel 0: Padres
+        // Nivel 0: Si hay un solo padre, se alinea exactamente con el usuario principal (root)
         const level0Nodes = parentIds.map(id => nodesMap.get(id)).filter(Boolean);
         if (level0Nodes.length === 1) {
-            // Si hay un solo padre, se alinea exactamente con el eje X del usuario principal
             level0Nodes[0].x = rootNode.x;
             level0Nodes[0].y = -(NODE_HEIGHT + VERTICAL_GAP);
         } else if (level0Nodes.length > 0) {
@@ -87,7 +86,7 @@ export async function calculateLayout(guild, family) {
             });
         }
 
-        // Nivel 2: Hijos (centrados respecto al bloque familiar)
+        // Nivel 2: Hijos
         const level2Nodes = childIds.map(id => nodesMap.get(id)).filter(Boolean);
         if (level2Nodes.length > 0) {
             const totalL2Width = level2Nodes.length * NODE_WIDTH + (level2Nodes.length - 1) * HORIZONTAL_GAP;
@@ -100,7 +99,7 @@ export async function calculateLayout(guild, family) {
         }
     }
 
-    // Definir Conexiones
+    // Conexiones
     if (parentIds.length > 0) {
         if (parentIds.length === 1) {
             connections.push({
