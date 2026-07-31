@@ -1,157 +1,146 @@
+/**
+ * Configuración de espaciado compacto para el árbol familiar
+ */
+const NODE_WIDTH = 100;       // Ancho del cuadrado
+const NODE_HEIGHT = 100;      // Alto del cuadrado
+const HORIZONTAL_GAP = 40;    // Distancia lateral reducida entre hermanos y parejas
+const VERTICAL_GAP = 60;      // Distancia vertical reducida entre niveles (padres, hijos)
+
 export async function calculateLayout(guild, family) {
-    // Normalizador seguro para aceptar objetos {id: ...} o strings 'ID'
-    const normalize = (list) => {
-        if (!Array.isArray(list)) return [];
-        return list.map(item => typeof item === 'object' ? item : { id: item }).filter(item => item && item.id);
+    const rootId = family.userId || family.targetUser;
+
+    // Función auxiliar para obtener datos del usuario de Discord
+    const fetchUser = async (id) => {
+        try {
+            const member = await guild.members.fetch(id).catch(() => null);
+            if (member) {
+                return {
+                    id,
+                    name: member.displayName || member.user.username,
+                    avatar: member.user.displayAvatarURL({ extension: 'png', size: 128 })
+                };
+            }
+        } catch (e) {}
+        return { id, name: `User ${id.slice(-4)}`, avatar: null };
     };
 
-    // Sincronizar 'members' con 'spouses' por compatibilidad de nombres
-    const rawMembers = family.members || family.spouses || [];
-    const spousesList = Array.isArray(rawMembers) ? rawMembers : [];
-    
-    // Identificar el usuario principal
-    const targetUserId = family.targetUser || family.userId || family.id || family.rootUser?.id;
-    
-    // 🔧 FIX: Garantizar que el usuario principal (tú) SIEMPRE esté en la lista de miembros
-    const spouseIds = spousesList.map(m => typeof m === 'object' ? m.id : m);
-    let members = [];
+    const nodesMap = new Map();
+    const connections = [];
 
-    if (targetUserId) {
-        members.push(targetUserId);
-    }
-
-    // Añadimos las parejas evitando duplicados
-    for (const spouseId of spouseIds) {
-        if (spouseId && !members.includes(spouseId)) {
-            members.push(spouseId);
-        }
-    }
-
-    const children = normalize(family.children);
-    const parents = normalize(family.parents);
-    const siblings = normalize(family.siblings);
-    const lovers = normalize(family.lovers);
-
-    const nodes = [];
-
-    const memberSpacing = Math.max(
-        180,
-        Math.min(320, 180 + members.length * 35)
-    );
-
-    const childSpacing = Math.max(
-        160,
-        Math.min(280, 160 + children.length * 25)
-    );
-
-    const parentSpacing = Math.max(
-        180,
-        Math.min(300, 180 + parents.length * 25)
-    );
-
-    const centerY = 0; // Se usará como origen relativo para el centrado final
-
-    /*
-        MIEMBROS PRINCIPALES 💍 (Tú + Pareja)
-    */
-    members.forEach((id, index) => {
-        nodes.push({
-            id,
-            type: 'member',
-            x: (index - (members.length - 1) / 2) * memberSpacing,
-            y: centerY
-        });
-    });
-
-    /*
-        UNIONES 💍
-    */
-    if (members.length >= 2) {
-        for (let i = 0; i < members.length - 1; i++) {
-            const left = nodes[i];
-            const right = nodes[i + 1];
-
-            nodes.push({
-                type: 'union',
-                x: (left.x + right.x) / 2,
-                y: centerY
+    const addNode = async (id, level, isRoot = false) => {
+        if (!nodesMap.has(id)) {
+            const userData = await fetchUser(id);
+            nodesMap.set(id, {
+                ...userData,
+                level,
+                isRoot,
+                x: 0,
+                y: 0
             });
         }
+        return nodesMap.get(id);
+    };
+
+    // 1. Asignar niveles jerárquicos:
+    // Nivel 0 = Padres | Nivel 1 = Usuario, Parejas, Hermanos | Nivel 2 = Hijos
+    const rootNode = await addNode(rootId, 1, true);
+
+    const parentIds = family.parents || [];
+    const spouseIds = family.spouses || [];
+    const loverIds = family.lovers || [];
+    const siblingIds = family.siblings || [];
+    const childIds = family.children || [];
+
+    for (const id of parentIds) await addNode(id, 0);
+    for (const id of siblingIds) await addNode(id, 1);
+    for (const id of spouseIds) await addNode(id, 1);
+    for (const id of loverIds) await addNode(id, 1);
+    for (const id of childIds) await addNode(id, 2);
+
+    // 2. Agrupar por filas/niveles
+    const levels = { 0: [], 1: [], 2: [] };
+    for (const node of nodesMap.values()) {
+        if (!levels[node.level]) levels[node.level] = [];
+        levels[node.level].push(node);
     }
 
-    /*
-        HIJOS 👶
-    */
-    const individualChildren = children.filter(child => child.parent);
-    const sharedChildren = children.filter(child => !child.parent);
+    // 3. Calcular posiciones X e Y compactas
+    const levelKeys = Object.keys(levels).map(Number).sort((a, b) => a - b);
 
-    individualChildren.forEach((child, index) => {
-        const parentNode = nodes.find(
-            node => node.type === 'member' && node.id === child.parent
-        );
+    levelKeys.forEach((level) => {
+        const rowNodes = levels[level];
+        const rowCount = rowNodes.length;
 
-        if (parentNode) {
-            nodes.push({
-                id: child.id,
-                type: 'child',
-                parent: child.parent,
-                x: parentNode.x + index * 140,
-                y: centerY + 280
+        if (rowCount === 0) return;
+
+        const totalRowWidth = rowCount * NODE_WIDTH + (rowCount - 1) * HORIZONTAL_GAP;
+        const startX = -totalRowWidth / 2 + NODE_WIDTH / 2;
+        const yPos = level * (NODE_HEIGHT + VERTICAL_GAP);
+
+        rowNodes.forEach((node, idx) => {
+            node.x = startX + idx * (NODE_WIDTH + HORIZONTAL_GAP);
+            node.y = yPos;
+        });
+    });
+
+    // 4. Construir conexiones (Líneas cortas entre las cajas)
+    
+    // Padres -> Usuario principal y Hermanos
+    if (parentIds.length > 0) {
+        parentIds.forEach(pId => {
+            const pNode = nodesMap.get(pId);
+            if (pNode) {
+                // Línea Padre -> Usuario
+                connections.push({
+                    from: { x: pNode.x, y: pNode.y + NODE_HEIGHT / 2 },
+                    to: { x: rootNode.x, y: rootNode.y - NODE_HEIGHT / 2 }
+                });
+
+                // Línea Padre -> Hermanos
+                siblingIds.forEach(sId => {
+                    const sNode = nodesMap.get(sId);
+                    if (sNode) {
+                        connections.push({
+                            from: { x: pNode.x, y: pNode.y + NODE_HEIGHT / 2 },
+                            to: { x: sNode.x, y: sNode.y - NODE_HEIGHT / 2 }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // Usuario principal <-> Cónyuges / Amantes
+    [...spouseIds, ...loverIds].forEach(sId => {
+        const sNode = nodesMap.get(sId);
+        if (sNode) {
+            connections.push({
+                from: { 
+                    x: rootNode.x + (sNode.x > rootNode.x ? NODE_WIDTH / 2 : -NODE_WIDTH / 2), 
+                    y: rootNode.y 
+                },
+                to: { 
+                    x: sNode.x + (sNode.x > rootNode.x ? -NODE_WIDTH / 2 : NODE_WIDTH / 2), 
+                    y: sNode.y 
+                }
             });
         }
     });
 
-    sharedChildren.forEach((child, index) => {
-        nodes.push({
-            id: child.id,
-            type: 'child',
-            x: (index - (sharedChildren.length - 1) / 2) * childSpacing,
-            y: centerY + 280
-        });
+    // Usuario principal -> Hijos
+    childIds.forEach(cId => {
+        const cNode = nodesMap.get(cId);
+        if (cNode) {
+            connections.push({
+                from: { x: rootNode.x, y: rootNode.y + NODE_HEIGHT / 2 },
+                to: { x: cNode.x, y: cNode.y - NODE_HEIGHT / 2 }
+            });
+        }
     });
-
-    /*
-        PADRES 👨‍👩‍👧
-    */
-    parents.forEach((parent, index) => {
-        nodes.push({
-            id: parent.id,
-            type: 'parent',
-            x: (index - (parents.length - 1) / 2) * parentSpacing,
-            y: centerY - 240
-        });
-    });
-
-    /*
-        HERMANOS 👥
-    */
-    siblings.forEach((sibling, index) => {
-        nodes.push({
-            id: sibling.id,
-            type: 'sibling',
-            x: -260 - index * 180,
-            y: centerY
-        });
-    });
-
-    // 🛡️ GARANTÍA ANTI-CRASH: Si la estructura aún no tiene ningún nodo, agregamos 1 por defecto
-    if (nodes.length === 0 && targetUserId) {
-        nodes.push({
-            id: targetUserId,
-            type: 'member',
-            x: 0,
-            y: centerY
-        });
-    }
 
     return {
-        guild,
-        nodes,
-        members,
-        children,
-        parents,
-        siblings,
-        lovers,
-        targetUserId
+        nodes: Array.from(nodesMap.values()),
+        connections,
+        family
     };
 }
