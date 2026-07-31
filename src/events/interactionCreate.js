@@ -28,18 +28,11 @@ export default {
                 let customId = interaction.customId;
                 let args = [];
 
-                /*
-                    IDs CON :
-                */
                 if (customId.includes(":")) {
                     const parts = customId.split(":");
                     customId = parts[0];
                     args = parts.slice(1);
                 }
-                /*
-                    IDs CON _
-                    Ej: accept_adoption_PARENT_CHILD
-                */
                 else if (customId.startsWith("accept_adoption_")) {
                     const parts = customId.split("_");
                     customId = "accept_adoption";
@@ -47,14 +40,14 @@ export default {
                 }
 
                 console.log(
-                    "BOTON:",
+                    "🔘 BOTÓN PRESIONADO:",
                     interaction.customId,
-                    "BUSCANDO:",
+                    "-> BUSCANDO:",
                     customId,
                     args
                 );
 
-                // 🎯 MANEJO DIRECTO DE ADOPCIONES (Garantiza guardado en BD)
+                // 🎯 MANEJO DIRECTO DE ADOPCIONES CON DIAGNÓSTICO
                 if (customId === 'accept_adopt' || customId === 'accept_adoption') {
                     const [parentId, childId] = args;
 
@@ -65,8 +58,19 @@ export default {
                         });
                     }
 
+                    console.log(`⏳ Intentando guardar en BD -> Servidor: ${interaction.guild.id} | Padre: ${parentId} | Hijo: ${childId}`);
+                    
                     // Guardar en la Base de Datos PostgreSQL
-                    await addRelation(interaction.guild.id, parentId, childId, 'parent_child');
+                    const success = await addRelation(interaction.guild.id, parentId, childId, 'parent_child');
+                    
+                    console.log(`📌 ¿SE GUARDÓ EN LA BASE DE DATOS?: ${success ? '✅ SÍ' : '❌ NO'}`);
+
+                    if (!success) {
+                        return interaction.reply({
+                            content: '⚠️ Hubo un problema al conectar con la Base de Datos para guardar la adopción.',
+                            ephemeral: true
+                        });
+                    }
 
                     const successEmbed = new EmbedBuilder()
                         .setTitle('👶 ¡Adopción Completada!')
@@ -102,11 +106,10 @@ export default {
                     });
                 }
 
-                // Buscar en la colección registrada en el cliente si no es de adopción
                 const button = client.buttons?.get(customId);
 
                 if (!button) {
-                    console.log("BOTON NO ENCONTRADO:", customId);
+                    console.log("⚠️ BOTÓN NO ENCONTRADO EN CLIENT.BUTTONS:", customId);
                     return;
                 }
 
@@ -115,7 +118,7 @@ export default {
             }
 
             /*
-                MENUS
+                MENÚS
             */
             if (interaction.isStringSelectMenu()) {
                 const [customId, ...args] = interaction.customId.split(":");
