@@ -1,3 +1,5 @@
+import { fonts } from './fonts.js';
+
 export async function drawNodes(ctx, layout) {
     const { nodes, settings } = layout;
     const nodeWidth = 120;
@@ -12,15 +14,14 @@ export async function drawNodes(ctx, layout) {
 
         const isRoot = node.isRoot || node.id === layout.family?.userId;
 
-        // Colores
         const bgColor = isRoot 
             ? (settings.userBg || '#1d4ed8') 
-            : (settings.nodeBg || '#222222');
+            : (settings.nodeBg || '#111111');
 
         const textColor = '#ffffff';
-        const lineColor = settings.lines || '#000000';
+        const lineColor = settings.lines || '#ffffff';
 
-        // 1. Dibujar el recuadro del nodo
+        // 1. Dibujar la tarjeta redondeada
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
@@ -42,33 +43,26 @@ export async function drawNodes(ctx, layout) {
         ctx.stroke();
         ctx.restore();
 
-        // 2. Obtener y preparar el texto
-        let rawName = node.name || node.username || '';
-        
-        // Si el nombre contiene solo emojis o caracteres invisibles que rompen Canvas
-        if (!rawName || rawName.trim().length === 0) {
-            rawName = `User ${String(node.id || '').slice(-4)}`;
-        }
-
-        const displayName = rawName.length > 12 
-            ? rawName.substring(0, 10) + '...' 
-            : rawName;
-
-        // 3. Renderizado multi-capa del texto para visibilidad máxima
+        // 2. Dibujar el texto limpio
         ctx.save();
-        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = textColor;
+        ctx.font = fonts.name || 'bold 13px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Trazo exterior negro por si el fondo y la letra se confunden
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 3;
-        ctx.strokeText(displayName, node.x, node.y);
+        // Obtener el nombre y eliminar caracteres/emojis no soportados por el Canvas del servidor
+        let rawName = node.name || node.username || '';
+        let cleanName = rawName.replace(/[^\x20-\x7E\xA0-\xFF]/g, '').trim();
 
-        // Relleno blanco
-        ctx.fillStyle = textColor;
+        if (!cleanName) {
+            cleanName = `User ${String(node.id || '').slice(-4)}`;
+        }
+
+        const displayName = cleanName.length > 12 
+            ? cleanName.substring(0, 10) + '...' 
+            : cleanName;
+
         ctx.fillText(displayName, node.x, node.y);
-
         ctx.restore();
     }
 }
