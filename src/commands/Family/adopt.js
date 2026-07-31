@@ -1,87 +1,98 @@
-import { 
-    SlashCommandBuilder, 
-    ActionRowBuilder, 
-    ButtonBuilder, 
-    ButtonStyle, 
-    EmbedBuilder,
-    MessageFlags 
-} from 'discord.js';
-import { createFamilyRequest } from '../../family/requests/familyRequests.js';
-import { getUserFamilyData } from '../../utils/families.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { addRelation } from '../../utils/families.js';
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName('adopt')
-        .setDescription('Envía una propuesta de adopción a un usuario.')
-        .addUserOption(option =>
-            option
-                .setName('usuario')
-                .setDescription('El usuario al que deseas adoptar como hijo/a')
-                .setRequired(true)
-        ),
+    name: 'adopt',
+    description: 'Adopta a un usuario para añadirlo como hijo/a.',
 
     async execute(interaction) {
-        const targetUser = interaction.options.getUser('usuario');
-        const guildId = interaction.guild.id;
-        const sender = interaction.user;
+        // Si la interacción es la ejecución del comando inicial /adopt
+        if (interaction.isChatInputCommand?.() || interaction.isCommand?.()) {
+            const target = interaction.options.getUser('usuario');
 
-        if (targetUser.id === sender.id) {
-            return interaction.reply({
-                content: '❌ No puedes adoptarte a ti mismo/a.',
-                flags: MessageFlags.Ephemeral
-            });
+            if (!target) {
+                return interaction.reply({ content: '❌ Debes mencionar a un usuario para adoptarlo.', ephemeral: true });
+            }
+
+            if (target.id === interaction.user.id) {
+                return interaction.reply({ content: '❌ No puedes adoptarte a ti mismo.', ephemeral: true });
+            }
+
+            if (target.bot) {
+                return interaction.reply({ content: '❌ No puedes adoptar a un bot.', ephemeral: true });
+            }
+
+            const embed = new EmbedBuilder()
+                .setTitle('👶 Solicitud de Adopción')
+                .setDescription(`¡Hola ${target}! ${interaction.user} quiere **adoptarte** como su hijo/a.\n\n¿Aceptas ser adoptado/a?`)
+                .setColor('#3b82f6')
+                .setFooter({ text: 'Responde a la solicitud usando los botones.' })
+                .setTimestamp();
+
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`accept_adopt:${interaction.user.id}:${target.id}`)
+                    .setLabel('Aceptar')
+                    .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
+                    .setCustomId(`deny_adopt:${interaction.user.id}:${target.id}`)
+                    .setLabel('Rechazar')
+                    .setStyle(ButtonStyle.Danger)
+            );
+
+            return interaction.reply({ embeds: [embed], components: [row] });
         }
 
-        if (targetUser.bot) {
-            return interaction.reply({
-                content: '❌ No puedes adoptar a un bot.',
-                flags: MessageFlags.Ephemeral
-            });
+        // Si la interacción viene de un BOTÓN (accept_adopt)
+        if (interaction.isButton?.()) {
+            const [action, parentId, childId] = interaction.customId.split(':');
+
+            if (action === 'accept_adopt') {
+                // Verificar que solo el usuario adoptado pueda responder
+                if (interaction.user.id !== childId) {
+                    return interaction.reply({
+                        content: '❌ Esta solicitud de adopción no es para ti.',
+                        ephemeral: true
+                    });
+                }
+
+                // 🎯 1. GUARDAR EN LA BASE DE DATOS CORRECTAMENTE
+                // addRelation(guildId, u1=Padre, u2=Hijo, type)
+                await addRelation(interaction.guild.id, parentId, childId, 'parent_child');
+
+                // 🎯 2. CREAR EMBED DE ÉXITO LIMPIO (Reemplaza al anterior)
+                const successEmbed = new EmbedBuilder()
+                    .setTitle('👶 ¡Adopción Completada!')
+                    .setDescription(`¡Felicidades! <@${childId}> ha sido adoptado/a oficialmente por <@${parentId}>.`)
+                    .setColor('#22c55e')
+                    .setTimestamp();
+
+                // Actualizamos el mensaje original eliminando los botones y reemplazando el embed viejo
+                return interaction.update({
+                    embeds: [successEmbed],
+                    components: []
+                });
+            }
+
+            if (action === 'deny_adopt') {
+                if (interaction.user.id !== childId) {
+                    return interaction.reply({
+                        content: '❌ Esta solicitud de adopción no es para ti.',
+                        ephemeral: true
+                    });
+                }
+
+                const denyEmbed = new EmbedBuilder()
+                    .setTitle('❌ Adopción Rechazada')
+                    .setDescription(`<@${childId}> ha rechazado la propuesta de adopción de <@${parentId}>.`)
+                    .setColor('#ef4444')
+                    .setTimestamp();
+
+                return interaction.update({
+                    embeds: [denyEmbed],
+                    components: []
+                });
+            }
         }
-
-        const childFamily = await getUserFamilyData(guildId, targetUser.id);
-
-        // 🚫 LÍMITE: Si el usuario objetivo ya tiene padre/madre registrado, no puede ser adoptado por otra persona
-        if (childFamily.parents && childFamily.parents.length >= 1) {
-            return interaction.reply({
-                content: `❌ ${targetUser} ya tiene un padre/madre registrado y no puede ser adoptado/a por otra persona.`,
-                flags: MessageFlags.Ephemeral
-            });
-        }
-
-        const requestId = `adopt_${Date.now()}_${sender.id}`;
-
-        // 🛠️ CORREGIDO: Se pasa requestId directamente como 2º parámetro (String), evitando que se guarde [object Object]
-        await createFamilyRequest(guildId, requestId, {
-            type: 'parent_child',
-            u1: sender.id,       // Padre adoptivo
-            u2: targetUser.id,   // Hijo a adoptar
-            createdBy: sender.id,
-            targetUser: targetUser.id
-        });
-
-        const buttons = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId(`accept_adoption:${requestId}`)
-                .setLabel('Aceptar')
-                .setStyle(ButtonStyle.Success),
-            new ButtonBuilder()
-                .setCustomId(`reject_adoption:${requestId}`)
-                .setLabel('Rechazar')
-                .setStyle(ButtonStyle.Danger)
-        );
-
-        const embed = new EmbedBuilder()
-            .setTitle('👶 Solicitud de Adopción')
-            .setDescription(`¡Hola ${targetUser}! ${sender} quiere **adoptarte** como su hijo/a.\n\n¿Aceptas ser adoptado/a?`)
-            .setColor('#5865F2')
-            .setFooter({ text: 'Responde a la solicitud usando los botones.' })
-            .setTimestamp();
-
-        return interaction.reply({
-            content: `${targetUser}`,
-            embeds: [embed],
-            components: [buttons]
-        });
     }
 };
