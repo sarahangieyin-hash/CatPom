@@ -63,19 +63,23 @@ export async function drawLines(ctx, layout) {
 
             const barStartX = leftMost.x + NODE_WIDTH / 2;
             const barEndX = rightMost.x + NODE_WIDTH / 2;
-            const barY = leftMost.y + NODE_HEIGHT + 25; // Línea horizontal inferior (la barra de hijos)
-            const parentBottomY = leftMost.y + NODE_HEIGHT;
+            
+            // Ubicación perfecta de la barra horizontal justo a mitad de altura entre el nivel 1 y el nivel 2
+            const level1Y = leftMost.y + NODE_HEIGHT;
+            const level2Y = children && children.length > 0 ? children[0].y : (level1Y + 90);
+            const barY = (level1Y + level2Y) / 2;
+            
             const rootCenterX = nodes.find(n => n.isRoot).x + NODE_WIDTH / 2;
 
-            // 1. Línea vertical desde el bloque central de padres hacia la barra horizontal inferior
-            ctx.moveTo(rootCenterX, parentBottomY);
+            // 1. Línea vertical desde ti (centro) hasta la barra horizontal inferior
+            ctx.moveTo(rootCenterX, level1Y);
             ctx.lineTo(rootCenterX, barY);
 
-            // 2. Barra horizontal de lado a lado (como dibujaste en rojo)
+            // 2. Barra horizontal de extremo a extremo cubriendo a todas las parejas
             ctx.moveTo(barStartX, barY);
             ctx.lineTo(barEndX, barY);
 
-            // 3. Si hay hijos, baja líneas desde la barra horizontal hasta cada hijo
+            // 3. Líneas verticales que bajan desde la barra hacia cada hijo existente
             if (children && children.length > 0) {
                 for (const child of children) {
                     const childCenterX = child.x + NODE_WIDTH / 2;
