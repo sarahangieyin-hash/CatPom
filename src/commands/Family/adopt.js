@@ -3,7 +3,8 @@ import {
     ActionRowBuilder, 
     ButtonBuilder, 
     ButtonStyle, 
-    EmbedBuilder 
+    EmbedBuilder,
+    MessageFlags 
 } from 'discord.js';
 import { createFamilyRequest } from '../../family/requests/familyRequests.js';
 import { getUserFamilyData } from '../../utils/families.js';
@@ -27,14 +28,14 @@ export default {
         if (targetUser.id === sender.id) {
             return interaction.reply({
                 content: '❌ No puedes adoptarte a ti mismo/a.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (targetUser.bot) {
             return interaction.reply({
                 content: '❌ No puedes adoptar a un bot.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -44,14 +45,14 @@ export default {
         if (childFamily.parents && childFamily.parents.length >= 1) {
             return interaction.reply({
                 content: `❌ ${targetUser} ya tiene un padre/madre registrado y no puede ser adoptado/a por otra persona.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         const requestId = `adopt_${Date.now()}_${sender.id}`;
 
-        await createFamilyRequest(guildId, {
-            id: requestId,
+        // 🛠️ CORREGIDO: Se pasa requestId directamente como 2º parámetro (String), evitando que se guarde [object Object]
+        await createFamilyRequest(guildId, requestId, {
             type: 'parent_child',
             u1: sender.id,       // Padre adoptivo
             u2: targetUser.id,   // Hijo a adoptar
