@@ -21,7 +21,7 @@ export async function drawNodes(ctx, layout) {
         const textColor = '#ffffff';
         const lineColor = settings.lines || '#ffffff';
 
-        // 1. Dibujar el recuadro del nodo
+        // 1. Dibujar recuadro de la tarjeta
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
@@ -43,17 +43,17 @@ export async function drawNodes(ctx, layout) {
         ctx.stroke();
         ctx.restore();
 
-        // 2. Dibujar el texto usando la fuente DejaVuSans
+        // 2. Renderizar el texto usando la fuente DejaVuSans
         ctx.save();
         ctx.fillStyle = textColor;
-        ctx.font = fonts.name || 'bold 13px "DejaVuSans", sans-serif';
+        ctx.font = fonts.name || 'bold 13px "DejaVuSans"';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const name = String(node.name || node.username || `User ${String(node.id || '').slice(-4)}`);
-        const truncatedName = name.length > 12 ? name.substring(0, 10) + '...' : name;
+        const rawName = node.name || node.username || `User ${String(node.id || '').slice(-4)}`;
+        const displayName = rawName.length > 12 ? rawName.substring(0, 10) + '...' : rawName;
 
-        ctx.fillText(truncatedName, node.x, node.y);
+        ctx.fillText(displayName, node.x, node.y);
         ctx.restore();
     }
 }
