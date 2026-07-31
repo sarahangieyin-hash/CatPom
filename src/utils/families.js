@@ -2,45 +2,42 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// 🎯 ACCESO Y EXTRACCIÓN PROFUNDA DEL POOL/CLIENTE EN global.db O global.pgPool
+// 🎯 EXTRACTOR MULTI-CAPA PARA global.db
 async function getDbPool() {
-    // Lista de candidatos donde la aplicación almacena la DB
-    const roots = [global.db, global.pgPool];
+    const candidates = [
+        global.db,
+        global.pgPool,
+        global.db?.db,
+        global.db?.pool,
+        global.db?.client,
+        global.db?.connection,
+        global.db?.pg
+    ];
 
-    for (const root of roots) {
-        if (!root) continue;
+    for (const cand of candidates) {
+        if (!cand) continue;
 
-        // 1. Si la raíz misma tiene el método de consulta SQL
-        if (typeof root.query === 'function' || typeof root.execute === 'function') {
-            return root;
-        }
+        // 1. Método directo de consulta
+        if (typeof cand.query === 'function') return { instance: cand, method: 'query' };
+        if (typeof cand.execute === 'function') return { instance: cand, method: 'execute' };
+        if (typeof cand.run === 'function') return { instance: cand, method: 'run' };
+        if (typeof cand.sql === 'function') return { instance: cand, method: 'sql' };
 
-        // 2. Buscar en Subpropiedades típicas de adaptadores/ORMs (db, pool, client, connection)
-        const subKeys = ['db', 'pool', 'client', 'connection', 'postgres', 'pg'];
-        for (const key of subKeys) {
-            const sub = root[key];
-            if (sub) {
-                if (typeof sub.query === 'function' || typeof sub.execute === 'function') {
-                    return sub;
-                }
-                // Nivel extra de anidación (ej. global.db.db.pool)
-                if (sub.pool && typeof sub.pool.query === 'function') return sub.pool;
-                if (sub.client && typeof sub.client.query === 'function') return sub.client;
-            }
-        }
+        // 2. Subpropiedad pool/client/db dentro del candidato
+        if (cand.pool && typeof cand.pool.query === 'function') return { instance: cand.pool, method: 'query' };
+        if (cand.client && typeof cand.client.query === 'function') return { instance: cand.client, method: 'query' };
+        if (cand.db && typeof cand.db.query === 'function') return { instance: cand.db, method: 'query' };
     }
 
-    // 3. Fallback: Inspección profunda de todas las llaves de global.db
-    if (global.db && typeof global.db === 'object') {
-        for (const key of Object.keys(global.db)) {
-            const val = global.db[key];
-            if (val && typeof val.query === 'function') {
-                return val;
-            }
-        }
+    // 3. Si llega aquí, inspeccionamos qué métodos tiene global.db para dar con el correcto
+    if (global.db) {
+        const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(global.db))
+            .concat(Object.keys(global.db))
+            .filter(k => typeof global.db[k] === 'function');
+
+        console.error("🔍 [DB DIAGNÓSTICO] Métodos disponibles en global.db:", methods);
     }
 
-    console.error("❌ [DB Error] Se encontró global.db pero no contenía un método .query() reconocido.");
     return null;
 }
 
@@ -93,18 +90,15 @@ export async function saveTreeSettings(userId, newSettings) {
 // --- OPERACIONES DE BASE DE DATOS ---
 
 async function executeQuery(sql, params = []) {
-    const db = await getDbPool();
-    if (!db) {
-        console.error("❌ [DB Query] No se pudo encontrar una conexión válida a PostgreSQL.");
+    const target = await getDbPool();
+    if (!target) {
+        console.error("❌ [DB Query] No se pudo obtener una instancia válida de PostgreSQL.");
         return null;
     }
 
     try {
-        if (typeof db.query === 'function') {
-            return await db.query(sql, params);
-        } else if (typeof db.execute === 'function') {
-            return await db.execute(sql, params);
-        }
+        const { instance, method } = target;
+        return await instance[method](sql, params);
     } catch (err) {
         console.error("❌ Error ejecutando consulta SQL:", err.message);
         return null;
@@ -132,7 +126,7 @@ export async function getGuildRelations(guildId) {
     );
 
     if (!res) return [];
-    return res.rows || res[0] || [];
+    return res.rows || res[0] || res || [];
 }
 
 export async function addRelation(guildId, u1, u2, type) {
@@ -152,7 +146,7 @@ export async function addRelation(guildId, u1, u2, type) {
         );
 
         if (res) {
-            console.log(`✅ [BD SUCCESS] Relación guardada: ${u1} -> ${u2} (${type})`);
+            console.log(`✅ [BD SUCCESS] Relación guardada exitosamente: ${u1} -> ${u2} (${type})`);
             return true;
         }
         return false;
