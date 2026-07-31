@@ -2,15 +2,13 @@ import { fonts } from './fonts.js';
 
 export async function drawNodes(ctx, layout) {
     const { nodes, settings } = layout;
-    const nodeWidth = 120;
-    const nodeHeight = 46;
+    const minWidth = 100;    // Ancho mínimo para que no queden micro-tarjetas en nombres muy cortos
+    const nodeHeight = 46;   // El alto se mantiene fijo
+    const paddingX = 24;     // Margen interno horizontal (espacio a los lados del texto)
     const radius = 10;
 
     for (const node of nodes) {
         if (node.type === 'union' || node.hidden) continue;
-
-        const x = node.x - nodeWidth / 2;
-        const y = node.y - nodeHeight / 2;
 
         const isRoot = node.isRoot || node.id === layout.family?.userId;
 
@@ -21,8 +19,21 @@ export async function drawNodes(ctx, layout) {
         const textColor = '#ffffff';
         const lineColor = settings.lines || '#ffffff';
 
-        // 1. Dibujar recuadro de la tarjeta
+        const name = String(node.name || node.username || `User ${String(node.id || '').slice(-4)}`);
+
+        // 1. Configurar la fuente primero para medir con precisión
         ctx.save();
+        ctx.font = fonts.name || 'bold 13px "DejaVuSans"';
+
+        // 2. Calcular el ancho dinámico según el texto
+        const textMetrics = ctx.measureText(name);
+        const calculatedWidth = textMetrics.width + paddingX;
+        const nodeWidth = Math.max(minWidth, calculatedWidth); // Se expande horizontalmente si el nombre es largo
+
+        const x = node.x - nodeWidth / 2;
+        const y = node.y - nodeHeight / 2;
+
+        // 3. Dibujar recuadro de la tarjeta con el nuevo ancho
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
         ctx.lineTo(x + nodeWidth - radius, y);
@@ -41,19 +52,13 @@ export async function drawNodes(ctx, layout) {
         ctx.strokeStyle = lineColor;
         ctx.lineWidth = 2;
         ctx.stroke();
-        ctx.restore();
 
-        // 2. Renderizar el texto usando la fuente DejaVuSans
-        ctx.save();
+        // 4. Renderizar el texto completo centrado
         ctx.fillStyle = textColor;
-        ctx.font = fonts.name || 'bold 13px "DejaVuSans"';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        ctx.fillText(name, node.x, node.y);
 
-        const rawName = node.name || node.username || `User ${String(node.id || '').slice(-4)}`;
-        const displayName = rawName.length > 12 ? rawName.substring(0, 10) + '...' : rawName;
-
-        ctx.fillText(displayName, node.x, node.y);
         ctx.restore();
     }
 }
