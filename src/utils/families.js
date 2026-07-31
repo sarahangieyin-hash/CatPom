@@ -2,6 +2,15 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Intentar importar el cliente de base de datos Postgres de tu bot
+let db = null;
+try {
+    const dbModule = await import('../database/index.js'); // O la ruta de tu conexión
+    db = dbModule.default || dbModule.db || dbModule;
+} catch (e) {
+    // Si la ruta difiere, usará fallback local
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -42,11 +51,11 @@ export const DEFAULT_TREE_SETTINGS = {
     nodeText: '#ffffff',    // Color texto cajas normales
     lines: '#000000',       // Color de las líneas de unión
     background: '#ffffff', // Color de fondo del árbol
-    direction: 'TB'        // TB = Top-Bottom (Arriba a Abajo), LR = Left-Right (Izquierda a Derecha)
+    direction: 'TB'        // TB = Top-Bottom, LR = Left-Right
 };
 
 /**
- * Obtener la configuración visual del árbol para un usuario o servidor
+ * Obtener la configuración visual del árbol
  */
 export async function getTreeSettings(userId) {
     const settings = loadStorage(settingsPath);
@@ -63,21 +72,29 @@ export async function saveTreeSettings(userId, newSettings) {
 }
 
 /**
- * Relaciones Familiares
+ * Obtiene todas las relaciones de un servidor.
  */
 export async function getGuildRelations(guildId) {
     const store = loadStorage(filePath);
     return store[guildId] || [];
 }
 
+/**
+ * Guarda las relaciones de un servidor.
+ */
 export async function saveGuildRelations(guildId, relations) {
     const store = loadStorage(filePath);
     store[guildId] = relations;
     return saveStorage(filePath, store);
 }
 
+/**
+ * Añade una nueva relación entre dos usuarios.
+ */
 export async function addRelation(guildId, u1, u2, type) {
     const relations = await getGuildRelations(guildId);
+    
+    // Evitar duplicados
     const exists = relations.some(r => 
         r.type === type && 
         ((r.u1 === u1 && r.u2 === u2) || (r.u1 === u2 && r.u2 === u1))
@@ -90,17 +107,25 @@ export async function addRelation(guildId, u1, u2, type) {
     return true;
 }
 
+/**
+ * Elimina una relación específica entre dos usuarios.
+ */
 export async function removeRelation(guildId, u1, u2, type) {
     let relations = await getGuildRelations(guildId);
+    
     relations = relations.filter(rel => {
         const isTargetType = rel.type === type || (type === 'parent_child' && rel.type === 'adoption');
-        const isMatch = (rel.u1 === u1 && rel.u2 === u2) || (rel.u1 === u2 && rel.u1 === u1);
+        const isMatch = (rel.u1 === u1 && rel.u2 === u2) || (rel.u1 === u2 && rel.u2 === u1);
         return !(isTargetType && isMatch);
     });
+
     await saveGuildRelations(guildId, relations);
     return true;
 }
 
+/**
+ * Obtiene la información familiar consolidada de un usuario.
+ */
 export async function getUserFamilyData(guildId, userId) {
     const relations = await getGuildRelations(guildId);
     
@@ -111,27 +136,38 @@ export async function getUserFamilyData(guildId, userId) {
     let lovers = [];
 
     for (const rel of relations) {
+        // Matrimonio / Pareja
         if (rel.type === 'marriage') {
             if (rel.u1 === userId) spouses.push(rel.u2);
             else if (rel.u2 === userId) spouses.push(rel.u1);
-        } else if (rel.type === 'parent_child' || rel.type === 'adoption') {
+        } 
+        // Hijos (Acepta tanto 'parent_child' como 'adoption')
+        else if (rel.type === 'parent_child' || rel.type === 'adoption') {
             if (rel.u2 === userId) parents.push(rel.u1);
             if (rel.u1 === userId) children.push(rel.u2);
-        } else if (rel.type === 'sibling') {
+        } 
+        // Hermanos
+        else if (rel.type === 'sibling') {
             if (rel.u1 === userId) siblings.push(rel.u2);
             else if (rel.u2 === userId) siblings.push(rel.u1);
-        } else if (rel.type === 'lover') {
+        } 
+        // Amantes
+        else if (rel.type === 'lover') {
             if (rel.u1 === userId) lovers.push(rel.u2);
             else if (rel.u2 === userId) lovers.push(rel.u1);
         }
     }
 
+    // Incluir parejas de los padres (padrastros / madrastras)
     const allParents = new Set(parents);
     for (const parentId of parents) {
         for (const rel of relations) {
             if (rel.type === 'marriage') {
-                if (rel.u1 === parentId && rel.u2 !== userId) allParents.add(rel.u2);
-                else if (rel.u2 === parentId && rel.u1 !== userId) allParents.add(rel.u1);
+                if (rel.u1 === parentId && rel.u2 !== userId) {
+                    allParents.add(rel.u2);
+                } else if (rel.u2 === parentId && rel.u1 !== userId) {
+                    allParents.add(rel.u1);
+                }
             }
         }
     }
