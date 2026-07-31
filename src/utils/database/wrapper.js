@@ -53,7 +53,7 @@ class DatabaseWrapper {
             }
         }
 
-        // Fallback a memoria si la conexión a PostgreSQL no se pudo establecer
+        // Fallback a memoria si PostgreSQL falla
         this.fallbackToMemory('POSTGRES_UNAVAILABLE');
     }
 
@@ -73,7 +73,7 @@ class DatabaseWrapper {
         this.initialized = true;
     }
 
-    // Helper interno para garantizar que `this.db` NUNCA sea null y apunte a un handler válido
+    // Helper indispensable para asegurar que this.db NUNCA sea null ni sea un objeto sin .set()
     ensureDatabaseReady() {
         if (!this.db || typeof this.db.set !== 'function') {
             if (pgDb && typeof pgDb.set === 'function') {
