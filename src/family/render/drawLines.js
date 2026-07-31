@@ -35,19 +35,22 @@ export async function drawLines(ctx, layout) {
             const toNode = nodes.find(n => n.id === conn.toNodeId);
             if (!fromNode || !toNode) continue;
 
-            // Centros exactos de ambos nodos de la pareja
             const fromCenterX = fromNode.x + NODE_WIDTH / 2;
             const toCenterX = toNode.x + NODE_WIDTH / 2;
-            
-            // Punto medio exacto entre ambos perfiles
-            const midX = (fromCenterX + toCenterX) / 2;
             const midY = fromNode.y + NODE_HEIGHT / 2;
+            const midX = (fromCenterX + toCenterX) / 2;
 
+            // Dibuja la línea horizontal que une a la pareja
+            ctx.moveTo(fromCenterX, midY);
+            ctx.lineTo(toCenterX, midY);
+            ctx.stroke(); // Ejecutamos este trazo para la línea
+
+            // Dibuja el anillo exactamente en el centro
             if (ringImage) {
                 const iconSize = 28;
                 ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
             }
-            continue; 
+            continue; // Aquí sí va bien porque ya hicimos el stroke de la pareja
         } 
         else if (conn.type === 'parent-child-direct') {
             const fromNode = nodes.find(n => n.id === conn.fromNodeId);
@@ -74,10 +77,10 @@ export async function drawLines(ctx, layout) {
                 const rootCenterX = rootNode.x + NODE_WIDTH / 2;
                 const partnerCenterX = partnerNode.x + NODE_WIDTH / 2;
                 
-                // Punto medio exacto entre ti y tu pareja
+                // Punto medio exacto entre ti y tu pareja (donde está el anillo)
                 const coupleMidX = (rootCenterX + partnerCenterX) / 2;
                 
-                const coupleY = rootNode.y + NODE_HEIGHT;
+                const coupleY = rootNode.y + NODE_HEIGHT / 2; // Altura del centro de la pareja
                 const childTopY = childNode.y;
                 const midY = (coupleY + childTopY) / 2;
                 const childCenterX = childNode.x + NODE_WIDTH / 2;
