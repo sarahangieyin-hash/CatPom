@@ -1,59 +1,42 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { getUserFamilyData, removeRelation } from '../../utils/families.js';
+import { removeRelation } from '../../utils/families.js';
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName('renunciar')
-        .setDescription('Renuncia a uno o a todos tus hijos.')
-        .addUserOption(option =>
-            option
-                .setName('hijo')
-                .setDescription('El hijo al que deseas renunciar (deja en blanco para renunciar a todos)')
-                .setRequired(false)
-        ),
-
+    // Si usas un sistema de botones con customId:
+    customId: 'renunciar_child',
+    
     async execute(interaction) {
-        const guildId = interaction.guild.id;
-        const userId = interaction.user.id;
+        try {
+            const childId = interaction.user.id;
+            
+            // Extraer el ID del padre desde los argumentos del customId (ej: renunciar_child:ID_PADRE)
+            const parentId = interaction.customId?.split(':')[1];
 
-        const family = await getUserFamilyData(guildId, userId);
-
-        if (!family.children || family.children.length === 0) {
-            return interaction.reply({
-                content: '❌ No tienes ningún hijo registrado a quien renunciar.',
-                ephemeral: true
-            });
-        }
-
-        const targetChild = interaction.options.getUser('hijo');
-
-        if (targetChild) {
-            // Renunciar a un hijo en específico
-            if (!family.children.includes(targetChild.id)) {
+            if (!parentId) {
                 return interaction.reply({
-                    content: `❌ ${targetChild} no figura como tu hijo/a.`,
+                    content: '❌ No se especificó el familiar del que deseas desvincularte.',
                     ephemeral: true
                 });
             }
 
-            await removeRelation(guildId, userId, targetChild.id, 'parent_child');
+            // 🎯 BORRADO PERSISTENTE EN POSTGRESQL
+            await removeRelation(
+                interaction.guild.id,
+                parentId,
+                childId,
+                'parent_child'
+            );
 
-            return interaction.reply({
-                content: `🚪 <@${userId}> ha renunciado a la relación filial con ${targetChild}.`
+            await interaction.reply({
+                content: '✅ Has renunciado correctamente a la relación familiar.'
             });
-        } else {
-            // Renunciar a TODOS los hijos
-            const hijosAntiguos = [...family.children];
-
-            for (const childId of hijosAntiguos) {
-                await removeRelation(guildId, userId, childId, 'parent_child');
+        } catch (error) {
+            console.error("❌ Error en renunciar_child:", error);
+            if (!interaction.replied) {
+                await interaction.reply({
+                    content: '❌ Ocurrió un error al procesar la renuncia.',
+                    ephemeral: true
+                });
             }
-
-            const listaHijos = hijosAntiguos.map(id => `<@${id}>`).join(', ');
-
-            return interaction.reply({
-                content: `🚪 <@${userId}> ha renunciado a todos sus hijos (${listaHijos}).`
-            });
         }
     }
 };
