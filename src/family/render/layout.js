@@ -49,20 +49,13 @@ export async function calculateLayout(guild, family) {
     for (const id of loverIds) await addNode(id, 1);
     for (const id of childIds) await addNode(id, 2);
 
-    // ORDEN ESTRICTO NIVEL 1: [Parejas Izquierda] -> [TÚ (ROOT)] -> [Parejas Derecha]
-    // El que ejecuta el comando (/tree) SIEMPRE va en el centro exacto (x = 0).
+    // Distribución Nivel 1: [Parejas Izquierda] -> [TÚ (ROOT)] -> [Parejas Derecha]
     const leftPartners = [];
     const rightPartners = [...spouseIds, ...loverIds];
 
-    if (rightPartners.length > 0) {
-        // Si hay parejas, repartimos simétricamente
-        const half = Math.ceil(rightPartners.length / 2);
-        // Por ejemplo, si hay varias, mandamos la mitad a la izquierda y mitad a la derecha, o todas a la derecha. 
-        // Para asegurar que TÚ estés en medio de tus parejas si son 2:
-        if (rightPartners.length === 2) {
-            leftPartners.push(rightPartners[0]);
-            rightPartners.splice(0, 1); // dejamos la otra en right
-        }
+    if (rightPartners.length >= 2) {
+        leftPartners.push(rightPartners[0]);
+        rightPartners.splice(0, 1);
     }
 
     const level1Nodes = [];
@@ -73,7 +66,6 @@ export async function calculateLayout(guild, family) {
         if (n) level1Nodes.push(n);
     });
 
-    // Posicionar Nivel 1 simétricamente alrededor del 0
     const totalWidth = level1Nodes.length * NODE_WIDTH + (level1Nodes.length - 1) * HORIZONTAL_GAP;
     let startX = -totalWidth / 2;
 
@@ -85,7 +77,7 @@ export async function calculateLayout(guild, family) {
         }
     });
 
-    // NIVEL 0 (PADRES): Alineados estrictamente encima de ti (rootNode.x)
+    // Nivel 0 (Padres): Arriba, centrados sobre ti
     const level0Nodes = parentIds.map(id => nodesMap.get(id)).filter(Boolean);
     if (level0Nodes.length === 1) {
         level0Nodes[0].x = rootNode.x;
@@ -99,7 +91,7 @@ export async function calculateLayout(guild, family) {
         });
     }
 
-    // NIVEL 2 (HIJOS): Alineados exactamente debajo del centro del matrimonio (x = 0 si estás con pareja, o debajo de ti)
+    // Nivel 2 (Hijos): Abajo, distribuidos de forma uniforme
     const level2Nodes = childIds.map(id => nodesMap.get(id)).filter(Boolean);
     if (level2Nodes.length > 0) {
         let startX2 = -((level2Nodes.length * NODE_WIDTH + (level2Nodes.length - 1) * HORIZONTAL_GAP) / 2);
@@ -110,7 +102,7 @@ export async function calculateLayout(guild, family) {
         });
     }
 
-    // CONEXIONES
+    // Conexiones
     parentIds.forEach(pId => {
         connections.push({
             fromNodeId: pId,
@@ -119,22 +111,34 @@ export async function calculateLayout(guild, family) {
         });
     });
 
-    // Registrar parejas adyacentes para colocar los anillos en medio
+    // Registrar los anillos entre parejas adyacentes
     for (let i = 0; i < level1Nodes.length - 1; i++) {
         connections.push({
             fromNodeId: level1Nodes[i].id,
             toNodeId: level1Nodes[i + 1].id,
-            type: 'partner-ring'
+            type: 'partner-ring',
+            leftNode: level1Nodes[i],
+            rightNode: level1Nodes[i + 1]
         });
     }
 
-    childIds.forEach(cId => {
+    // Barra principal de hijos que abarca desde el primer cónyuge hasta el último del nivel 1
+    if (level1Nodes.length > 1) {
         connections.push({
-            fromNodeId: rootNode.id,
-            toNodeId: cId,
-            type: 'family-child'
+            type: 'family-children-bar',
+            leftMost: level1Nodes[0],
+            rightMost: level1Nodes[level1Nodes.length - 1],
+            children: level2Nodes
         });
-    });
+    } else {
+        childIds.forEach(cId => {
+            connections.push({
+                fromNodeId: rootNode.id,
+                toNodeId: cId,
+                type: 'parent-child-direct'
+            });
+        });
+    }
 
     return {
         nodes: Array.from(nodesMap.values()),
