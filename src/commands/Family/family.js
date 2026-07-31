@@ -19,6 +19,18 @@ export default {
         // Obtener datos familiares con el nuevo sistema atómico
         const family = await getUserFamilyData(guildId, targetUser.id);
 
+        // Normalizar los arrays para evitar undefined/null o estructuras mixtas
+        const getIds = (list) => {
+            if (!Array.isArray(list)) return [];
+            return list.map(item => typeof item === 'object' ? item.id : item).filter(Boolean);
+        };
+
+        const spouses = getIds(family.spouses || family.members);
+        const parents = getIds(family.parents);
+        const children = getIds(family.children);
+        const siblings = getIds(family.siblings);
+        const lovers = getIds(family.lovers);
+
         // Formatear menciones
         const formatList = (ids) => {
             if (!ids || ids.length === 0) return 'Ninguno';
@@ -30,11 +42,11 @@ export default {
             .setColor('#2b2d31')
             .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
             .addFields(
-                { name: '💍 Pareja(s)', value: formatList(family.spouses), inline: false },
-                { name: '👨‍👩‍👦 Padres', value: formatList(family.parents), inline: true },
-                { name: '👶 Hijos', value: formatList(family.children), inline: true },
-                { name: '👫 Hermanos', value: formatList(family.siblings), inline: false },
-                { name: '💋 Amantes', value: formatList(family.lovers), inline: false }
+                { name: '💍 Pareja(s)', value: formatList(spouses), inline: false },
+                { name: '👨‍👩‍👦 Padres', value: formatList(parents), inline: true },
+                { name: '👶 Hijos', value: formatList(children), inline: true },
+                { name: '👫 Hermanos', value: formatList(siblings), inline: false },
+                { name: '💋 Amantes', value: formatList(lovers), inline: false }
             )
             .setFooter({ text: `CatPom System • Solicitado por ${interaction.user.username}` })
             .setTimestamp();
