@@ -2,43 +2,37 @@ import { addRelation } from '../../utils/families.js';
 
 export default {
     customId: 'accept_adoption',
-
-    async execute(interaction, client, args) {
+    async execute(interaction) {
         try {
-            const parentId = args[0];
-            const childId = args[1];
+            const parentId = interaction.customId.split(':')[1] || interaction.message?.interaction?.user?.id;
+            const childId = interaction.user.id;
 
-            if (interaction.user.id !== childId) {
+            if (!parentId) {
                 return interaction.reply({
-                    content: '❌ Esta solicitud no es para ti.',
+                    content: '❌ No se pudo identificar al padre/madre adoptivo.',
                     ephemeral: true
                 });
             }
 
+            // 🎯 GUARDADO PERSISTENTE EN POSTGRESQL (Tipo Adoption)
             await addRelation(
                 interaction.guild.id,
                 parentId,
                 childId,
-                'parent_child'
+                'adoption'
             );
 
             await interaction.update({
-                content: `👶 <@${childId}> ha aceptado ser adoptado/a por <@${parentId}>.`,
+                content: `👶 ¡Adopción completada! <@${childId}> ha sido adoptado por <@${parentId}>.`,
                 components: []
             });
         } catch (error) {
-            console.error('========== ERROR ACCEPT_ADOPTION ==========', error);
-
-            if (!interaction.replied && !interaction.deferred) {
+            console.error("❌ Error en accept_adoption:", error);
+            if (!interaction.replied) {
                 await interaction.reply({
-                    content: `❌ Error: ${error.message}`,
+                    content: '❌ Ocurrió un error al procesar la adopción.',
                     ephemeral: true
-                }).catch(() => {});
-            } else {
-                await interaction.followUp({
-                    content: `❌ Error: ${error.message}`,
-                    ephemeral: true
-                }).catch(() => {});
+                });
             }
         }
     }
