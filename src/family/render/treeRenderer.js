@@ -20,8 +20,9 @@ export async function renderFamilyTree(guild, family) {
         throw new Error('No hay nodos para renderizar en el árbol.');
     }
 
-    const nodeSize = 120;
-    const padding = 140;
+    // 🎯 REDUCCIÓN DE TAMAÑO Y ESPACIOS
+    const nodeSize = 100; // Reducido de 120
+    const padding = 60;   // Reducido de 140 para acortar bordes vacíos
 
     const minX = Math.min(...nodes.map(node => node.x));
     const maxX = Math.max(...nodes.map(node => node.x));
@@ -31,8 +32,8 @@ export async function renderFamilyTree(guild, family) {
     const contentWidth = maxX - minX;
     const contentHeight = maxY - minY;
 
-    const width = Math.max(900, contentWidth + nodeSize + padding * 2);
-    const height = Math.max(700, contentHeight + nodeSize + padding * 2);
+    const width = Math.max(600, contentWidth + nodeSize + padding * 2);
+    const height = Math.max(450, contentHeight + nodeSize + padding * 2);
 
     const offsetX = width / 2 - (minX + maxX) / 2;
     const offsetY = height / 2 - (minY + maxY) / 2;
