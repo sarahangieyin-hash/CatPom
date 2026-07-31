@@ -7,15 +7,25 @@ export async function calculateLayout(guild, family) {
 
     // Sincronizar 'members' con 'spouses' por compatibilidad de nombres
     const rawMembers = family.members || family.spouses || [];
-    const membersList = Array.isArray(rawMembers) ? rawMembers : [];
+    const spousesList = Array.isArray(rawMembers) ? rawMembers : [];
     
     // Identificar el usuario principal
-    const targetUserId = family.targetUser || family.userId || family.id;
+    const targetUserId = family.targetUser || family.userId || family.id || family.rootUser?.id;
     
-    // Asegurar que el usuario objetivo siempre esté en los miembros principales si el array viene vacío
-    let members = membersList.length > 0 
-        ? membersList.map(m => typeof m === 'object' ? m.id : m) 
-        : (targetUserId ? [targetUserId] : []);
+    // 🔧 FIX: Garantizar que el usuario principal (tú) SIEMPRE esté en la lista de miembros
+    const spouseIds = spousesList.map(m => typeof m === 'object' ? m.id : m);
+    let members = [];
+
+    if (targetUserId) {
+        members.push(targetUserId);
+    }
+
+    // Añadimos las parejas evitando duplicados
+    for (const spouseId of spouseIds) {
+        if (spouseId && !members.includes(spouseId)) {
+            members.push(spouseId);
+        }
+    }
 
     const children = normalize(family.children);
     const parents = normalize(family.parents);
@@ -42,7 +52,7 @@ export async function calculateLayout(guild, family) {
     const centerY = 0; // Se usará como origen relativo para el centrado final
 
     /*
-        MIEMBROS PRINCIPALES 💍
+        MIEMBROS PRINCIPALES 💍 (Tú + Pareja)
     */
     members.forEach((id, index) => {
         nodes.push({
