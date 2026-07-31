@@ -2,7 +2,6 @@ import { createCanvas } from 'canvas';
 import { calculateLayout } from './layout.js';
 import { drawNodes } from './drawNodes.js';
 import { drawLines } from './drawLines.js';
-import { drawIcons } from './drawIcons.js';
 import { drawMarriage } from './drawMarriage.js';
 import { getTreeSettings } from '../../utils/families.js';
 
@@ -37,25 +36,45 @@ export async function renderFamilyTree(guild, family) {
     const offsetX = width / 2 - (minX + maxX) / 2;
     const offsetY = height / 2 - (minY + maxY) / 2;
 
+    // Desplazar nodos
     layout.nodes.forEach(node => {
         node.x += offsetX;
         node.y += offsetY;
     });
+
+    // Desplazar líneas y puntos intermedios para sincronizarlos con los nodos
+    if (layout.connections && Array.isArray(layout.connections)) {
+        layout.connections.forEach(conn => {
+            if (conn.from) {
+                conn.from.x += offsetX;
+                conn.from.y += offsetY;
+            }
+            if (conn.to) {
+                conn.to.x += offsetX;
+                conn.to.y += offsetY;
+            }
+            if (conn.points && Array.isArray(conn.points)) {
+                conn.points.forEach(pt => {
+                    pt.x += offsetX;
+                    pt.y += offsetY;
+                });
+            }
+        });
+    }
 
     const canvas = createCanvas(width * scale, height * scale);
     const ctx = canvas.getContext('2d');
 
     ctx.scale(scale, scale);
 
+    // Fondo base
     ctx.fillStyle = settings.background || '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
+    // Renderizar: 1. Líneas de parentesco, 2. Uniones de matrimonio, 3. Nodos de usuario
     await drawLines(ctx, layout);
-    await drawNodes(ctx, layout);
     await drawMarriage(ctx, layout);
-    if (typeof drawIcons === 'function') {
-        await drawIcons(ctx, layout);
-    }
+    await drawNodes(ctx, layout);
 
     return canvas.toBuffer('image/png');
 }
