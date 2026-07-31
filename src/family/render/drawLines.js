@@ -1,3 +1,6 @@
+import { loadImage } from 'canvas';
+import path from 'path';
+
 export async function drawLines(ctx, layout) {
     const { nodes, connections, family } = layout;
     
@@ -9,6 +12,15 @@ export async function drawLines(ctx, layout) {
     
     const NODE_HEIGHT = 46;
     const NODE_WIDTH = 120;
+
+    // Cargar el icono de pareja (anillo)
+    let ringImage = null;
+    try {
+        const ringPath = path.resolve('src/assets/icons/ring.png');
+        ringImage = await loadImage(ringPath);
+    } catch (e) {
+        console.warn('No se pudo cargar el icono ring.png, se omitirá el icono de pareja.');
+    }
 
     ctx.save();
     ctx.strokeStyle = lineColor;
@@ -25,16 +37,33 @@ export async function drawLines(ctx, layout) {
             if (!fromNode || !toNode) continue;
 
             if (direction === 'TB') {
-                const startX = fromNode.x + (toNode.x > fromNode.x ? NODE_WIDTH / 2 : -NODE_WIDTH / 2);
-                const endX = toNode.x + (toNode.x > fromNode.x ? -NODE_WIDTH / 2 : NODE_WIDTH / 2);
-                ctx.moveTo(startX, fromNode.y);
-                ctx.lineTo(endX, toNode.y);
+                // Dibujar línea corta de unión o dejar espacio para el icono en el centro
+                const midX = (fromNode.x + toNode.x) / 2;
+                const midY = (fromNode.y + toNode.y) / 2;
+
+                ctx.moveTo(fromNode.x + (toNode.x > fromNode.x ? NODE_WIDTH / 2 : -NODE_WIDTH / 2), fromNode.y);
+                ctx.lineTo(toNode.x + (toNode.x > fromNode.x ? -NODE_WIDTH / 2 : NODE_WIDTH / 2), toNode.y);
+                ctx.stroke();
+
+                // Pintar el icono del anillo en el centro exacto de la pareja
+                if (ringImage) {
+                    const iconSize = 24;
+                    ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
+                }
             } else {
-                const startY = fromNode.y + (toNode.y > fromNode.y ? NODE_HEIGHT / 2 : -NODE_HEIGHT / 2);
-                const endY = toNode.y + (toNode.y > fromNode.y ? -NODE_HEIGHT / 2 : NODE_HEIGHT / 2);
-                ctx.moveTo(fromNode.x, startY);
-                ctx.lineTo(toNode.x, endY);
+                const midX = (fromNode.x + toNode.x) / 2;
+                const midY = (fromNode.y + toNode.y) / 2;
+
+                ctx.moveTo(fromNode.x, fromNode.y + (toNode.y > fromNode.y ? NODE_HEIGHT / 2 : -NODE_HEIGHT / 2));
+                ctx.lineTo(toNode.x, toNode.y + (toNode.y > fromNode.y ? -NODE_HEIGHT / 2 : NODE_HEIGHT / 2));
+                ctx.stroke();
+
+                if (ringImage) {
+                    const iconSize = 24;
+                    ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
+                }
             }
+            continue; // Evita el stroke general al final para este tipo
         } 
         else if (conn.type === 'parents-couple') {
             const p1 = nodes.find(n => n.id === conn.fromNodeId);
