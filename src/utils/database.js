@@ -1,8 +1,22 @@
-import logger from '../utils/logger.js';
+import logger from './logger.js';
 
 // ==========================================
-// 1. HELPER FUNCTIONS & KEY GENERATORS
+// 1. INICIALIZACIÓN Y HELPERS
 // ==========================================
+
+export async function initializeDatabase(client) {
+    try {
+        if (!client.db) {
+            logger.warn('Client DB instance is not initialized or unavailable.');
+            return false;
+        }
+        logger.info('Database initialized successfully.');
+        return true;
+    } catch (error) {
+        logger.error('Error during database initialization:', error);
+        return false;
+    }
+}
 
 export function unwrapReplitData(data) {
     if (data === null || data === undefined) return data;
@@ -12,6 +26,11 @@ export function unwrapReplitData(data) {
     return data;
 }
 
+export function generateCaseId() {
+    return `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 4)}`;
+}
+
+// Key Generators
 export function getApplicationSettingsKey(guildId) {
     return `guild:${guildId}:applications:settings`;
 }
@@ -56,12 +75,8 @@ export function getWarnKey(guildId, userId) {
     return `guild:${guildId}:warns:${userId}`;
 }
 
-export function generateCaseId() {
-    return `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 4)}`;
-}
-
 // ==========================================
-// 2. APPLICATIONS MODULE & CLEANUP
+// 2. MÓDULO DE SOLICITUDES (APPLICATIONS)
 // ==========================================
 
 export function buildApplicationSettingsDefaults() {
@@ -420,7 +435,7 @@ export async function getApplications(client, guildId, filters = {}) {
 }
 
 // ==========================================
-// 3. JOIN TO CREATE CONFIG & TEMPORARY CHANNELS
+// 3. CANALES DE VOZ TEMPORALES (JOIN TO CREATE)
 // ==========================================
 
 export async function getJoinToCreateConfig(client, guildId) {
@@ -618,7 +633,7 @@ export function formatChannelName(template, variables = {}) {
 }
 
 // ==========================================
-// 4. GIVEAWAYS MODULE
+// 4. MÓDULO DE SORTEOS (GIVEAWAYS)
 // ==========================================
 
 export async function createGiveaway(client, giveawayData) {
@@ -819,7 +834,7 @@ export async function removeGiveawayParticipant(client, guildId, messageId, user
 }
 
 // ==========================================
-// 5. WELCOME & GOODBYE MODULE
+// 5. BIENVENIDAS Y DESPEDIDAS
 // ==========================================
 
 export function buildWelcomeDefaults() {
@@ -976,7 +991,7 @@ export function formatWelcomeVariables(template, member) {
 }
 
 // ==========================================
-// 6. LEVELING SYSTEM MODULE
+// 6. SISTEMA DE NIVELES (XP)
 // ==========================================
 
 export async function getLevelingConfig(client, guildId) {
@@ -1153,7 +1168,7 @@ export async function getLeaderboard(client, guildId, limit = 10) {
 }
 
 // ==========================================
-// 7. WARNS & MODERATION MODULE
+// 7. MODERACIÓN Y WARNS
 // ==========================================
 
 export async function addWarn(client, guildId, userId, warnData) {
