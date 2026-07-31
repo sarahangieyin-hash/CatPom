@@ -52,16 +52,16 @@ export async function calculateLayout(guild, family) {
     for (const id of loverIds) await addNode(id, 1);
     for (const id of childIds) await addNode(id, 2);
 
-    // Posicionamiento base por niveles
-    const levels = { 0: [], 1: [], 2: [] };
-    for (const node of nodesMap.values()) {
-        if (!levels[node.level]) levels[node.level] = [];
-        levels[node.level].push(node);
-    }
-
     if (direction === 'TB') {
-        // Nivel 1 (Usuario y parejas/hermanos)
-        const level1Nodes = levels[1];
+        // Nivel 1: Usuario principal y su pareja(s) distribuidos horizontalmente desde el centro
+        const partners = [...spouseIds, ...loverIds];
+        const level1Nodes = [rootNode];
+        
+        for (const pId of partners) {
+            const pNode = nodesMap.get(pId);
+            if (pNode && !level1Nodes.includes(pNode)) level1Nodes.push(pNode);
+        }
+
         const totalL1Width = level1Nodes.length * NODE_WIDTH + (level1Nodes.length - 1) * HORIZONTAL_GAP;
         let startX = -totalL1Width / 2;
 
@@ -71,16 +71,13 @@ export async function calculateLayout(guild, family) {
             startX += NODE_WIDTH + HORIZONTAL_GAP;
         });
 
-        // Asegurar que el root esté centrado y si hay un solo padre, alinearlo exactamente encima
-        rootNode.x = -NODE_WIDTH / 2; // Centrado en 0
-
-        // Nivel 0 (Padres)
-        const level0Nodes = levels[0];
+        // Nivel 0: Padres
+        const level0Nodes = parentIds.map(id => nodesMap.get(id)).filter(Boolean);
         if (level0Nodes.length === 1) {
-            // Un solo padre: se coloca exactamente en la misma vertical que el usuario
+            // Si hay un solo padre, se alinea exactamente con el eje X del usuario principal
             level0Nodes[0].x = rootNode.x;
             level0Nodes[0].y = -(NODE_HEIGHT + VERTICAL_GAP);
-        } else {
+        } else if (level0Nodes.length > 0) {
             const totalL0Width = level0Nodes.length * NODE_WIDTH + (level0Nodes.length - 1) * HORIZONTAL_GAP;
             let startX0 = -totalL0Width / 2;
             level0Nodes.forEach((node) => {
@@ -90,15 +87,17 @@ export async function calculateLayout(guild, family) {
             });
         }
 
-        // Nivel 2 (Hijos)
-        const level2Nodes = levels[2];
-        const totalL2Width = level2Nodes.length * NODE_WIDTH + (level2Nodes.length - 1) * HORIZONTAL_GAP;
-        let startX2 = -totalL2Width / 2;
-        level2Nodes.forEach((node) => {
-            node.x = startX2;
-            node.y = (NODE_HEIGHT + VERTICAL_GAP);
-            startX2 += NODE_WIDTH + HORIZONTAL_GAP;
-        });
+        // Nivel 2: Hijos (centrados respecto al bloque familiar)
+        const level2Nodes = childIds.map(id => nodesMap.get(id)).filter(Boolean);
+        if (level2Nodes.length > 0) {
+            const totalL2Width = level2Nodes.length * NODE_WIDTH + (level2Nodes.length - 1) * HORIZONTAL_GAP;
+            let startX2 = -totalL2Width / 2;
+            level2Nodes.forEach((node) => {
+                node.x = startX2;
+                node.y = (NODE_HEIGHT + VERTICAL_GAP);
+                startX2 += NODE_WIDTH + HORIZONTAL_GAP;
+            });
+        }
     }
 
     // Definir Conexiones
