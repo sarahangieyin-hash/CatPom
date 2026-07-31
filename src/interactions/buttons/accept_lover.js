@@ -1,50 +1,39 @@
-import { EmbedBuilder } from 'discord.js';
-import { 
-    getFamilyRequest, 
-    deleteFamilyRequest 
-} from '../../family/requests/familyRequests.js';
 import { addRelation } from '../../utils/families.js';
 
 export default {
     customId: 'accept_lover',
     async execute(interaction) {
-        const [, requestId] = interaction.customId.split(':');
-        const guild = interaction.guild;
-        const user = interaction.user;
+        try {
+            const user1 = interaction.user.id;
+            const user2 = interaction.customId.split(':')[1] || interaction.message?.interaction?.user?.id;
 
-        const request = await getFamilyRequest(guild.id, requestId);
+            if (!user2) {
+                return interaction.reply({
+                    content: '❌ No se pudo identificar a la pareja.',
+                    ephemeral: true
+                });
+            }
 
-        if (!request) {
-            return interaction.reply({
-                content: '❌ Esta propuesta ya no está disponible o caducó.',
-                ephemeral: true
+            // 🎯 GUARDADO PERSISTENTE EN POSTGRESQL (Tipo Lover)
+            await addRelation(
+                interaction.guild.id,
+                user1,
+                user2,
+                'lover'
+            );
+
+            await interaction.update({
+                content: `💕 <@${user1}> y <@${user2}> ahora son amantes.`,
+                components: []
             });
+        } catch (error) {
+            console.error("❌ Error en accept_lover:", error);
+            if (!interaction.replied) {
+                await interaction.reply({
+                    content: '❌ Ocurrió un error al aceptar la solicitud.',
+                    ephemeral: true
+                });
+            }
         }
-
-        // Solo el usuario objetivo puede aceptar la solicitud
-        if (user.id !== request.targetUser) {
-            return interaction.reply({
-                content: '❌ Esta propuesta no es para ti, metiche. 🤫',
-                ephemeral: true
-            });
-        }
-
-        // Registrar la relación de amantes en la base de datos
-        await addRelation(guild.id, request.createdBy, request.targetUser, 'lover');
-        
-        // Limpiar la solicitud pendiente
-        await deleteFamilyRequest(guild.id, requestId);
-
-        const acceptEmbed = new EmbedBuilder()
-            .setTitle('🔥 Vuestro pequeño secreto...')
-            .setDescription(`¡Shhh! <@${request.targetUser}> ha aceptado la propuesta de <@${request.createdBy}>. 🤫\n\n*A partir de ahora, esto quedará entre vosotros dos...*`)
-            .setColor('#e74c3c')
-            .setFooter({ text: 'Guardaremos bien el secreto.' });
-
-        return interaction.update({
-            content: null,
-            embeds: [acceptEmbed],
-            components: []
-        });
     }
 };
