@@ -1,30 +1,22 @@
-import { QuickDB } from 'quick.db';
-const db = new QuickDB();
+// Almacenamiento local en memoria para relaciones familiares
+const familyStore = new Map();
 
 /**
  * Obtiene todas las relaciones de un servidor.
  */
 export async function getGuildRelations(guildId) {
-    try {
-        const data = await db.get(`family_${guildId}_relations`);
-        return Array.isArray(data) ? data : [];
-    } catch (error) {
-        console.error('Error obteniendo relaciones familiares:', error);
-        return [];
+    if (!familyStore.has(guildId)) {
+        familyStore.set(guildId, []);
     }
+    return familyStore.get(guildId);
 }
 
 /**
  * Guarda las relaciones de un servidor.
  */
 export async function saveGuildRelations(guildId, relations) {
-    try {
-        await db.set(`family_${guildId}_relations`, relations);
-        return true;
-    } catch (error) {
-        console.error('Error guardando relaciones familiares:', error);
-        return false;
-    }
+    familyStore.set(guildId, relations);
+    return true;
 }
 
 /**
@@ -90,7 +82,7 @@ export async function getUserFamilyData(guildId, userId) {
         }
     }
 
-    // Incluir automáticamente a las parejas de tus padres como parte de tus padres
+    // Incluir parejas de los padres
     const allParents = new Set(parents);
     for (const parentId of parents) {
         for (const rel of relations) {
