@@ -2,42 +2,45 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// 🎯 BÚSQUEDA AUTOMÁTICA E INTELIGENTE DE POSTGRESQL EN MEMORIA GLOBAL
+// 🎯 ACCESO Y EXTRACCIÓN PROFUNDA DEL POOL/CLIENTE EN global.db O global.pgPool
 async function getDbPool() {
-    // 1. Probar llaves directas habituales
-    const knownKeys = ['pgPool', 'db', 'database', 'postgres', 'pool', 'client', 'sql'];
-    for (const key of knownKeys) {
-        const obj = global[key];
-        if (obj) {
-            if (typeof obj.query === 'function') return obj;
-            if (obj.pool && typeof obj.pool.query === 'function') return obj.pool;
-            if (obj.db && typeof obj.db.query === 'function') return obj.db;
-            if (obj.db?.pool && typeof obj.db.pool.query === 'function') return obj.db.pool;
+    // Lista de candidatos donde la aplicación almacena la DB
+    const roots = [global.db, global.pgPool];
+
+    for (const root of roots) {
+        if (!root) continue;
+
+        // 1. Si la raíz misma tiene el método de consulta SQL
+        if (typeof root.query === 'function' || typeof root.execute === 'function') {
+            return root;
+        }
+
+        // 2. Buscar en Subpropiedades típicas de adaptadores/ORMs (db, pool, client, connection)
+        const subKeys = ['db', 'pool', 'client', 'connection', 'postgres', 'pg'];
+        for (const key of subKeys) {
+            const sub = root[key];
+            if (sub) {
+                if (typeof sub.query === 'function' || typeof sub.execute === 'function') {
+                    return sub;
+                }
+                // Nivel extra de anidación (ej. global.db.db.pool)
+                if (sub.pool && typeof sub.pool.query === 'function') return sub.pool;
+                if (sub.client && typeof sub.client.query === 'function') return sub.client;
+            }
         }
     }
 
-    // 2. Escanear TODAS las propiedades del entorno global para ubicar la conexión
-    for (const key of Object.keys(global)) {
-        if (key.startsWith('_') || key.startsWith('v8') || key === 'global') continue;
-        
-        const val = global[key];
-        if (val && typeof val === 'object') {
-            if (typeof val.query === 'function' || typeof val.execute === 'function') {
+    // 3. Fallback: Inspección profunda de todas las llaves de global.db
+    if (global.db && typeof global.db === 'object') {
+        for (const key of Object.keys(global.db)) {
+            const val = global.db[key];
+            if (val && typeof val.query === 'function') {
                 return val;
             }
-            if (val.pool && typeof val.pool.query === 'function') {
-                return val.pool;
-            }
-            if (val.db && typeof val.db.query === 'function') {
-                return val.db;
-            }
-            if (val.db?.pool && typeof val.db.pool.query === 'function') {
-                return val.db.pool;
-            }
         }
     }
 
-    console.error("❌ [DB Diagnostic] No se encontró la conexión. Claves presentes en global:", Object.keys(global));
+    console.error("❌ [DB Error] Se encontró global.db pero no contenía un método .query() reconocido.");
     return null;
 }
 
