@@ -3,10 +3,11 @@ import { calculateLayout } from './layout.js';
 import { drawNodes } from './drawNodes.js';
 import { drawLines } from './drawLines.js';
 import { drawMarriage } from './drawMarriage.js';
-import { getTreeSettings } from '../../utils/families.js';
+import { getUserFamilyData } from '../../utils/families.js';
 
 export async function renderFamilyTree(guild, family) {
-    const settings = await getTreeSettings(family.userId || family.targetUser);
+    // Usar la configuración guardada por el usuario (o valores por defecto)
+    const settings = family.settings || {};
     
     const layout = await calculateLayout(guild, family);
     layout.guild = guild;
@@ -48,11 +49,11 @@ export async function renderFamilyTree(guild, family) {
 
     ctx.scale(scale, scale);
 
-    // Fondo del lienzo
-    ctx.fillStyle = settings.background || '#ffffff';
+    // Fondo del lienzo configurable
+    ctx.fillStyle = settings.bg || '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    // Dibujar en orden: 1. Líneas, 2. Íconos de Matrimonio/Pareja, 3. Tarjetas de Usuario
+    // Dibujar en orden correcto: 1. Líneas, 2. Matrimonio, 3. Tarjetas
     await drawLines(ctx, layout);
     await drawMarriage(ctx, layout);
     await drawNodes(ctx, layout);
