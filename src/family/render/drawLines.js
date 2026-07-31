@@ -35,12 +35,11 @@ export async function drawLines(ctx, layout) {
             const toNode = nodes.find(n => n.id === conn.toNodeId);
             if (!fromNode || !toNode) continue;
 
-            // Coordenadas reales de los centros de los nodos
             const fromCenterX = fromNode.x + NODE_WIDTH / 2;
             const toCenterX = toNode.x + NODE_WIDTH / 2;
             
             const midX = (fromCenterX + toCenterX) / 2;
-            const midY = fromNode.y + NODE_HEIGHT / 2; // Exactamente a media altura de los nodos
+            const midY = fromNode.y + NODE_HEIGHT / 2;
 
             if (ringImage) {
                 const iconSize = 24;
@@ -72,7 +71,6 @@ export async function drawLines(ctx, layout) {
                 const endX = toNode.x + NODE_WIDTH / 2;
                 const endY = toNode.y;                  // Entra por arriba del hijo/usuario
 
-                // Línea absolutamente recta si están centrados
                 ctx.moveTo(startX, startY);
                 ctx.lineTo(endX, endY);
             }
@@ -91,7 +89,6 @@ export async function drawLines(ctx, layout) {
                 const parentsBottomY = p1.y + NODE_HEIGHT;
                 const rootTopY = rootNode.y;
                 const midY = (parentsBottomY + rootTopY) / 2;
-
                 const rootCenterX = rootNode.x + NODE_WIDTH / 2;
 
                 ctx.moveTo(midX, parentsBottomY);
@@ -110,13 +107,12 @@ export async function drawLines(ctx, layout) {
                 const rootCenterX = rootNode.x + NODE_WIDTH / 2;
                 const partnerCenterX = partnerNode.x + NODE_WIDTH / 2;
                 
-                // Punto medio exacto entre ti y tu pareja
+                // Punto medio exacto entre tú y tu esposa
                 const coupleMidX = (rootCenterX + partnerCenterX) / 2;
                 
-                const coupleY = rootNode.y + NODE_HEIGHT; // Abajo de vuestros nodos
-                const childTopY = childNode.y;            // Arriba del nodo del hijo
+                const coupleY = rootNode.y + NODE_HEIGHT;
+                const childTopY = childNode.y;
                 const midY = (coupleY + childTopY) / 2;
-                
                 const childCenterX = childNode.x + NODE_WIDTH / 2;
 
                 ctx.moveTo(coupleMidX, coupleY);
