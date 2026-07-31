@@ -33,10 +33,8 @@ export async function drawLines(ctx, layout) {
             const { leftNode, rightNode } = conn;
             if (!leftNode || !rightNode) continue;
 
-            // Calcula el centro exacto del espacio libre horizontal entre las dos tarjetas
-            const rightOfLeft = leftNode.x + NODE_WIDTH;
-            const leftOfRight = rightNode.x;
-            const midX = (rightOfLeft + leftOfRight) / 2;
+            // Anillo perfectamente centrado en el pasillo horizontal entre ambas tarjetas
+            const midX = (leftNode.x + NODE_WIDTH + rightNode.x) / 2;
             const midY = leftNode.y + (NODE_HEIGHT / 2);
 
             if (ringImage) {
@@ -71,15 +69,15 @@ export async function drawLines(ctx, layout) {
             
             const rootCenterX = nodes.find(n => n.isRoot).x + NODE_WIDTH / 2;
 
-            // Línea vertical que baja desde ti hasta la barra horizontal
+            // Línea vertical que baja desde ti hacia la barra horizontal de hijos
             ctx.moveTo(rootCenterX, level1Y);
             ctx.lineTo(rootCenterX, barY);
 
-            // Barra horizontal que se extiende de lado a lado cubriendo a todas las parejas
+            // Barra horizontal de lado a lado cubriendo a todas las parejas
             ctx.moveTo(barStartX, barY);
             ctx.lineTo(barEndX, barY);
 
-            // Bajadas verticales hacia los hijos existentes
+            // Bajadas hacia los hijos (o marcas de referencia si hubiera más)
             if (children && children.length > 0) {
                 for (const child of children) {
                     const childCenterX = child.x + NODE_WIDTH / 2;
