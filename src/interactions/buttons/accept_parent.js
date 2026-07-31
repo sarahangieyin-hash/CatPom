@@ -6,45 +6,42 @@ export default {
 
     async execute(interaction, client, args) {
         try {
-            // Si viene con ID de solicitud en args[0] o si viene con [parentId, childId]
-            const requestId = args[0];
-            
-            // Intentamos recuperar la info desde la BD o parámetros
-            console.log("🔘 Procesando solicitud accept_parent para:", requestId);
+            const rawArg = args[0] || '';
+            let parentId = null;
+            let childId = interaction.user.id; // Quien presiona el botón suele ser quien acepta
 
-            // Supongamos que pasas los IDs en la interacción o parseas args
-            let parentId = args[0];
-            let childId = args[1];
-
-            // Si el customId trae formato completo o viene desde solicitud guardada
-            if (!childId && interaction.customId.includes(":")) {
-                const parts = interaction.customId.split(":");
-                if (parts.length >= 3) {
-                    parentId = parts[1];
-                    childId = parts[2];
-                }
+            // 🎯 SI EL ARGUMENTO TRAE FORMATO 'parent_timestamp_userId'
+            if (rawArg.startsWith('parent_')) {
+                const parts = rawArg.split('_');
+                // El creador de la solicitud fue parts[2]
+                parentId = parts[2];
+            } else if (args.length >= 2) {
+                parentId = args[0];
+                childId = args[1];
             }
 
-            // Fallback si la interacción la activó el hijo
-            if (!childId) childId = interaction.user.id;
+            if (!parentId) {
+                return interaction.reply({
+                    content: '❌ No se pudo determinar quién hizo la solicitud.',
+                    flags: MessageFlags.Ephemeral
+                });
+            }
 
-            console.log(`⏳ Intentando guardar parent_child -> Guild: ${interaction.guild.id} | Padre: ${parentId} | Hijo: ${childId}`);
+            console.log(`⏳ Guardando en BD -> Servidor: ${interaction.guild.id} | Padre: ${parentId} | Hijo: ${childId}`);
 
-            // 🎯 GUARDAR EN LA BD
+            // Guardar la relación en PostgreSQL
             const success = await addRelation(interaction.guild.id, parentId, childId, 'parent_child');
-
-            console.log(`📌 ¿RESULTADO GUARDADO?: ${success ? '✅ SÍ' : '❌ NO'}`);
 
             if (!success) {
                 return interaction.reply({
-                    content: '⚠️ Hubo un problema al conectar con la Base de Datos para guardar la relación.',
+                    content: '⚠️ Ocurrió un error al registrar la relación en la base de datos.',
                     flags: MessageFlags.Ephemeral
                 });
             }
 
             const successEmbed = new EmbedBuilder()
                 .setTitle('👪 ¡Familia Actualizada!')
-                .setDescription(`¡Felicidades! Se ha aceptado y registrado la parentela en el árbol genealógico.`)
+                .setDescription(`¡Felicidades! Se ha aceptado y registrado la parentela entre <@${parentId}> y <@${childId}>.`)
                 .setColor('#22c55e')
                 .setTimestamp();
 
@@ -54,10 +51,10 @@ export default {
             });
 
         } catch (error) {
-            console.error("❌ Error en accept_parent:", error);
+            console.error("❌ Error en accept_parent.js:", error);
             if (!interaction.replied) {
                 await interaction.reply({
-                    content: '❌ Ocurrió un error inesperado al procesar la solicitud.',
+                    content: '❌ Ocurrió un error inesperado.',
                     flags: MessageFlags.Ephemeral
                 });
             }
