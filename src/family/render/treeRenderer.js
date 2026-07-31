@@ -20,9 +20,8 @@ export async function renderFamilyTree(guild, family) {
         throw new Error('No hay nodos para renderizar en el árbol.');
     }
 
-    // 🎯 REDUCCIÓN DE TAMAÑO Y ESPACIOS
-    const nodeSize = 100; // Reducido de 120
-    const padding = 60;   // Reducido de 140 para acortar bordes vacíos
+    const nodeSize = 100;
+    const padding = 60;
 
     const minX = Math.min(...nodes.map(node => node.x));
     const maxX = Math.max(...nodes.map(node => node.x));
@@ -48,7 +47,6 @@ export async function renderFamilyTree(guild, family) {
 
     ctx.scale(scale, scale);
 
-    // Color de fondo dinámico
     ctx.fillStyle = settings.background || '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
