@@ -30,24 +30,26 @@ export async function drawLines(ctx, layout) {
         ctx.beginPath();
 
         if (conn.type === 'partner-ring') {
-            // Dibuja ÚNICAMENTE el anillo entre las dos cajas, SIN LÍNEA HORIZONTAL DE MATRIMONIO
             const fromNode = nodes.find(n => n.id === conn.fromNodeId);
             const toNode = nodes.find(n => n.id === conn.toNodeId);
             if (!fromNode || !toNode) continue;
 
+            // Coordenada X exacta del espacio libre entre el borde derecho de un nodo y el izquierdo del otro
             const rightOfFrom = fromNode.x + NODE_WIDTH;
             const leftOfTo = toNode.x;
             const midX = (rightOfFrom + leftOfTo) / 2;
-            const midY = fromNode.y + NODE_HEIGHT / 2;
+            
+            // Coordenada Y exacta de la mitad de la altura de las tarjetas para que quede centrado verticalmente
+            const midY = fromNode.y + (NODE_HEIGHT / 2);
 
             if (ringImage) {
-                const iconSize = 28;
+                const iconSize = 30;
+                // Dibujar centrado milimétricamente en el espacio libre
                 ctx.drawImage(ringImage, midX - iconSize / 2, midY - iconSize / 2, iconSize, iconSize);
             }
             continue;
         } 
         else if (conn.type === 'parent-child-direct') {
-            // Línea recta vertical perfecta de la madre al nodo
             const fromNode = nodes.find(n => n.id === conn.fromNodeId);
             const toNode = nodes.find(n => n.id === conn.toNodeId);
             if (!fromNode || !toNode) continue;
@@ -61,7 +63,6 @@ export async function drawLines(ctx, layout) {
             ctx.lineTo(endX, endY);
         }
         else if (conn.type === 'family-child') {
-            // Línea recta vertical perfecta desde ti (o el centro del matrimonio) hacia el hijo
             const rootNode = nodes.find(n => n.isRoot);
             const childNode = nodes.find(n => n.id === conn.toNodeId);
             if (!rootNode || !childNode) continue;
