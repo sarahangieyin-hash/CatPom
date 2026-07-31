@@ -1,89 +1,87 @@
-import {
-    SlashCommandBuilder,
-    EmbedBuilder,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle
+import { 
+    SlashCommandBuilder, 
+    ActionRowBuilder, 
+    ButtonBuilder, 
+    ButtonStyle, 
+    MessageFlags 
 } from 'discord.js';
-
-import {
-    createFamilyRequest,
-    getFamilyRequestByCreator
-} from '../../family/requests/familyRequests.js';
+import { getUserFamilyData, saveFamilyData } from '../../utils/families.js';
 
 export default {
     data: new SlashCommandBuilder()
         .setName('marry')
-        .setDescription('Solicita un matrimonio o unión.')
-        .addUserOption(option =>
-            option.setName('persona1').setDescription('Primera persona').setRequired(true)
-        )
-        .addUserOption(option =>
-            option.setName('persona2').setDescription('Segunda persona').setRequired(false)
-        )
-        .addUserOption(option =>
-            option.setName('persona3').setDescription('Tercera persona').setRequired(false)
+        .setDescription('Propropón matrimonio a alguien o pide a tu pareja actual ampliar la unión.')
+        .addUserOption(option => 
+            option.setName('usuario')
+                .setDescription('La persona a la que quieres proponer matrimonio')
+                .setRequired(true)
         ),
 
     async execute(interaction) {
-        const existing = await getFamilyRequestByCreator(
-            interaction.guild.id,
-            interaction.user.id
-        );
+        const author = interaction.user;
+        const target = interaction.options.getUser('usuario');
 
-        if (existing) {
-            return interaction.reply({
-                content: '❌ Ya tienes una solicitud de unión pendiente.',
-                ephemeral: true
-            });
+        if (author.id === target.id) {
+            return interaction.reply({ content: '❌ No puedes casarte contigo mismo.', flags: MessageFlags.Ephemeral });
         }
 
-        const personas = [
-            interaction.options.getUser('persona1'),
-            interaction.options.getUser('persona2'),
-            interaction.options.getUser('persona3')
-        ].filter(Boolean);
+        const family = await getUserFamilyData(interaction.guild.id, author.id);
+        const spouses = family.spouses || [];
 
-        if (personas.some(p => p.id === interaction.user.id)) {
-            return interaction.reply({
-                content: '❌ No puedes casarte contigo mismo.',
-                ephemeral: true
-            });
+        // CASO 1: Ya está casado con la persona a la que intenta proponerle matrimonio de nuevo
+        if (spouses.includes(target.id)) {
+            return interaction.reply({ content: `❌ Ya estás casado/a con ${target.username}.`, flags: MessageFlags.Ephemeral });
         }
 
-        const miembros = [interaction.user, ...personas];
-        const ids = miembros.map(user => user.id);
-        const requestId = `marriage_${Date.now()}`;
+        // CASO 2: EL USUARIO YA ESTÁ CASADO (Quiere proponer un trío/ampliar)
+        if (spouses.length > 0) {
+            const currentSpouseId = spouses[0]; // Tomamos a la pareja actual principal
+            const currentSpouse = await interaction.guild.members.fetch(currentSpouseId).catch(() => null);
 
-        await createFamilyRequest(interaction.guild.id, requestId, {
-            type: 'marriage',
-            members: ids,
-            creator: interaction.user.id,
-            accepted: [interaction.user.id],
-            createdAt: Date.now()
-        });
+            if (!currentSpouse) {
+                return interaction.reply({ content: '❌ No se pudo encontrar a tu pareja actual para pedirle autorización.', flags: MessageFlags.Ephemeral });
+            }
 
-        const embed = new EmbedBuilder()
-            .setTitle('💍 Solicitud de unión')
-            .setColor('#ff69b4')
-            .setDescription(
-                `${interaction.user} quiere formar una unión con:\n\n` +
-                personas.map(user => `💍 ${user}`).join('\n')
-            );
+            // Creamos un botón para que la pareja actual acepte ampliar la unión
+            const acceptBtn = new ButtonBuilder()
+                .setCustomId(`expand_marriage_accept_${author.id}_${target.id}`)
+                .setLabel('Aceptar Ampliación (Trío)')
+                .setStyle(ButtonStyle.Success);
 
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId(`accept_marriage:${requestId}`)
-                .setLabel('Aceptar')
-                .setStyle(ButtonStyle.Success),
-            new ButtonBuilder()
-                .setCustomId(`reject_marriage:${requestId}`)
+            const rejectBtn = new ButtonBuilder()
+                .setCustomId(`expand_marriage_reject_${author.id}_${target.id}`)
                 .setLabel('Rechazar')
-                .setStyle(ButtonStyle.Danger)
-        );
+                .setStyle(ButtonStyle.Danger);
+
+            const row = new ActionRowBuilder().addComponents(acceptBtn, rejectBtn);
+
+            await interaction.reply({
+                content: `💍 <@${author.id}> ya está casado/a contigo, pero quiere proponerle matrimonio a <@${target.id}> para formar una unión múltiple.\n¿Autorizas que se amplíe la unión?`,
+                components: [row]
+            });
+            return;
+        }
+
+        // CASO 3: SOLTERO (Matrimonio tradicional de 2 personas)
+        const targetFamily = await getUserFamilyData(interaction.guild.id, target.id);
+        if (targetFamily.spouses && targetFamily.spouses.length > 0) {
+            return interaction.reply({ content: `❌ ${target.username} ya está casado/a con otra persona.`, flags: MessageFlags.Ephemeral });
+        }
+
+        const acceptBtn = new ButtonBuilder()
+            .setCustomId(`accept_marriage_${author.id}_${target.id}`)
+            .setLabel('Aceptar')
+            .setStyle(ButtonStyle.Success);
+
+        const rejectBtn = new ButtonBuilder()
+            .setCustomId(`reject_marriage_${author.id}_${target.id}`)
+            .setLabel('Rechazar')
+            .setStyle(ButtonStyle.Danger);
+
+        const row = new ActionRowBuilder().addComponents(acceptBtn, rejectBtn);
 
         await interaction.reply({
-            embeds: [embed],
+            content: `💍 <@${target.id}>, <@${author.id}> te ha pedido matrimonio. ¿Aceptas?`,
             components: [row]
         });
     }
