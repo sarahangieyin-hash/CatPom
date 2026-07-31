@@ -39,11 +39,12 @@ export default {
             });
         }
 
-        // Verificar si ya es su padre/madre
         const senderFamily = await getUserFamilyData(guildId, sender.id);
-        if (senderFamily.parents && senderFamily.parents.includes(targetUser.id)) {
+
+        // 🚫 LÍMITE: Si ya tiene 1 o más padres registrados, no puede solicitar otro.
+        if (senderFamily.parents && senderFamily.parents.length >= 1) {
             return interaction.reply({
-                content: `❌ ${targetUser} ya figura como tu padre/madre.`,
+                content: '❌ Ya tienes un padre/madre registrado. No puedes añadir a más personas directamente.',
                 ephemeral: true
             });
         }
@@ -51,17 +52,16 @@ export default {
         // Generar un ID único para la solicitud
         const requestId = `parent_${Date.now()}_${sender.id}`;
 
-        // Guardar la solicitud en la base de datos (u1 = Padre propuesto, u2 = Hijo que pide la relación)
+        // Guardar la solicitud (u1 = Padre propuesto, u2 = Hijo que pide la relación)
         await createFamilyRequest(guildId, {
             id: requestId,
             type: 'parent_child',
-            u1: targetUser.id, // El receptor será el padre
-            u2: sender.id,     // El creador de la solicitud será el hijo
+            u1: targetUser.id,
+            u2: sender.id,
             createdBy: sender.id,
             targetUser: targetUser.id
         });
 
-        // Crear botones de confirmación
         const buttons = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId(`accept_parent:${requestId}`)
