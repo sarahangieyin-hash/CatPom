@@ -4,7 +4,7 @@ import { REST } from '@discordjs/rest';
 import express from 'express';
 
 import config from './config/bot.js';
-import { initializeDatabase } from './utils/database.js';
+import { initializeDatabase } from './utils/database/wrapper.js';
 import { logger, startupLog, shutdownLog } from './utils/logger.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { handleTaskError, ErrorCodes } from './utils/errorHandler.js';
@@ -12,448 +12,161 @@ import pkg from '../package.json' with { type: 'json' };
 
 console.log("APP STARTED");
 
-const BOT_TOKEN =
-    process.env.DISCORD_TOKEN ||
-    process.env.TOKEN;
+const BOT_TOKEN = process.env.DISCORD_TOKEN || process.env.TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
 
-const CLIENT_ID =
-    process.env.CLIENT_ID;
-
-console.log(
-    "TOKEN EXISTS:",
-    Boolean(BOT_TOKEN)
-);
-
-console.log(
-    "CLIENT ID EXISTS:",
-    Boolean(CLIENT_ID)
-);
+console.log("TOKEN EXISTS:", Boolean(BOT_TOKEN));
+console.log("CLIENT ID EXISTS:", Boolean(CLIENT_ID));
 
 class CatPom extends Client {
-
     constructor() {
-
         super({
-
             intents: [
-
                 GatewayIntentBits.Guilds,
                 GatewayIntentBits.GuildMembers,
                 GatewayIntentBits.GuildMessages,
                 GatewayIntentBits.MessageContent,
-
             ],
-
         });
 
         this.config = config;
-
         this.commands = new Collection();
-
         this.buttons = new Collection();
-
         this.selectMenus = new Collection();
 
         this.family = {
-
             graph: null,
-
             managers: {}
-
         };
 
         this.db = null;
         this.pgPool = null;
 
-        this.rest = new REST({
-
-            version: '10'
-
-        })
-        .setToken(BOT_TOKEN);
-
+        this.rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
     }
 
     async start() {
-
         try {
+            startupLog('Starting CatPom...');
+            startupLog('Initializing database...');
 
-            startupLog(
-                'Starting CatPom...'
-            );
+            // 🎯 INICIALIZAMOS LA BASE DE DATOS CORRECTAMENTE ANTES DE NADA
+            const { db } = await initializeDatabase();
+            this.db = db;
 
-            startupLog(
-                'Initializing database...'
-            );
-
-            // 🎯 PASAMOS `this` PARA QUE LA INICIALIZACIÓN LEA EL CLIENTE CORRECTAMENTE
-            const dbInstance =
-                await initializeDatabase(this);
-
-            if (dbInstance) {
-                this.db = dbInstance.db || dbInstance;
-                this.pgPool = dbInstance.pgPool || dbInstance.db?.pool || dbInstance.pool || dbInstance;
-
-                // 🎯 ASIGNACIÓN GLOBAL DE LA BASE DE DATOS Y POOL PARA EL SISTEMA DE FAMILIA
-                global.db = this.db;
-                global.pgPool = this.pgPool;
-            }
-
-            startupLog(
-                'Loading commands...'
-            );
-
+            startupLog('Loading commands...');
             await loadCommands(this);
+            startupLog(`Commands loaded: ${this.commands.size}`);
 
-            startupLog(
-                `Commands loaded: ${this.commands.size}`
-            );
+            startupLog('Initializing family system...');
+            const { FamilyGraph } = await import('./family/utils/graph.js');
+            const { FamilyManager } = await import('./family/managers/familyManager.js');
+            const { MarriageManager } = await import('./family/managers/marriageManager.js');
+            const { AdoptionManager } = await import('./family/managers/adoptionManager.js');
+            const { RelationshipManager } = await import('./family/managers/relationshipManager.js');
 
-            startupLog(
-                'Initializing family system...'
-            );
+            this.family.graph = new FamilyGraph();
+            this.family.managers.family = new FamilyManager(this.family.graph);
+            this.family.managers.marriage = new MarriageManager(this.family.graph);
+            this.family.managers.adoption = new AdoptionManager(this.family.graph);
+            this.family.managers.relationship = new RelationshipManager(this.family.graph);
 
-            const { FamilyGraph } =
-                await import(
-                    './family/utils/graph.js'
-                );
+            startupLog('Family system ready');
 
-            const { FamilyManager } =
-                await import(
-                    './family/managers/familyManager.js'
-                );
-
-            const { MarriageManager } =
-                await import(
-                    './family/managers/marriageManager.js'
-                );
-
-            const { AdoptionManager } =
-                await import(
-                    './family/managers/adoptionManager.js'
-                );
-
-            const { RelationshipManager } =
-                await import(
-                    './family/managers/relationshipManager.js'
-                );
-
-            this.family.graph =
-                new FamilyGraph();
-
-            this.family.managers.family =
-                new FamilyManager(
-                    this.family.graph
-                );
-
-            this.family.managers.marriage =
-                new MarriageManager(
-                    this.family.graph
-                );
-
-            this.family.managers.adoption =
-                new AdoptionManager(
-                    this.family.graph
-                );
-
-            this.family.managers.relationship =
-                new RelationshipManager(
-                    this.family.graph
-                );
-
-            startupLog(
-                'Family system ready'
-            );
-
-            startupLog(
-                'Loading handlers...'
-            );
-
+            startupLog('Loading handlers...');
             await this.loadHandlers();
 
-            startupLog(
-                'Starting web server...'
-            );
-
+            startupLog('Starting web server...');
             this.startWebServer();
 
-            startupLog(
-                'Logging into Discord...'
-            );
+            startupLog('Logging into Discord...');
+            await this.login(BOT_TOKEN);
 
-            await this.login(
-                BOT_TOKEN
-            );
-
-            startupLog(
-                'Registering slash commands...'
-            );
-
+            startupLog('Registering slash commands...');
             await this.registerCommands();
 
-            startupLog(
+            startupLog(`ONLINE ✅ | ${this.commands.size} commands | ${this.buttons.size} buttons | ${this.selectMenus.size} menus`);
 
-                `ONLINE ✅ | ${this.commands.size} commands | ${this.buttons.size} buttons | ${this.selectMenus.size} menus`
-
-            );
-
-        } catch(error) {
-
-            logger.error(
-                'Failed to start bot:',
-                error
-            );
-
+        } catch (error) {
+            logger.error('Failed to start bot:', error);
             console.error(error);
-
             process.exit(1);
-
         }
-
     }
 
     startWebServer() {
+        const app = express();
+        const port = Number(process.env.PORT || 3000);
 
-        const app =
-            express();
+        app.get('/', (req, res) => {
+            res.json({ message: 'CatPom online', version: pkg.version });
+        });
 
-        const port =
-            Number(
-                process.env.PORT || 3000
-            );
+        app.get('/health', (req, res) => {
+            res.json({ status: 'healthy', uptime: process.uptime() });
+        });
 
-        app.get(
-            '/',
-            (req,res)=>{
-
-                res.json({
-
-                    message:
-                        'CatPom online',
-
-                    version:
-                        pkg.version
-
-                });
-
-            }
-        );
-
-        app.get(
-            '/health',
-            (req,res)=>{
-
-                res.json({
-
-                    status:
-                        'healthy',
-
-                    uptime:
-                        process.uptime()
-
-                });
-
-            }
-        );
-
-        this.webServer =
-            app.listen(
-                port,
-                ()=>{
-
-                    startupLog(
-                        `Web server running on port ${port}`
-                    );
-
-                }
-            );
-
+        this.webServer = app.listen(port, () => {
+            startupLog(`Web server running on port ${port}`);
+        });
     }
 
-    async loadHandlers(){
+    async loadHandlers() {
+        const handlers = ['loaders/events', 'loaders/interactions'];
 
-        const handlers = [
-
-            'loaders/events',
-            'loaders/interactions'
-
-        ];
-
-        for(
-            const handler of handlers
-        ){
-
-            const module =
-                await import(
-                    `./handlers/${handler}.js`
-                );
-
-            if(
-                typeof module.default === 'function'
-            ){
-
+        for (const handler of handlers) {
+            const module = await import(`./handlers/${handler}.js`);
+            if (typeof module.default === 'function') {
                 await module.default(this);
-
-                startupLog(
-                    `Loaded ${handler}`
-                );
-
+                startupLog(`Loaded ${handler}`);
             }
-
         }
-
     }
 
-    async registerCommands(){
-
-        try{
-
-            await registerSlashCommands(
-
-                this,
-
-                {
-
-                    clientId:
-                        CLIENT_ID
-
-                }
-
-            );
-
-        }catch(error){
-
-            logger.error(
-
-                'Command registration failed:',
-
-                error
-
-            );
-
+    async registerCommands() {
+        try {
+            await registerSlashCommands(this, { clientId: CLIENT_ID });
+        } catch (error) {
+            logger.error('Command registration failed:', error);
         }
-
     }
 
-    async shutdown(
-        reason='UNKNOWN'
-    ){
-
-        shutdownLog(
-
-            `CatPom shutting down: ${reason}`
-
-        );
-
-        try{
-
-            if(this.webServer){
-
+    async shutdown(reason = 'UNKNOWN') {
+        shutdownLog(`CatPom shutting down: ${reason}`);
+        try {
+            if (this.webServer) {
                 this.webServer.close();
-
             }
-
-            if(this.pgPool && typeof this.pgPool.end === 'function'){
-
-                await this.pgPool.end();
-
-            } else if(this.db?.db?.pool){
-
-                await this.db.db.pool.end();
-
+            if (global.pgPool && typeof global.pgPool.end === 'function') {
+                await global.pgPool.end();
             }
-
             this.destroy();
-
             process.exit(0);
-
-        }catch(error){
-
-            logger.error(
-
-                'Shutdown error:',
-
-                error
-
-            );
-
+        } catch (error) {
+            logger.error('Shutdown error:', error);
             process.exit(1);
-
         }
-
     }
-
 }
 
-const bot =
-    new CatPom();
+const bot = new CatPom();
 
-process.on(
-    'SIGTERM',
-    ()=>bot.shutdown('SIGTERM')
-);
+process.on('SIGTERM', () => bot.shutdown('SIGTERM'));
+process.on('SIGINT', () => bot.shutdown('SIGINT'));
 
-process.on(
-    'SIGINT',
-    ()=>bot.shutdown('SIGINT')
-);
+process.on('uncaughtException', error => {
+    console.error('💥 UNCAUGHT EXCEPTION', error);
+    handleTaskError('uncaught_exception', error, { fatal: true });
+});
 
-process.on(
-    'uncaughtException',
-    error=>{
-
-        console.error(
-            '💥 UNCAUGHT EXCEPTION'
-        );
-
-        console.error(error);
-
-        handleTaskError(
-
-            'uncaught_exception',
-
-            error,
-
-            {
-                fatal:true
-            }
-
-        );
-
-    }
-);
-
-process.on(
-    'unhandledRejection',
-    reason=>{
-
-        console.error(
-            '💥 UNHANDLED REJECTION'
-        );
-
-        console.error(reason);
-
-        handleTaskError(
-
-            'unhandled_rejection',
-
-            reason instanceof Error
-                ? reason
-                : new Error(
-                    String(reason)
-                ),
-
-            {
-
-                errorCode:
-                    ErrorCodes.UNHANDLED_REJECTION
-
-            }
-
-        );
-
-    }
-);
+process.on('unhandledRejection', reason => {
+    console.error('💥 UNHANDLED REJECTION', reason);
+    handleTaskError(
+        'unhandled_rejection',
+        reason instanceof Error ? reason : new Error(String(reason)),
+        { errorCode: ErrorCodes.UNHANDLED_REJECTION }
+    );
+});
 
 bot.start();
 
