@@ -1,9 +1,11 @@
 export async function drawLines(ctx, layout) {
-    const { connections, settings } = layout;
+    const { nodes, connections, settings } = layout;
     
     if (!connections || !Array.isArray(connections)) return;
 
     const lineColor = settings.lines || '#000000';
+    const NODE_HEIGHT = 46;
+    const NODE_WIDTH = 120;
 
     ctx.save();
     ctx.strokeStyle = lineColor;
@@ -12,17 +14,33 @@ export async function drawLines(ctx, layout) {
     ctx.lineJoin = 'round';
 
     for (const conn of connections) {
-        if (!conn.from || !conn.to) continue;
+        const fromNode = nodes.find(n => n.id === conn.fromNodeId);
+        const toNode = nodes.find(n => n.id === conn.toNodeId);
+
+        if (!fromNode || !toNode) continue;
 
         ctx.beginPath();
-        ctx.moveTo(conn.from.x, conn.from.y);
 
-        if (conn.points && Array.isArray(conn.points)) {
-            for (const pt of conn.points) {
-                ctx.lineTo(pt.x, pt.y);
-            }
+        if (conn.type === 'partner') {
+            // Línea horizontal directa entre parejas
+            const startX = fromNode.x + (toNode.x > fromNode.x ? NODE_WIDTH / 2 : -NODE_WIDTH / 2);
+            const endX = toNode.x + (toNode.x > fromNode.x ? -NODE_WIDTH / 2 : NODE_WIDTH / 2);
+            
+            ctx.moveTo(startX, fromNode.y);
+            ctx.lineTo(endX, toNode.y);
         } else {
-            ctx.lineTo(conn.to.x, conn.to.y);
+            // Conexión vertical (Padre / Hijo)
+            const startX = fromNode.x;
+            const startY = fromNode.y + NODE_HEIGHT / 2;
+            const endX = toNode.x;
+            const endY = toNode.y - NODE_HEIGHT / 2;
+
+            const midY = (startY + endY) / 2;
+
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX, midY);
+            ctx.lineTo(endX, midY);
+            ctx.lineTo(endX, endY);
         }
 
         ctx.stroke();
