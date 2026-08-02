@@ -5,11 +5,9 @@ import {
 } from '../../utils/missions.js';
 
 export default {
-
     customId: 'join_mission',
 
     async execute(interaction, client, args) {
-
         const id = args[0];
 
         const mission = await getMission(
@@ -20,15 +18,20 @@ export default {
         if (!mission) {
             return interaction.reply({
                 content: '❌ Misión no encontrada.',
-                ephemeral: true
+                flags: 64
             });
+        }
+
+        // Asegurar que mission.usuarios exista siempre como array
+        if (!Array.isArray(mission.usuarios)) {
+            mission.usuarios = [];
         }
 
         // ¿Ya está apuntado a esta misión?
         if (mission.usuarios.includes(interaction.user.id)) {
             return interaction.reply({
                 content: '❌ Ya estás apuntado.',
-                ephemeral: true
+                flags: 64
             });
         }
 
@@ -45,7 +48,7 @@ export default {
         if (otherMission) {
             return interaction.reply({
                 content: `❌ Ya participas en la misión **${otherMission.nombre}**. Sal de ella antes de unirte a otra.`,
-                ephemeral: true
+                flags: 64
             });
         }
 
@@ -53,7 +56,7 @@ export default {
         if (mission.usuarios.length >= mission.personas) {
             return interaction.reply({
                 content: '❌ Esta misión ya está completa.',
-                ephemeral: true
+                flags: 64
             });
         }
 
@@ -67,13 +70,10 @@ export default {
 
         // Dar rol temporal
         if (mission.roleId) {
-
             const role = interaction.guild.roles.cache.get(mission.roleId);
-
             if (role) {
-                await interaction.member.roles.add(role);
+                await interaction.member.roles.add(role).catch(() => {});
             }
-
         }
 
         const embed = interaction.message.embeds[0];
@@ -85,7 +85,5 @@ export default {
             embeds: [embed],
             components: interaction.message.components
         });
-
     }
-
 };
