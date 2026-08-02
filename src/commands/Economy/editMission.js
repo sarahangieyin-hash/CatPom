@@ -27,7 +27,7 @@ export default {
         ),
 
     async execute(interaction) {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: 64 });
 
         const nombreActual = interaction.options.getString('nombre_actual').toLowerCase();
         const nuevoNombre = interaction.options.getString('nuevo_nombre');
@@ -53,7 +53,6 @@ export default {
                 puntos: nuevosPuntos !== null ? nuevosPuntos : missionEntry.puntos
             };
 
-            // Guardamos usando createMission para asegurar que se escriba en la base de datos con el mismo ID
             await createMission(interaction.guild.id, missionEntry.id, updatedData);
 
             if (nuevoNombre && missionEntry.roleId) {
