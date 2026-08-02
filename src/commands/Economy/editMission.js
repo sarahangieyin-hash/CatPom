@@ -1,10 +1,8 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'id'; // (O los imports que uses, asegurando discord.js)
-import { SlashCommandBuilder as SBuilder, EmbedBuilder as EBuilder } from 'discord.js';
-// Ajusta esta ruta a donde tengas realmente tu archivo de utilidades/funciones de misiones (ej. '../../utils/missions.js')
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { getMissions, updateMission } from '../../utils/missions.js'; 
 
 export default {
-    data: new SBuilder()
+    data: new SlashCommandBuilder()
         .setName('editar-mision')
         .setDescription('Edita una misión existente sin necesidad de crear una nueva')
         .addStringOption(o =>
@@ -41,20 +39,15 @@ export default {
         }
 
         try {
-            // Dependiendo de cómo funcione tu utils/missions.js, necesitamos obtener las misiones del servidor
-            // Si getMissions requiere el guildId, se lo pasamos:
             const missions = await getMissions(interaction.guild.id); 
             
-            // Buscamos la misión que coincida con el nombre ingresado
-            // (Asumiendo que `missions` es un objeto donde las keys son los IDs o un array con objetos)
             let missionEntry = null;
             let missionId = null;
 
             if (Array.isArray(missions)) {
-                missionEntry = missions.find(m => m.nombre.toLowerCase().includes(nombreActual));
+                missionEntry = missions.find(m => m.nombre && m.nombre.toLowerCase().includes(nombreActual));
                 if (missionEntry) missionId = missionEntry.id;
             } else if (missions && typeof missions === 'object') {
-                // Si es un objeto tipo { id: { nombre, personas, ... } }
                 for (const [id, data] of Object.entries(missions)) {
                     if (data.nombre && data.nombre.toLowerCase().includes(nombreActual)) {
                         missionId = id;
@@ -68,7 +61,6 @@ export default {
                 return interaction.editReply(`❌ No se encontró ninguna misión activa que coincida con "**${nombreActual}**".`);
             }
 
-            // Actualizamos los datos localmente en el objeto
             const updatedData = {
                 ...missionEntry,
                 nombre: nuevoNombre || missionEntry.nombre,
@@ -76,10 +68,8 @@ export default {
                 puntos: nuevosPuntos !== null ? nuevosPuntos : missionEntry.puntos
             };
 
-            // Guardamos los cambios usando tu función de utilidad
             await updateMission(interaction.guild.id, missionId, updatedData);
 
-            // Si cambió el nombre, opcionalmente podemos intentar actualizar el nombre del rol asociado si existe
             if (nuevoNombre && missionEntry.roleId) {
                 const role = interaction.guild.roles.cache.get(missionEntry.roleId);
                 if (role) {
@@ -87,7 +77,7 @@ export default {
                 }
             }
 
-            const embed = new EBuilder()
+            const embed = new EmbedBuilder()
                 .setTitle('✅ Misión Actualizada Correctamente')
                 .setColor('#00FF00')
                 .setDescription(
