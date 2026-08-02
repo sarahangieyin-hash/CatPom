@@ -2,14 +2,12 @@ import pg from "pg";
 
 const { Pool } = pg;
 
-// Detectar automáticamente cualquiera de las variables de entorno comunes de Postgres
 const connectionString =
     process.env.POSTGRES_URL ||
     process.env.DATABASE_URL ||
     process.env.PG_CONNECTION_STRING ||
     process.env.PGURI;
 
-// Configuración flexible con o sin SSL dependiendo de si estamos en local o prod
 const poolConfig = {
     connectionString,
 };
@@ -20,7 +18,6 @@ if (connectionString && !connectionString.includes('localhost') && !connectionSt
 
 export const pool = new Pool(poolConfig);
 
-// Asignación global para que todo el bot (incluyendo el sistema de familia) tenga acceso al pool
 global.pgPool = pool;
 
 export const pgDb = {
@@ -28,25 +25,21 @@ export const pgDb = {
 
     async connect() {
         if (!connectionString) {
-            console.error("❌ No se encontró ninguna variable de entorno de PostgreSQL (POSTGRES_URL o DATABASE_URL).");
+            console.error("❌ No se encontró ninguna variable de entorno de PostgreSQL.");
             return false;
         }
 
         try {
-            // Probar conexión
             await pool.query("SELECT 1");
             console.log("✅ POSTGRES CONECTADO CORRECTAMENTE");
 
-            // Asegurar que la tabla clave exista
             await pool.query(`
                 CREATE TABLE IF NOT EXISTS bot_storage (
                     key TEXT PRIMARY KEY,
-                    value JSONB NOT NULL,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    value JSONB NOT NULL
                 );
             `);
 
-            // Asignar referencias globales
             global.db = this;
             global.pgPool = pool;
 
@@ -57,7 +50,6 @@ export const pgDb = {
         }
     },
 
-    // Método universal para ejecutar consultas SQL directas
     async query(text, params) {
         return pool.query(text, params);
     },
@@ -78,13 +70,10 @@ export const pgDb = {
             if (typeof value === "string") {
                 try {
                     value = JSON.parse(value);
-                } catch {
-                    // Si no es JSON válido, lo deja como cadena
-                }
+                } catch {}
             }
 
             return value;
-
         } catch (error) {
             console.error("ERROR GET:", error.message);
             return defaultValue;
@@ -100,16 +89,12 @@ export const pgDb = {
                 INSERT INTO bot_storage (key, value)
                 VALUES ($1, $2::jsonb)
                 ON CONFLICT (key)
-                DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP
+                DO UPDATE SET value = EXCLUDED.value
                 `,
-                [
-                    key,
-                    jsonValue
-                ]
+                [key, jsonValue]
             );
 
             return true;
-
         } catch (error) {
             console.error("ERROR SET:", error.message);
             return false;
@@ -118,10 +103,7 @@ export const pgDb = {
 
     async delete(key) {
         try {
-            await pool.query(
-                "DELETE FROM bot_storage WHERE key = $1",
-                [key]
-            );
+            await pool.query("DELETE FROM bot_storage WHERE key = $1", [key]);
             return true;
         } catch (error) {
             console.error("ERROR DELETE:", error.message);
@@ -142,17 +124,11 @@ export const pgDb = {
                 if (typeof value === "string") {
                     try {
                         value = JSON.parse(value);
-                    } catch {
-                        // dejarlo intacto
-                    }
+                    } catch {}
                 }
 
-                return {
-                    key: row.key,
-                    value
-                };
+                return { key: row.key, value };
             });
-
         } catch (error) {
             console.error("ERROR LIST:", error.message);
             return [];
