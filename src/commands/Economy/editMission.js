@@ -1,7 +1,7 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const Mission = require('../../models/Mission'); // Ajusta la ruta a tu modelo de Misiones
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import pool from '../../database/db.js'; // Ajusta la ruta a tu conexión de PostgreSQL si es distinta
 
-module.exports = {
+export default {
     data: new SlashCommandBuilder()
         .setName('edit-mission')
         .setDescription('Edita una misión de economía existente sin crear una nueva.')
@@ -30,38 +30,43 @@ module.exports = {
         const newDescription = interaction.options.getString('new_description');
         const newReward = interaction.options.getInteger('new_reward');
 
-        // Verificar si se proporcionó al menos un cambio
-        if (!newTitle && !newDescription && !newReward) {
+        if (!newTitle && !newDescription && newReward === null) {
             return interaction.editReply('❌ Debes proporcionar al menos un campo para actualizar (título, descripción o recompensa).');
         }
 
         try {
-            // Buscamos la misión por ID o por Título (según cómo guardes tus misiones)
-            let mission = await Mission.findOne({
-                $or: [
-                    { _id: missionIdentifier.match(/^[0-9a-fA-F]{24}$/) ? missionIdentifier : null },
-                    { title: { $regex: new RegExp(`^${missionIdentifier}$`, 'i') } }
-                ].filter(condition => condition._id !== null || condition.title)
-            });
+            // Buscamos la misión en PostgreSQL por ID (si es numérico o UUID) o por título
+            let query = `SELECT * FROM missions WHERE id::text = $1 OR title ILIKE $2`;
+            let result = await pool.query(query, [missionIdentifier, missionIdentifier]);
 
-            if (!mission) {
+            if (result.rows.length === 0) {
                 return interaction.editReply(`❌ No se ha encontrado ninguna misión con el identificador: **${missionIdentifier}**`);
             }
 
-            // Actualizamos solo los campos que el usuario haya rellenado
-            if (newTitle) mission.title = newTitle;
-            if (newDescription) mission.description = newDescription;
-            if (newReward !== null) mission.reward = newReward;
+            let mission = result.rows[0];
 
-            await mission.save();
+            // Preparamos los valores actualizados conservando los anteriores si no se modifican
+            const updatedTitle = newTitle || mission.title;
+            const updatedDescription = newDescription || mission.description;
+            const updatedReward = newReward !== null ? newReward : mission.reward;
+
+            // Actualizamos en la base de datos
+            const updateQuery = `
+                UPDATE missions 
+                SET title = $1, description = $2, reward = $3 
+                WHERE id = $4 
+                RETURNING *;
+            `;
+            const updateResult = await pool.query(updateQuery, [updatedTitle, updatedDescription, updatedReward, mission.id]);
+            const updatedMission = updateResult.rows[0];
 
             const embed = new EmbedBuilder()
                 .setTitle('✅ Misión Actualizada con Éxito')
                 .setColor('#00FF00')
                 .addFields(
-                    { name: 'Título', value: mission.title, inline: true },
-                    { name: 'Recompensa', value: `${mission.reward} 🪙`, inline: true },
-                    { name: 'Descripción', value: mission.description || 'Sin descripción' }
+                    { name: 'Título', value: updatedMission.title, inline: true },
+                    { name: 'Recompensa', value: `${updatedMission.reward} 🪙`, inline: true },
+                    { name: 'Descripción', value: updatedMission.description || 'Sin descripción' }
                 )
                 .setTimestamp();
 
