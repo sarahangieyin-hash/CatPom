@@ -1,6 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-// Importamos desde el mismo sitio que tu comando de crear misión
-import { getMissions, updateMission } from '../../utils/missions.js'; 
+import { getAllMissions, updateMission } from '../../utils/missions.js';
 
 export default {
     data: new SlashCommandBuilder()
@@ -40,29 +39,17 @@ export default {
         }
 
         try {
-            // Obtenemos las misiones del servidor usando tu utilidad existente
-            const missions = await getMissions(interaction.guild.id);
+            // Obtenemos todas las misiones del servidor usando tu wrapper
+            const missions = await getAllMissions(interaction.guild.id);
             
-            let missionEntry = null;
-            let missionId = null;
+            // Buscamos la misión que coincida con el nombre
+            const missionEntry = missions.find(m => m.nombre && m.nombre.toLowerCase().includes(nombreActual));
 
-            if (Array.isArray(missions)) {
-                missionEntry = missions.find(m => m.nombre && m.nombre.toLowerCase().includes(nombreActual));
-                if (missionEntry) missionId = missionEntry.id;
-            } else if (missions && typeof missions === 'object') {
-                for (const [id, data] of Object.entries(missions)) {
-                    if (data.nombre && data.nombre.toLowerCase().includes(nombreActual)) {
-                        missionId = id;
-                        missionEntry = data;
-                        break;
-                    }
-                }
-            }
-
-            if (!missionEntry || !missionId) {
+            if (!missionEntry || !missionEntry.id) {
                 return interaction.editReply(`❌ No se encontró ninguna misión activa que coincida con "**${nombreActual}**".`);
             }
 
+            // Preparamos los datos actualizados manteniendo los anteriores si no se cambian
             const updatedData = {
                 ...missionEntry,
                 nombre: nuevoNombre || missionEntry.nombre,
@@ -70,9 +57,10 @@ export default {
                 puntos: nuevosPuntos !== null ? nuevosPuntos : missionEntry.puntos
             };
 
-            // Guardamos los cambios usando tu gestor de misiones
-            await updateMission(interaction.guild.id, missionId, updatedData);
+            // Guardamos los cambios con tu función oficial de misiones
+            await updateMission(interaction.guild.id, missionEntry.id, updatedData);
 
+            // Si cambió el nombre y tenía un rol asociado, actualizamos el nombre del rol también
             if (nuevoNombre && missionEntry.roleId) {
                 const role = interaction.guild.roles.cache.get(missionEntry.roleId);
                 if (role) {
