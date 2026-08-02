@@ -1,72 +1,100 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import pool from '../../database/db.js'; // Ajusta la ruta a tu conexión de PostgreSQL si es distinta
+import { SlashCommandBuilder, EmbedBuilder } from 'id'; // (O los imports que uses, asegurando discord.js)
+import { SlashCommandBuilder as SBuilder, EmbedBuilder as EBuilder } from 'discord.js';
+// Ajusta esta ruta a donde tengas realmente tu archivo de utilidades/funciones de misiones (ej. '../../utils/missions.js')
+import { getMissions, updateMission } from '../../utils/missions.js'; 
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName('edit-mission')
-        .setDescription('Edita una misión de economía existente sin crear una nueva.')
-        .addStringOption(option =>
-            option.setName('mission_id')
-                .setDescription('El ID o título exacto de la misión que quieres editar')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('new_title')
-                .setDescription('Nuevo título para la misión')
-                .setRequired(false))
-        .addStringOption(option =>
-            option.setName('new_description')
-                .setDescription('Nueva descripción de la misión')
-                .setRequired(false))
-        .addIntegerOption(option =>
-            option.setName('new_reward')
-                .setDescription('Nueva recompensa de monedas')
-                .setRequired(false)),
+    data: new SBuilder()
+        .setName('editar-mision')
+        .setDescription('Edita una misión existente sin necesidad de crear una nueva')
+        .addStringOption(o =>
+            o.setName('nombre_actual')
+                .setDescription('El nombre exacto o parte del nombre de la misión que quieres editar')
+                .setRequired(true)
+        )
+        .addStringOption(o =>
+            o.setName('nuevo_nombre')
+                .setDescription('Nuevo nombre para la misión (opcional)')
+                .setRequired(false)
+        )
+        .addIntegerOption(o =>
+            o.setName('nuevas_personas')
+                .setDescription('Nuevas personas necesarias (opcional)')
+                .setRequired(false)
+        )
+        .addIntegerOption(o =>
+            o.setName('nuevos_puntos')
+                .setDescription('Nuevos Pomp de recompensa (opcional)')
+                .setRequired(false)
+        ),
 
     async execute(interaction) {
         await interaction.deferReply({ ephemeral: true });
 
-        const missionIdentifier = interaction.options.getString('mission_id');
-        const newTitle = interaction.options.getString('new_title');
-        const newDescription = interaction.options.getString('new_description');
-        const newReward = interaction.options.getInteger('new_reward');
+        const nombreActual = interaction.options.getString('nombre_actual').toLowerCase();
+        const nuevoNombre = interaction.options.getString('nuevo_nombre');
+        const nuevasPersonas = interaction.options.getInteger('nuevas_personas');
+        const nuevosPuntos = interaction.options.getInteger('nuevos_puntos');
 
-        if (!newTitle && !newDescription && newReward === null) {
-            return interaction.editReply('❌ Debes proporcionar al menos un campo para actualizar (título, descripción o recompensa).');
+        if (!nuevoNombre && nuevasPersonas === null && nuevosPuntos === null) {
+            return interaction.editReply('❌ Debes proporcionar al menos un campo para modificar (nuevo nombre, personas o puntos).');
         }
 
         try {
-            // Buscamos la misión en PostgreSQL por ID (si es numérico o UUID) o por título
-            let query = `SELECT * FROM missions WHERE id::text = $1 OR title ILIKE $2`;
-            let result = await pool.query(query, [missionIdentifier, missionIdentifier]);
+            // Dependiendo de cómo funcione tu utils/missions.js, necesitamos obtener las misiones del servidor
+            // Si getMissions requiere el guildId, se lo pasamos:
+            const missions = await getMissions(interaction.guild.id); 
+            
+            // Buscamos la misión que coincida con el nombre ingresado
+            // (Asumiendo que `missions` es un objeto donde las keys son los IDs o un array con objetos)
+            let missionEntry = null;
+            let missionId = null;
 
-            if (result.rows.length === 0) {
-                return interaction.editReply(`❌ No se ha encontrado ninguna misión con el identificador: **${missionIdentifier}**`);
+            if (Array.isArray(missions)) {
+                missionEntry = missions.find(m => m.nombre.toLowerCase().includes(nombreActual));
+                if (missionEntry) missionId = missionEntry.id;
+            } else if (missions && typeof missions === 'object') {
+                // Si es un objeto tipo { id: { nombre, personas, ... } }
+                for (const [id, data] of Object.entries(missions)) {
+                    if (data.nombre && data.nombre.toLowerCase().includes(nombreActual)) {
+                        missionId = id;
+                        missionEntry = data;
+                        break;
+                    }
+                }
             }
 
-            let mission = result.rows[0];
+            if (!missionEntry || !missionId) {
+                return interaction.editReply(`❌ No se encontró ninguna misión activa que coincida con "**${nombreActual}**".`);
+            }
 
-            // Preparamos los valores actualizados conservando los anteriores si no se modifican
-            const updatedTitle = newTitle || mission.title;
-            const updatedDescription = newDescription || mission.description;
-            const updatedReward = newReward !== null ? newReward : mission.reward;
+            // Actualizamos los datos localmente en el objeto
+            const updatedData = {
+                ...missionEntry,
+                nombre: nuevoNombre || missionEntry.nombre,
+                personas: nuevasPersonas !== null ? nuevasPersonas : missionEntry.personas,
+                puntos: nuevosPuntos !== null ? nuevosPuntos : missionEntry.puntos
+            };
 
-            // Actualizamos en la base de datos
-            const updateQuery = `
-                UPDATE missions 
-                SET title = $1, description = $2, reward = $3 
-                WHERE id = $4 
-                RETURNING *;
-            `;
-            const updateResult = await pool.query(updateQuery, [updatedTitle, updatedDescription, updatedReward, mission.id]);
-            const updatedMission = updateResult.rows[0];
+            // Guardamos los cambios usando tu función de utilidad
+            await updateMission(interaction.guild.id, missionId, updatedData);
 
-            const embed = new EmbedBuilder()
-                .setTitle('✅ Misión Actualizada con Éxito')
+            // Si cambió el nombre, opcionalmente podemos intentar actualizar el nombre del rol asociado si existe
+            if (nuevoNombre && missionEntry.roleId) {
+                const role = interaction.guild.roles.cache.get(missionEntry.roleId);
+                if (role) {
+                    await role.setName(nuevoNombre).catch(() => {});
+                }
+            }
+
+            const embed = new EBuilder()
+                .setTitle('✅ Misión Actualizada Correctamente')
                 .setColor('#00FF00')
-                .addFields(
-                    { name: 'Título', value: updatedMission.title, inline: true },
-                    { name: 'Recompensa', value: `${updatedMission.reward} 🪙`, inline: true },
-                    { name: 'Descripción', value: updatedMission.description || 'Sin descripción' }
+                .setDescription(
+                    `Se han modificado los datos de la misión:\n\n` +
+                    `📌 **Nombre:** ${missionEntry.nombre} ➡️ **${updatedData.nombre}**\n` +
+                    `👥 **Personas:** ${missionEntry.personas} ➡️ **${updatedData.personas}**\n` +
+                    `💎 **Puntos (Pomp):** ${missionEntry.puntos} ➡️ **${updatedData.puntos}**`
                 )
                 .setTimestamp();
 
@@ -74,7 +102,7 @@ export default {
 
         } catch (error) {
             console.error('Error al editar la misión:', error);
-            await interaction.editReply('❌ Ocurrió un error al intentar actualizar la misión en la base de datos.');
+            await interaction.editReply('❌ Hubo un error al intentar actualizar la misión.');
         }
-    },
+    }
 };
