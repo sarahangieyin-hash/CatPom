@@ -38,6 +38,11 @@ export default {
                     customId = "accept_adoption";
                     args = [parts[2], parts[3]];
                 }
+                else if (customId.startsWith("poll_")) {
+                    const parts = customId.split("_");
+                    customId = "poll";
+                    args = [parts[1], parts[2]]; // [roleId, optionIndex]
+                }
 
                 console.log(
                     "🔘 BOTÓN PRESIONADO:",
@@ -118,7 +123,6 @@ export default {
                     }
 
                     if (customId === 'expand_marriage_accept') {
-                        // Actualizamos este mensaje para cerrarlo y que no queden botones activos aquí
                         await interaction.update({
                             content: `✅ Has autorizado la ampliación. Enviando propuesta formal al nuevo integrante...`,
                             components: []
@@ -128,7 +132,6 @@ export default {
                         const currentGroup = [authorId, ...(authorFamily.spouses || [])];
                         const groupString = currentGroup.join(':');
 
-                        // Creamos los botones para el nuevo integrante usando dos puntos para el args del interactionCreate
                         const acceptBtn = {
                             type: 2,
                             style: 3,
@@ -150,7 +153,6 @@ export default {
 
                         const mentions = currentGroup.map(id => `<@${id}>`).join(', ');
 
-                        // Enviamos un mensaje NUEVO (followUp) con los botones intactos para la tercera persona
                         return interaction.followUp({
                             content: `💍 <@${targetId}>, el grupo actual (${mentions}) te ha propuesto unirte a su matrimonio múltiple. ¿Aceptas?`,
                             components: [row]
@@ -179,7 +181,6 @@ export default {
                     if (customId === 'multimarry_accept') {
                         const allMembers = [...groupIds, targetId];
 
-                        // Guardar las relaciones de forma cruzada para que todos estén casados con todos
                         for (let i = 0; i < allMembers.length; i++) {
                             for (let j = i + 1; j < allMembers.length; j++) {
                                 await addRelation(interaction.guild.id, allMembers[i], allMembers[j], 'marriage');
