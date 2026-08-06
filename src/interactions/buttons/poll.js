@@ -1,6 +1,5 @@
 import { MessageFlags, EmbedBuilder, ActionRowBuilder } from 'discord.js';
 
-// Base de datos en memoria para guardar quién votó: messageId -> Map(userId -> { optionIndex, optionText })
 const pollVotes = new Map();
 
 export default {
@@ -10,13 +9,12 @@ export default {
         const message = interaction.message;
         const userId = interaction.user.id;
 
-        // Inicializar estructura para este mensaje si no existe
         if (!pollVotes.has(message.id)) {
             pollVotes.set(message.id, new Map());
         }
         const userVotes = pollVotes.get(message.id);
 
-        // CASO 1: Botón de Revisar Votos
+        // CASO 1: Revisar Votos
         if (args[0] === 'check') {
             if (userVotes.size === 0) {
                 return interaction.reply({
@@ -25,7 +23,6 @@ export default {
                 });
             }
 
-            // Extraemos los textos de las opciones del embed actual
             const embed = message.embeds[0];
             const optionTexts = [];
             embed.description.split('\n').forEach(line => {
@@ -33,7 +30,6 @@ export default {
                 if (match) optionTexts.push(match[1]);
             });
 
-            // Agrupar votos por usuario
             let report = '📋 **Detalle de votos de la encuesta:**\n\n';
             for (const [uId, data] of userVotes.entries()) {
                 const optName = optionTexts[data.optionIndex] || `Opción ${data.optionIndex + 1}`;
@@ -46,9 +42,8 @@ export default {
             });
         }
 
-        // CASO 2: Botón de Cerrar Encuesta
+        // CASO 2: Cerrar Encuesta
         if (args[0] === 'close') {
-            // Verificar si el usuario es el creador o tiene permisos de gestionar mensajes
             const embed = message.embeds[0];
             const footer = embed?.footer?.text || '';
             const isCreator = footer.includes(userId);
@@ -61,7 +56,6 @@ export default {
                 });
             }
 
-            // Desactivar todos los botones
             const disabledRows = message.components.map(row => {
                 const newRow = ActionRowBuilder.from(row);
                 newRow.components.forEach(btn => btn.setDisabled(true));
@@ -83,7 +77,7 @@ export default {
             });
         }
 
-        // CASO 3: Votación normal (args[0] es el roleId, args[1] es el optionIndex)
+        // CASO 3: Votación normal
         const roleId = args[0];
         const optionIndex = parseInt(args[1]);
 
@@ -103,7 +97,6 @@ export default {
             });
         }
 
-        // Guardar/Actualizar el voto del usuario
         userVotes.set(userId, { optionIndex });
 
         const embed = message.embeds[0];
@@ -111,7 +104,6 @@ export default {
 
         const lines = embed.description.split('\n');
         
-        // Actualizar contadores en el embed en tiempo real
         let updatedDescription = lines.map(line => {
             for (let i = 0; i < 5; i++) {
                 if (line.includes(`🔹 **Opción ${i + 1}:**`)) {
