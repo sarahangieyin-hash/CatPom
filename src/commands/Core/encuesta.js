@@ -10,7 +10,7 @@ import {
 export default {
     data: new SlashCommandBuilder()
         .setName('encuesta')
-        .setDescription('Crea una encuesta con restricción de rol, opciones y tiempo de cierre')
+        .setDescription('Crea una encuesta con rol permitido, tiempo límite y botones de gestión')
         .addStringOption(o =>
             o.setName('pregunta')
                 .setDescription('La pregunta de la encuesta')
@@ -47,12 +47,12 @@ export default {
             return interaction.editReply('❌ Debes proporcionar entre **2 y 5 opciones** separadas por comas.');
         }
 
-        let footerText = `Encuesta creada por ${interaction.user.tag}`;
+        let footerText = `Creada por ${interaction.user.tag} (${interaction.user.id})`;
         let cierreTimestamp = null;
 
         if (horas && horas > 0) {
             cierreTimestamp = Date.now() + (horas * 60 * 60 * 1000);
-            footerText += ` • Cierra el: <t:${Math.floor(cierreTimestamp / 1000)}:f>`;
+            footerText += ` • Cierra: <t:${Math.floor(cierreTimestamp / 1000)}:f>`;
         }
 
         const embed = new EmbedBuilder()
@@ -62,23 +62,36 @@ export default {
             .setFooter({ text: footerText })
             .setTimestamp();
 
-        const buttons = opciones.map((op, i) => {
+        // Fila 1: Opciones de voto (poll_ROLID_OPCIONINDEX)
+        const voteButtons = opciones.map((op, i) => {
             return new ButtonBuilder()
                 .setCustomId(`poll_${rolPermitido.id}_${i}`)
                 .setLabel(op.length > 80 ? op.substring(0, 77) + '...' : op)
                 .setStyle(ButtonStyle.Primary);
         });
+        const rowVotes = new ActionRowBuilder().addComponents(voteButtons);
 
-        const row = new ActionRowBuilder().addComponents(buttons);
+        // Fila 2: Botones de control (Cerrar y Ver Votos)
+        const closeButton = new ButtonBuilder()
+            .setCustomId('poll_close')
+            .setLabel('🔒 Cerrar Encuesta')
+            .setStyle(ButtonStyle.Danger);
+
+        const checkButton = new ButtonBuilder()
+            .setCustomId('poll_check')
+            .setLabel('📋 Revisar Votos')
+            .setStyle(ButtonStyle.Secondary);
+
+        const rowControl = new ActionRowBuilder().addComponents(closeButton, checkButton);
 
         const message = await interaction.channel.send({
             embeds: [embed],
-            components: [row]
+            components: [rowVotes, rowControl]
         });
 
         await interaction.editReply(`✅ Encuesta creada con éxito.`);
 
-        // Si se especificó un tiempo, programar el cierre automático
+        // Cierre automático por tiempo si aplica
         if (cierreTimestamp) {
             const timeLeft = cierreTimestamp - Date.now();
             setTimeout(async () => {
@@ -87,18 +100,16 @@ export default {
                     if (!fetchedMessage) return;
 
                     const currentEmbed = fetchedMessage.embeds[0];
-                    if (!currentEmbed) return;
+                    if (!currentEmbed || currentEmbed.title.includes('Finalizada')) return;
 
-                    // Desactivar botones
                     const disabledRows = fetchedMessage.components.map(row => {
                         const newRow = ActionRowBuilder.from(row);
                         newRow.components.forEach(btn => btn.setDisabled(true));
                         return newRow;
                     });
 
-                    // Calcular ganador o resumen
                     const closedEmbed = EmbedBuilder.from(currentEmbed)
-                        .setTitle('📊 Encuesta Finalizada (Resultados)')
+                        .setTitle('📊 Encuesta Finalizada (Cierre Automático)')
                         .setColor('#E74C3C');
 
                     await fetchedMessage.edit({
