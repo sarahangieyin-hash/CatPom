@@ -1,13 +1,92 @@
-import { MessageFlags, EmbedBuilder } from 'discord.js';
+import { MessageFlags, EmbedBuilder, ActionRowBuilder } from 'discord.js';
+
+// Base de datos en memoria para guardar quién votó: messageId -> Map(userId -> { optionIndex, optionText })
+const pollVotes = new Map();
 
 export default {
     customId: 'poll',
 
     async execute(interaction, client, args) {
+        const message = interaction.message;
+        const userId = interaction.user.id;
+
+        // Inicializar estructura para este mensaje si no existe
+        if (!pollVotes.has(message.id)) {
+            pollVotes.set(message.id, new Map());
+        }
+        const userVotes = pollVotes.get(message.id);
+
+        // CASO 1: Botón de Revisar Votos
+        if (args[0] === 'check') {
+            if (userVotes.size === 0) {
+                return interaction.reply({
+                    content: '📋 Nadie ha votado en esta encuesta todavía.',
+                    flags: MessageFlags.Ephemeral
+                });
+            }
+
+            // Extraemos los textos de las opciones del embed actual
+            const embed = message.embeds[0];
+            const optionTexts = [];
+            embed.description.split('\n').forEach(line => {
+                const match = line.match(/🔹 \*\*Opción \d+:\*\* (.+?) \(\d+ votos\)/);
+                if (match) optionTexts.push(match[1]);
+            });
+
+            // Agrupar votos por usuario
+            let report = '📋 **Detalle de votos de la encuesta:**\n\n';
+            for (const [uId, data] of userVotes.entries()) {
+                const optName = optionTexts[data.optionIndex] || `Opción ${data.optionIndex + 1}`;
+                report += `• <@${uId}> votó por: **${optName}**\n`;
+            }
+
+            return interaction.reply({
+                content: report,
+                flags: MessageFlags.Ephemeral
+            });
+        }
+
+        // CASO 2: Botón de Cerrar Encuesta
+        if (args[0] === 'close') {
+            // Verificar si el usuario es el creador o tiene permisos de gestionar mensajes
+            const embed = message.embeds[0];
+            const footer = embed?.footer?.text || '';
+            const isCreator = footer.includes(userId);
+            const hasPermissions = interaction.member.permissions.has('ManageMessages');
+
+            if (!isCreator && !hasPermissions) {
+                return interaction.reply({
+                    content: '❌ Solo el creador de la encuesta o un moderador pueden cerrarla.',
+                    flags: MessageFlags.Ephemeral
+                });
+            }
+
+            // Desactivar todos los botones
+            const disabledRows = message.components.map(row => {
+                const newRow = ActionRowBuilder.from(row);
+                newRow.components.forEach(btn => btn.setDisabled(true));
+                return newRow;
+            });
+
+            const closedEmbed = EmbedBuilder.from(embed)
+                .setTitle('📊 Encuesta Finalizada (Cerrada Manualmente)')
+                .setColor('#E74C3C');
+
+            await message.edit({
+                embeds: [closedEmbed],
+                components: disabledRows
+            });
+
+            return interaction.reply({
+                content: '🔒 Has cerrado la encuesta correctamente.',
+                flags: MessageFlags.Ephemeral
+            });
+        }
+
+        // CASO 3: Votación normal (args[0] es el roleId, args[1] es el optionIndex)
         const roleId = args[0];
         const optionIndex = parseInt(args[1]);
 
-        // Verificar si tiene el rol permitido
         if (!interaction.member.roles.cache.has(roleId)) {
             return interaction.reply({
                 content: `❌ Solo los miembros con el rol <@&${roleId}> pueden votar en esta encuesta.`,
@@ -15,43 +94,45 @@ export default {
             });
         }
 
-        const message = interaction.message;
-        const embed = message.embeds[0];
+        const previousVoteData = userVotes.get(userId);
 
-        if (!embed) {
+        if (previousVoteData && previousVoteData.optionIndex === optionIndex) {
             return interaction.reply({
-                content: '❌ No se pudo encontrar el embed de la encuesta.',
+                content: `⚠️ Ya habías votado por esta opción.`,
                 flags: MessageFlags.Ephemeral
             });
         }
 
-        // Extraer las líneas de la descripción actual
+        // Guardar/Actualizar el voto del usuario
+        userVotes.set(userId, { optionIndex });
+
+        const embed = message.embeds[0];
+        if (!embed) return;
+
         const lines = embed.description.split('\n');
         
-        // Buscamos las líneas de las opciones y actualizamos los votos sumando +1 a la opción seleccionada
+        // Actualizar contadores en el embed en tiempo real
         let updatedDescription = lines.map(line => {
-            if (line.includes(`🔹 **Opción ${optionIndex + 1}:**`)) {
-                // Ejemplo de línea: 🔹 **Opción 1:** Sí (0 votos)
-                const match = line.match(/\((\d+)\s+votos?\)/);
-                if (match) {
-                    const currentVotes = parseInt(match[1]);
-                    // Reemplazamos el número de votos anterior por el nuevo incrementado
-                    return line.replace(/\(\d+\s+votos?\)/, `(${currentVotes + 1} votos)`);
+            for (let i = 0; i < 5; i++) {
+                if (line.includes(`🔹 **Opción ${i + 1}:**`)) {
+                    let count = 0;
+                    for (const vote of userVotes.values()) {
+                        if (vote.optionIndex === i) count++;
+                    }
+                    return line.replace(/\(\d+\s+votos?\)/, `(${count} votos)`);
                 }
             }
             return line;
         }).join('\n');
 
-        // Construir el nuevo embed actualizado
         const updatedEmbed = EmbedBuilder.from(embed)
             .setDescription(updatedDescription);
 
-        // Actualizar el mensaje público con el nuevo conteo
         await message.edit({ embeds: [updatedEmbed] });
 
-        // Confirmar de forma privada al usuario que su voto fue registrado
+        const actionText = previousVoteData !== undefined ? '¡Has cambiado tu voto con éxito!' : '¡Tu voto ha sido registrado!';
         await interaction.reply({
-            content: `✅ ¡Tu voto para la opción ${optionIndex + 1} ha sido registrado con éxito!`,
+            content: `✅ ${actionText} (Opción ${optionIndex + 1})`,
             flags: MessageFlags.Ephemeral
         });
     }
