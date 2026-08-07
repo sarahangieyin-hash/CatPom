@@ -1,50 +1,28 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-
-// Mapa global para guardar los estados AFK de los usuarios por servidor (guildId -> Map(userId -> { reason, timestamp }))
-export const afkUsers = new Map();
+import { afkUsers } from '../../utils/afkManager.js'; // IMPORTA EL MAPA CENTRAL
 
 export default {
     data: new SlashCommandBuilder()
         .setName('afk')
         .setDescription('Establece tu estado como ausente (AFK)')
-        .addStringOption(option =>
-            option.setName('motivo')
-                .setDescription('El motivo por el cual te ausentas')
-                .setRequired(false)
-        ),
+        .addStringOption(o => o.setName('motivo').setDescription('Motivo').setRequired(false)),
 
-    async execute(interaction, client) {
+    async execute(interaction) {
         const guildId = interaction.guild.id;
         const userId = interaction.user.id;
-        const motivo = interaction.options.getString('motivo') || 'Sin motivo especificado';
+        const motivo = interaction.options.getString('motivo') || 'Sin motivo';
 
-        if (!afkUsers.has(guildId)) {
-            afkUsers.set(guildId, new Map());
-        }
+        if (!afkUsers.has(guildId)) afkUsers.set(guildId, new Map());
+        
+        afkUsers.get(guildId).set(userId, { reason: motivo, timestamp: Date.now() });
 
-        const guildAfk = afkUsers.get(guildId);
-        guildAfk.set(userId, {
-            reason: motivo,
-            timestamp: Date.now()
+        await interaction.reply({
+            embeds: [new EmbedBuilder().setTitle('💤 AFK Activado').setDescription(`<@${userId}> está AFK: ${motivo}`).setColor('Yellow')]
         });
 
-        const embed = new EmbedBuilder()
-            .setTitle('💤 Estado AFK Activado')
-            .setDescription(`<@${userId}> se ha puesto AFK.\n📌 **Motivo:** ${motivo}`)
-            .setColor('#f39c12')
-            .setTimestamp();
-
-        // Se envía de forma pública para que todos lo sepan en el canal
-        await interaction.reply({ embeds: [embed] });
-
-        // Opcional: Cambiar temporalmente el apodo del usuario añadiendo "[AFK]" si el bot tiene permisos
-        try {
-            const member = interaction.member;
-            if (member.manageable && !member.displayName.includes('[AFK]')) {
-                await member.setNickname(`[AFK] ${member.displayName}`).catch(() => {});
-            }
-        } catch (e) {
-            // Ignorar si no hay permisos para cambiar el apodo
+        // Intentar cambiar apodo
+        if (interaction.member.manageable) {
+            await interaction.member.setNickname(`[AFK] ${interaction.member.displayName}`).catch(() => {});
         }
     }
 };
