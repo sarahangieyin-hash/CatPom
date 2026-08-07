@@ -30,11 +30,12 @@ export default {
 
         const embed = new EmbedBuilder()
             .setTitle('💤 Estado AFK Activado')
-            .setDescription(`Has quedado registrado como AFK.\n📌 **Motivo:** ${motivo}`)
+            .setDescription(`<@${userId}> se ha puesto AFK.\n📌 **Motivo:** ${motivo}`)
             .setColor('#f39c12')
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        // Se envía de forma pública para que todos lo sepan en el canal
+        await interaction.reply({ embeds: [embed] });
 
         // Opcional: Cambiar temporalmente el apodo del usuario añadiendo "[AFK]" si el bot tiene permisos
         try {
