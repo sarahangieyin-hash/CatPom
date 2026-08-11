@@ -1,9 +1,12 @@
 console.log("USANDO ESTE interactionCreate");
 
 import { Events, EmbedBuilder, MessageFlags } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
 import { logger } from '../utils/logger.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
 import { addRelation, getUserFamilyData } from '../utils/families.js';
+import { addPomp } from '../utils/points.js';
 
 export default {
     name: Events.InteractionCreate,
@@ -38,6 +41,111 @@ export default {
                 let customId = interaction.customId;
                 let args = [];
 
+                // 1. Manejador para aprobar/rechazar compra de parcelas físicas (Staff)
+                if (customId.startsWith('aprobar_parcela_') || customId.startsWith('rechazar_parcela_')) {
+                    const parts = customId.split('_');
+                    const accion = parts[0]; // aprobar o rechazar
+                    const solicitudId = parts[2];
+                    const compradorId = parts[3];
+
+                    if (accion === 'aprobar') {
+                        const idParcela = parseInt(parts[4]);
+
+                        let dataParcelas = {};
+                        const parcelasPath = path.resolve('src/data/parcelas.json');
+                        
+                        if (fs.existsSync(parcelasPath)) {
+                            try { dataParcelas = JSON.parse(fs.readFileSync(parcelasPath, 'utf8')); } catch (e) {}
+                        }
+
+                        const guildId = interaction.guild.id;
+                        if (dataParcelas[guildId] && dataParcelas[guildId][idParcela - 1]) {
+                            dataParcelas[guildId][idParcela - 1].estado = 'Ocupada';
+                            dataParcelas[guildId][idParcela - 1].propietarioId = compradorId;
+                            fs.writeFileSync(parcelasPath, JSON.stringify(dataParcelas, null, 2));
+                        }
+
+                        return interaction.update({
+                            content: `✅ **Parcela asignada oficialmente** a <@${compradorId}> por el encargado <@${interaction.user.id}>.`,
+                            components: []
+                        });
+                    } else {
+                        // Si se rechaza, devolvemos el derecho al inventario del usuario
+                        const tipoRequerido = parts[5];
+                        const invPath = path.resolve('src/data/inventario_parcelas.json');
+                        const guildId = interaction.guild.id;
+
+                        if (tipoRequerido) {
+                            let inventario = {};
+                            if (fs.existsSync(invPath)) {
+                                try { inventario = JSON.parse(fs.readFileSync(invPath, 'utf8')); } catch (e) {}
+                            }
+                            if (inventario[guildId] && inventario[guildId][compradorId]) {
+                                inventario[guildId][compradorId][tipoRequerido] += 1;
+                                fs.writeFileSync(invPath, JSON.stringify(inventario, null, 2));
+                            }
+                        }
+
+                        return interaction.update({
+                            content: `❌ **Solicitud de parcela rechazada** por <@${interaction.user.id}>. El derecho ha sido devuelto al inventario del usuario.`,
+                            components: []
+                        });
+                    }
+                }
+
+                // 2. Manejador para contratos de devolución firmados por encargados (Staff)
+                if (customId.startsWith('aprobar_devolucion_') || customId.startsWith('rechazar_devolucion_')) {
+                    const parts = customId.split('_');
+                    const accion = parts[0]; // aprobar o rechazar
+                    const solicitudId = parts[2];
+
+                    if (accion === 'aprobar') {
+                        const idParcela = parseInt(parts[3]);
+                        const propietarioId = parts[4];
+                        const tipoParcela = parts[5];
+                        const precioDevolver = parseInt(parts[6]);
+
+                        // Liberar parcela física
+                        const parcelasPath = path.resolve('src/data/parcelas.json');
+                        let dataParcelas = {};
+                        if (fs.existsSync(parcelasPath)) {
+                            try { dataParcelas = JSON.parse(fs.readFileSync(parcelasPath, 'utf8')); } catch (e) {}
+                        }
+
+                        const guildId = interaction.guild.id;
+                        if (dataParcelas[guildId] && dataParcelas[guildId][idParcela - 1]) {
+                            dataParcelas[guildId][idParcela - 1].estado = 'Disponible';
+                            delete dataParcelas[guildId][idParcela - 1].propietarioId;
+                            fs.writeFileSync(parcelasPath, JSON.stringify(dataParcelas, null, 2));
+                        }
+
+                        // Devolver los Pomp al usuario
+                        await addPomp(guildId, propietarioId, precioDevolver);
+
+                        // Devolver el derecho al inventario del usuario
+                        const invPath = path.resolve('src/data/inventario_parcelas.json');
+                        let inventario = {};
+                        if (fs.existsSync(invPath)) {
+                            try { inventario = JSON.parse(fs.readFileSync(invPath, 'utf8')); } catch (e) {}
+                        }
+
+                        if (!inventario[guildId]) inventario[guildId] = {};
+                        if (!inventario[guildId][propietarioId]) inventario[guildId][propietarioId] = { A: 0, B: 0, C: 0 };
+                        inventario[guildId][propietarioId][tipoParcela] += 1;
+                        fs.writeFileSync(invPath, JSON.stringify(inventario, null, 2));
+
+                        return interaction.update({
+                            content: `✅ **Contrato firmado y aprobado** por <@${interaction.user.id}>.\n- Parcela #${idParcela} liberada.\n- Reembolsados **${precioDevolver} Pomp** a <@${propietarioId}>.\n- 1x Parcela Tipo ${tipoParcela} devuelta a su inventario.`,
+                            components: []
+                        });
+                    } else {
+                        return interaction.update({
+                            content: `❌ **Contrato de devolución rechazado** por <@${interaction.user.id}>.`,
+                            components: []
+                        });
+                    }
+                }
+
                 // Detectar compra de derecho general en /parcelas
                 if (customId.startsWith('buy_plot_')) {
                     const tipoParcela = customId.replace('buy_plot_', '');
@@ -49,7 +157,7 @@ export default {
 
                     return interaction.reply({
                         content: `🏛️ ¡<@${interaction.user.id}> ha adquirido el derecho de una **Parcela Tipo ${tipoParcela}** por **${precio} puntos**!\n\n` +
-                                 `📌 **Siguiente paso:** Ve a \`/shoparce\` para ver las parcelas físicas disponibles y elige la tuya.`
+                                     `📌 **Siguiente paso:** Ve a \`/shoparce\` para ver las parcelas físicas disponibles y elige la tuya.`
                     });
                 }
 
@@ -59,9 +167,9 @@ export default {
 
                     return interaction.reply({
                         content: `🏛️ ¡<@${interaction.user.id}> ha mostrado interés en la parcela **${nombreParcela}**!\n\n` +
-                                 `📌 **Siguientes pasos:**\n` +
-                                 `1️⃣ Asegúrate de haber comprado tu derecho con \`/parcelas\`.\n` +
-                                 `2️⃣ Contacta con nuestros encargados (etiquetando al rol <@&1536563139489964134>) para formalizar la compra de la **${nombreParcela}** y que te la asignen.`
+                                     `📌 **Siguientes pasos:**\n` +
+                                     `1️⃣ Asegúrate de haber comprado tu derecho con \`/parcelas\`.\n` +
+                                     `2️⃣ Contacta con nuestros encargados (etiquetando al rol <@&1536563139489964134>) para formalizar la compra de la **${nombreParcela}** y que te la asignen.`
                     });
                 }
 
@@ -78,7 +186,7 @@ export default {
                 else if (customId.startsWith("poll_")) {
                     const parts = customId.split("_");
                     customId = "poll";
-                    args = parts.slice(1); // Pasa ['close'], ['check'] o [roleId, optionIndex]
+                    args = parts.slice(1);
                 }
 
                 console.log(
