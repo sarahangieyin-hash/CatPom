@@ -1,9 +1,13 @@
 import { SlashCommandBuilder } from 'discord.js';
-import fs from 'fs';
-import path from 'path';
+import pg from 'pg';
+
+const { Pool } = pg;
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 const ROL_ENCARGADO_ID = '1536563139489964134';
-const filePath = path.resolve('src/data/parcelas.json');
 
 export default {
     data: new SlashCommandBuilder()
@@ -31,29 +35,30 @@ export default {
         const precio = interaction.options.getInteger('precio');
         const foto = interaction.options.getString('foto');
 
-        let data = {};
-        if (fs.existsSync(filePath)) {
-            try {
-                data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-            } catch (e) {
-                data = {};
-            }
+        try {
+            await pool.query(
+                `CREATE TABLE IF NOT EXISTS parcelas (
+                    id SERIAL PRIMARY KEY,
+                    guild_id VARCHAR(50),
+                    nombre VARCHAR(100),
+                    tipo VARCHAR(10),
+                    coordenadas VARCHAR(100),
+                    precio INTEGER,
+                    foto TEXT,
+                    estado VARCHAR(50) DEFAULT 'Disponible'
+                )`
+            );
+
+            await pool.query(
+                `INSERT INTO parcelas (guild_id, nombre, tipo, coordenadas, precio, foto, estado) 
+                 VALUES ($1, $2, $3, $4, $5, $6, 'Disponible')`,
+                [guildId, nombre, tipo, coordenadas, precio, foto]
+            );
+
+            await interaction.reply({ content: `✅ ¡Parcela **${nombre}** (Tipo ${tipo}) añadida a la base de datos con éxito!` });
+        } catch (error) {
+            console.error(error);
+            await interaction.reply({ content: '❌ Ocurrió un error al guardar la parcela en la base de datos.', ephemeral: true });
         }
-
-        if (!data[guildId]) data[guildId] = [];
-
-        data[guildId].push({
-            nombre,
-            tipo,
-            coordenadas,
-            precio,
-            foto,
-            estado: 'Disponible',
-            propietarioId: null
-        });
-
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-
-        await interaction.reply({ content: `✅ ¡Parcela **${nombre}** (Tipo ${tipo}) añadida al archivo local con éxito!` });
     }
 };
