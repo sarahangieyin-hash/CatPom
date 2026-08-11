@@ -23,8 +23,6 @@ export default {
             /*
                 COMANDOS
             */
-           // (Aquí continúa el resto de tu código de interacciones...)
-            */
             if (interaction.isChatInputCommand()) {
                 const command = client.commands.get(interaction.commandName);
                 if (!command) return;
