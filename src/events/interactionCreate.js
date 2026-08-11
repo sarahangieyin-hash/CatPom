@@ -9,9 +9,21 @@ export default {
     name: Events.InteractionCreate,
 
     async execute(interaction, client) {
+        // Detectar cuando un usuario pulsa el botón de información de parcelas
+        if (interaction.isButton() && interaction.customId === 'reclamar_parcela_info') {
+            return interaction.reply({
+                content: '🏛️ **¿Cómo adquirir una parcela en Metztlán?**\n\n' +
+                         '1️⃣ Primero, usa el comando `/parcelas` para comprar tu derecho de parcela general.\n' +
+                         '2️⃣ Mira el catálogo en `/shoparce` y elige la parcela física que te guste (anota su nombre).\n' +
+                         '3️⃣ Contacta con nuestros encargados (etiquetando al rol <@&1536563139489964134>) indicando cuál quieres para que te la asignen oficialmente.'
+            });
+        }
+
         try {
             /*
                 COMANDOS
+            */
+           // (Aquí continúa el resto de tu código de interacciones...)
             */
             if (interaction.isChatInputCommand()) {
                 const command = client.commands.get(interaction.commandName);
