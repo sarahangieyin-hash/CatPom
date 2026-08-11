@@ -4,7 +4,7 @@ export default {
 
     customId: 'buy_plot_B',
 
-    async execute(interaction, client) {
+    async execute(interaction) {
 
         const price = 1000;
 
@@ -13,14 +13,11 @@ export default {
             interaction.user.id
         );
 
-
         if (points < price) {
             return interaction.reply({
-                content: `❌ No tienes suficientes Pomp.\nNecesitas **${price}** y tienes **${points}**.`,
-                ephemeral: true
+                content: `❌ No tienes suficientes Pomp. Necesitas **${price}** y tienes **${points}**.`
             });
         }
-
 
         await removePomp(
             interaction.guild.id,
@@ -28,10 +25,8 @@ export default {
             price
         );
 
-
         await interaction.reply({
-            content: `🟦 Compraste la Parcela B (30x30) por **${price} Pomp**.\n💎 Te quedan **${points - price} Pomp**.`,
-            ephemeral: true
+            content: `🟦 Compraste el derecho de Parcela Tipo B.\n💎 Gastaste **${price} Pomp**.\n\n📌 **Siguiente paso:** Ve a \`/shoparce\` para mirar el catálogo de parcelas físicas, anota el número de ID de la que quieras y usa el comando \`/buy <id>\` para solicitarla.`
         });
 
     }
