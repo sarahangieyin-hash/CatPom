@@ -1,8 +1,9 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
-import { pool } from '../../utils/database.js'; 
+import { SlashCommandBuilder } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
 
-// ID del rol de Encargados de Parcelas
 const ROL_ENCARGADO_ID = '1536563139489964134';
+const filePath = path.resolve('src/data/parcelas.json');
 
 export default {
     data: new SlashCommandBuilder()
@@ -20,25 +21,39 @@ export default {
 
     async execute(interaction) {
         if (!interaction.member.roles.cache.has(ROL_ENCARGADO_ID)) {
-            return interaction.reply({ content: '❌ No tienes permisos de Encargado de Parcelas para usar este comando.', ephemeral: true });
+            return interaction.reply({ content: '❌ No tienes permisos de Encargado de Parcelas.', ephemeral: true });
         }
 
+        const guildId = interaction.guild.id;
         const nombre = interaction.options.getString('nombre');
         const tipo = interaction.options.getString('tipo');
         const coordenadas = interaction.options.getString('coordenadas');
         const precio = interaction.options.getInteger('precio');
         const foto = interaction.options.getString('foto');
 
-        try {
-            await pool.query(
-                `INSERT INTO catalogo_parcelas (guild_id, nombre_parcela, tipo, coordenadas, precio, foto_url, estado) VALUES ($1, $2, $3, $4, $5, $6, 'Disponible')`,
-                [interaction.guild.id, nombre, tipo, coordenadas, precio, foto]
-            );
-
-            await interaction.reply({ content: `✅ ¡Parcela **${nombre}** (Tipo ${tipo}) añadida al catálogo con éxito!` });
-        } catch (error) {
-            console.error(error);
-            await interaction.reply({ content: '❌ Hubo un error al guardar la parcela en la base de datos.', ephemeral: true });
+        let data = {};
+        if (fs.existsSync(filePath)) {
+            try {
+                data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            } catch (e) {
+                data = {};
+            }
         }
+
+        if (!data[guildId]) data[guildId] = [];
+
+        data[guildId].push({
+            nombre,
+            tipo,
+            coordenadas,
+            precio,
+            foto,
+            estado: 'Disponible',
+            propietarioId: null
+        });
+
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+
+        await interaction.reply({ content: `✅ ¡Parcela **${nombre}** (Tipo ${tipo}) añadida al archivo local con éxito!` });
     }
 };
