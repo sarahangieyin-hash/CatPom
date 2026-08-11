@@ -28,13 +28,13 @@ export default {
             return interaction.editReply('🏛️ Actualmente no hay parcelas registradas en la Oficina de Tierras.');
         }
 
-        // Creamos un embed por cada parcela o mostramos el listado
-        const embeds = parcelas.map((p, index) => {
+        // Mapeamos cada parcela creando su Embed y su propio botón de compra
+        for (const [index, p] of parcelas.entries()) {
             const estadoTexto = p.estado === 'Ocupada' 
                 ? `🔴 **Ocupada**\n👤 **Propietario:** <@${p.propietarioId}>` 
                 : `🟢 **Disponible**`;
 
-            return new EmbedBuilder()
+            const embed = new EmbedBuilder()
                 .setTitle(`🏛️ ${p.nombre} (Tipo ${p.tipo})`)
                 .setDescription(
                     `📍 **Coordenadas:** \`${p.coordenadas}\`\n` +
@@ -44,20 +44,22 @@ export default {
                 .setImage(p.foto)
                 .setColor(p.estado === 'Ocupada' ? '#E74C3C' : '#2ECC71')
                 .setFooter({ text: `Parcela ${index + 1} de ${parcelas.length} • Oficina de Tierras de Metztlán` });
-        });
 
-        // Botón de contacto o aviso general para los encargados
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId('reclamar_parcela_info')
-                .setLabel('¿Cómo comprar una parcela?')
-                .setStyle(ButtonStyle.Secondary)
-                .setEmoji('📌')
-        );
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`comprar_parcela_${p.nombre}`)
+                    .setLabel(`Quiero esta parcela (${p.nombre})`)
+                    .setStyle(p.estado === 'Ocupada' ? ButtonStyle.Secondary : ButtonStyle.Success)
+                    .setEmoji('🏠')
+                    .setDisabled(p.estado === 'Ocupada') // Se desactiva si ya está ocupada
+            );
 
-        await interaction.editReply({ 
-            embeds: embeds.slice(0, 10), 
-            components: [row] 
-        });
+            // Si es la primera, respondemos; si hay más, usamos followUp para enviarlas todas ordenadas
+            if (index === 0) {
+                await interaction.editReply({ embeds: [embed], components: [row] });
+            } else {
+                await interaction.followUp({ embeds: [embed], components: [row] });
+            }
+        }
     }
 };
