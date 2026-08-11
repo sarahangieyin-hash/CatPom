@@ -31,7 +31,7 @@ export default {
                     [idParcela, guildId]
                 );
 
-                const parcela = res.rows;
+                const parcela = res.rows[0];
 
                 if (!parcela) {
                     return interaction.reply({ content: `❌ No existe ninguna parcela con el ID **#${idParcela}**.`, ephemeral: true });
