@@ -15,8 +15,7 @@ export default {
 
         if (points < price) {
             return interaction.reply({
-                content: `❌ No tienes suficientes Pomp. Necesitas **${price}** y tienes **${points}**.`,
-                ephemeral: true
+                content: `❌ No tienes suficientes Pomp. Necesitas **${price}** y tienes **${points}**.`
             });
         }
 
@@ -27,8 +26,7 @@ export default {
         );
 
         await interaction.reply({
-            content: `🟨 Compraste la Parcela A (50x50).\n💎 Gastaste **${price} Pomp**.`,
-            ephemeral: true
+            content: `🟨 Compraste el derecho de Parcela Tipo A.\n💎 Gastaste **${price} Pomp**.\n\n📌 **Siguiente paso:** Ve a \`/shoparce\` para mirar el catálogo de parcelas físicas, anota el número de ID de la que quieras y usa el comando \`/buy <id>\` para solicitarla.`
         });
 
     }
