@@ -1,5 +1,12 @@
 import { SlashCommandBuilder } from 'discord.js';
-import db from '../../db.js';
+import pkg from 'pg';
+
+const { Pool } = pkg;
+
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+});
 
 const ROL_ENCARGADO_ID = '1536563139489964134';
 
@@ -30,7 +37,7 @@ export default {
         const foto = interaction.options.getString('foto');
 
         try {
-            await db.query(
+            await pool.query(
                 `CREATE TABLE IF NOT EXISTS parcelas (
                     id SERIAL PRIMARY KEY,
                     guild_id VARCHAR(50),
@@ -44,7 +51,7 @@ export default {
                 )`
             );
 
-            await db.query(
+            await pool.query(
                 `INSERT INTO parcelas (guild_id, nombre, tipo, coordenadas, precio, foto, estado) 
                  VALUES ($1, $2, $3, $4, $5, $6, 'Disponible')`,
                 [guildId, nombre, tipo, coordenadas, precio, foto]
