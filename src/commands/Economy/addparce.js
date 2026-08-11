@@ -25,7 +25,7 @@ export default {
 
     async execute(interaction) {
         if (!interaction.member.roles.cache.has(ROL_ENCARGADO_ID)) {
-            return interaction.reply({ content: '❌ No tienes permisos de Encargado de Parcelas.', ephemeral: true });
+            return interaction.reply({ content: '❌ No tienes permisos de Encargado de Parcelas.', flags: 64 });
         }
 
         const guildId = interaction.guild.id;
@@ -45,7 +45,8 @@ export default {
                     coordenadas VARCHAR(100),
                     precio INTEGER,
                     foto TEXT,
-                    estado VARCHAR(50) DEFAULT 'Disponible'
+                    estado VARCHAR(50) DEFAULT 'Disponible',
+                    propietario_id VARCHAR(50)
                 )`
             );
 
@@ -58,7 +59,7 @@ export default {
             await interaction.reply({ content: `✅ ¡Parcela **${nombre}** (Tipo ${tipo}) añadida a la base de datos con éxito!` });
         } catch (error) {
             console.error(error);
-            await interaction.reply({ content: '❌ Ocurrió un error al guardar la parcela en la base de datos.', ephemeral: true });
+            await interaction.reply({ content: '❌ Ocurrió un error al guardar la parcela en la base de datos.', flags: 64 });
         }
     }
 };
