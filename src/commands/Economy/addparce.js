@@ -1,6 +1,9 @@
 import { SlashCommandBuilder } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
 
 const ROL_ENCARGADO_ID = '1536563139489964134';
+const filePath = path.resolve('src/data/parcelas.json');
 
 export default {
     data: new SlashCommandBuilder()
@@ -24,38 +27,53 @@ export default {
         await interaction.deferReply({ flags: 64 });
 
         const guildId = interaction.guild.id;
-        const database = interaction.client.db;
-
-        if (!database) {
-            return interaction.editReply({ content: '❌ La base de datos no está disponible en este momento.' });
-        }
-
-        const nuevaParcela = {
-            id: Date.now().toString(),
-            nombre: interaction.options.getString('nombre'),
-            tipo: interaction.options.getString('tipo'),
-            coordenadas: interaction.options.getString('coordenadas'),
-            precio: interaction.options.getInteger('precio'),
-            foto: interaction.options.getString('foto'),
-            estado: 'Disponible',
-            propietario_id: null
-        };
+        const nombre = interaction.options.getString('nombre');
+        const tipo = interaction.options.getString('tipo');
+        const coordenadas = interaction.options.getString('coordenadas');
+        const precio = interaction.options.getInteger('precio');
+        const foto = interaction.options.getString('foto');
 
         try {
-            // Obtenemos las parcelas actuales del servidor (o un array vacío si no hay ninguna)
-            const storageKey = `guild:${guildId}:parcelas`;
-            const parcelasActuales = (await database.get(storageKey)) || [];
+            // Asegurarnos de que el directorio data existe
+            const dir = path.dirname(filePath);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
 
-            // Añadimos la nueva parcela
-            parcelasActuales.push(nuevaParcela);
+            // Leer datos actuales del JSON
+            let data = {};
+            if (fs.existsSync(filePath)) {
+                try {
+                    data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                } catch (e) {
+                    data = {};
+                }
+            }
 
-            // Guardamos de vuelta usando el wrapper oficial del bot
-            await database.set(storageKey, parcelasActuales);
+            if (!data[guildId]) {
+                data[guildId] = [];
+            }
 
-            await interaction.editReply({ content: `✅ ¡Parcela **${nuevaParcela.nombre}** (Tipo ${nuevaParcela.tipo}) añadida al catálogo con éxito!` });
+            const nuevaParcela = {
+                id: Date.now().toString(),
+                nombre,
+                tipo,
+                coordenadas,
+                precio,
+                foto,
+                estado: 'Disponible',
+                propietarioId: null
+            };
+
+            data[guildId].push(nuevaParcela);
+
+            // Guardar de vuelta en el archivo JSON
+            fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+
+            await interaction.editReply({ content: `✅ ¡Parcela **${nombre}** (Tipo ${tipo}) añadida al catálogo con éxito!` });
         } catch (error) {
-            console.error('Error al guardar parcela en la base de datos:', error);
-            await interaction.editReply({ content: '❌ Ocurrió un error al guardar la parcela en la base de datos.' });
+            console.error('Error al guardar parcela en el JSON:', error);
+            await interaction.editReply({ content: '❌ Ocurrió un error al guardar la parcela en el archivo de datos.' });
         }
     }
 };
