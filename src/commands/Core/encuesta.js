@@ -7,7 +7,6 @@ import {
     PermissionFlagsBits 
 } from 'discord.js';
 
-// Función para transformar formatos como 1h, 30m, 45s, 1h30m a milisegundos
 function parseDuration(timeStr) {
     if (!timeStr) return null;
     const regex = /(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/i;
@@ -25,7 +24,7 @@ function parseDuration(timeStr) {
 export default {
     data: new SlashCommandBuilder()
         .setName('encuesta')
-        .setDescription('Crea una encuesta con rol permitido, tiempo límite flexible y botones')
+        .setDescription('Crea una encuesta con rol permitido, tiempo límite y hasta 5 fotos opcionales para las opciones')
         .addStringOption(o =>
             o.setName('pregunta')
                 .setDescription('La pregunta de la encuesta')
@@ -38,14 +37,19 @@ export default {
         )
         .addStringOption(o =>
             o.setName('opciones')
-                .setDescription('Opciones separadas por comas (Ej: Sí, No)')
+                .setDescription('Opciones separadas por comas (Ej: Terreno A, Terreno B, Terreno C)')
                 .setRequired(true)
         )
         .addStringOption(o =>
             o.setName('tiempo')
-                .setDescription('Tiempo de cierre (Ej: 1h, 30m, 45s, 1h30m)')
+                .setDescription('Tiempo de cierre (Ej: 1h, 30m, 45s)')
                 .setRequired(false)
         )
+        .addAttachmentOption(o => o.setName('foto_1').setDescription('Imagen para la Opción 1').setRequired(false))
+        .addAttachmentOption(o => o.setName('foto_2').setDescription('Imagen para la Opción 2').setRequired(false))
+        .addAttachmentOption(o => o.setName('foto_3').setDescription('Imagen para la Opción 3').setRequired(false))
+        .addAttachmentOption(o => o.setName('foto_4').setDescription('Imagen para la Opción 4').setRequired(false))
+        .addAttachmentOption(o => o.setName('foto_5').setDescription('Imagen para la Opción 5').setRequired(false))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 
     async execute(interaction, client) {
@@ -55,6 +59,14 @@ export default {
         const rolPermitido = interaction.options.getRole('rol_permitido');
         const opcionesTexto = interaction.options.getString('opciones');
         const tiempoTexto = interaction.options.getString('tiempo');
+        
+        const fotos = [
+            interaction.options.getAttachment('foto_1'),
+            interaction.options.getAttachment('foto_2'),
+            interaction.options.getAttachment('foto_3'),
+            interaction.options.getAttachment('foto_4'),
+            interaction.options.getAttachment('foto_5')
+        ].filter(Boolean); // Solo guarda las que el usuario haya subido
 
         const opciones = opcionesTexto.split(',').map(o => o.trim()).filter(Boolean);
 
@@ -70,20 +82,50 @@ export default {
             cierreTimestamp = Date.now() + cierreMs;
             footerText += ` • Cierra: <t:${Math.floor(cierreTimestamp / 1000)}:f>`;
         } else if (tiempoTexto) {
-            return interaction.editReply('❌ Formato de tiempo inválido. Usa ejemplos como: `1h`, `30m`, `45s` o `1h30m`.');
+            return interaction.editReply('❌ Formato de tiempo inválido. Usa ejemplos como: `1h`, `30m`, `45s`.');
         }
 
-        const embed = new EmbedBuilder()
-            .setTitle('📊 Nueva Encuesta')
+        let descripcion = `**${pregunta}**\n\n🔒 **Rol autorizado:** ${rolPermitido}\n\n`;
+
+        opciones.forEach((op, i) => {
+            const letra = String.fromCharCode(65 + i); // Convierte 0 en A, 1 en B, 2 en C, etc.
+            descripcion += `🔹 **Opción ${letra} (${op}):** 0 votos\n`;
+        });
+
+        const embeds = [];
+
+        // Embed Principal con la pregunta y las opciones
+        const mainEmbed = new EmbedBuilder()
+            .setTitle('📊 Nueva Encuesta de Terrenos / Opciones')
             .setColor('#3498DB')
-            .setDescription(`**${pregunta}**\n\n🔒 **Rol autorizado:** ${rolPermitido}\n\n` + opciones.map((op, i) => `🔹 **Opción ${i + 1}:** ${op} (0 votos)`).join('\n'))
+            .setDescription(descripcion)
             .setFooter({ text: footerText })
             .setTimestamp();
 
+        // Si hay al menos una foto, la ponemos en el embed principal
+        if (fotos.length > 0) {
+            mainEmbed.setImage(fotos[0].url);
+            mainEmbed.addFields({ name: `🖼️ Imagen Opción A`, value: `[Ver enlace](${fotos[0].url})`, inline: true });
+        }
+
+        embeds.push(mainEmbed);
+
+        // Si subió más fotos (foto_2, foto_3...), creamos embeds limpios adicionales para cada una con su letra correspondiente (B, C, D...)
+        for (let i = 1; i < fotos.length; i++) {
+            const letra = String.fromCharCode(65 + i);
+            const extraEmbed = new EmbedBuilder()
+                .setColor('#3498DB')
+                .setTitle(`🖼️ Imagen - Opción ${letra} (${opciones[i] || `Opción ${letra}`})`)
+                .setImage(fotos[i].url);
+            embeds.push(extraEmbed);
+        }
+
+        // Construir botones interactivos mapeados por letras/índices
         const voteButtons = opciones.map((op, i) => {
+            const letra = String.fromCharCode(65 + i);
             return new ButtonBuilder()
                 .setCustomId(`poll_${rolPermitido.id}_${i}`)
-                .setLabel(op.length > 80 ? op.substring(0, 77) + '...' : op)
+                .setLabel(`Votar ${letra}: ${op.length > 70 ? op.substring(0, 67) + '...' : op}`)
                 .setStyle(ButtonStyle.Primary);
         });
         const rowVotes = new ActionRowBuilder().addComponents(voteButtons);
@@ -101,7 +143,7 @@ export default {
         const rowControl = new ActionRowBuilder().addComponents(closeButton, checkButton);
 
         const message = await interaction.channel.send({
-            embeds: [embed],
+            embeds: embeds,
             components: [rowVotes, rowControl]
         });
 
@@ -127,7 +169,7 @@ export default {
                         .setColor('#E74C3C');
 
                     await fetchedMessage.edit({
-                        embeds: [closedEmbed],
+                        embeds: [closedEmbed, ...fetchedMessage.embeds.slice(1)],
                         components: disabledRows
                     });
                 } catch (err) {
