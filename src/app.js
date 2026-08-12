@@ -1,173 +1,63 @@
-import 'dotenv/config';
-import { Client, Collection, GatewayIntentBits } from 'discord.js';
-import { REST } from '@discordjs/rest';
-import express from 'express';
+import { SlashCommandBuilder } from 'discord.js';
 
-import config from './config/bot.js';
-import { initializeDatabase } from './utils/database/wrapper.js';
-import { logger, startupLog, shutdownLog } from './utils/logger.js';
-import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
-import { handleTaskError, ErrorCodes } from './utils/errorHandler.js';
-import pkg from '../package.json' with { type: 'json' };
+const ROL_ENCARGADO_ID = '1536563139489964134';
 
-console.log("APP STARTED");
+export default {
+    data: new SlashCommandBuilder()
+        .setName('addparce')
+        .setDescription('Añade una nueva parcela al catálogo oficial (Solo Encargados)')
+        .addStringOption(o => o.setName('nombre').setDescription('Ej: Parcela Norte 01').setRequired(true))
+        .addStringOption(o => o.setName('tipo').setDescription('Tipo de parcela (A, B o C)').setChoices(
+            { name: 'Tipo A', value: 'A' },
+            { name: 'Tipo B', value: 'B' },
+            { name: 'Tipo C', value: 'C' }
+        ).setRequired(true))
+        .addStringOption(o => o.setName('coordenadas').setDescription('Ej: X: 120, Z: -450').setRequired(true))
+        .addIntegerOption(o => o.setName('precio').setDescription('Precio en puntos').setRequired(true))
+        .addStringOption(o => o.setName('foto').setDescription('URL de la imagen de la parcela').setRequired(true)),
 
-const BOT_TOKEN = process.env.DISCORD_TOKEN || process.env.TOKEN;
-const CLIENT_ID = process.env.CLIENT_ID;
+    async execute(interaction) {
+        if (!interaction.member.roles.cache.has(ROL_ENCARGADO_ID)) {
+            return interaction.reply({ content: '❌ No tienes permisos de Encargado de Parcelas.', flags: 64 });
+        }
 
-console.log("TOKEN EXISTS:", Boolean(BOT_TOKEN));
-console.log("CLIENT ID EXISTS:", Boolean(CLIENT_ID));
+        const guildId = interaction.guild.id;
+        const nombre = interaction.options.getString('nombre');
+        const tipo = interaction.options.getString('tipo');
+        const coordenadas = interaction.options.getString('coordenadas');
+        const precio = interaction.options.getInteger('precio');
+        const foto = interaction.options.getString('foto');
+        const db = interaction.client.db;
 
-class CatPom extends Client {
-    constructor() {
-        super({
-            intents: [
-                GatewayIntentBits.Guilds,
-                GatewayIntentBits.GuildMembers,
-                GatewayIntentBits.GuildMessages,
-                GatewayIntentBits.MessageContent,
-            ],
-        });
+        if (!db) {
+            return interaction.reply({ content: '❌ La base de datos no está disponible en este momento.', flags: 64 });
+        }
 
-        this.config = config;
-        this.commands = new Collection();
-        this.buttons = new Collection();
-        this.selectMenus = new Collection();
-
-        this.family = {
-            graph: null,
-            managers: {}
-        };
-
-        this.db = null;
-        this.pgPool = null;
-
-        this.rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
-    }
-
-    async start() {
         try {
-            startupLog('Starting CatPom...');
-            startupLog('Initializing database...');
+            await db.query(
+                `CREATE TABLE IF NOT EXISTS parcelas (
+                    id SERIAL PRIMARY KEY,
+                    guild_id VARCHAR(50),
+                    nombre VARCHAR(100),
+                    tipo VARCHAR(10),
+                    coordenadas VARCHAR(100),
+                    precio INTEGER,
+                    foto TEXT,
+                    estado VARCHAR(50) DEFAULT 'Disponible',
+                    propietario_id VARCHAR(50)
+                )`
+            );
 
-            // 🎯 INICIALIZAMOS LA BASE DE DATOS CORRECTAMENTE ANTES DE NADA
-            const { db } = await initializeDatabase();
-            this.db = db;
+            await db.query(
+                `INSERT INTO parcelas (guild_id, nombre, tipo, coordenadas, precio, foto, estado) 
+                 VALUES ($1, $2, $3, $4, $5, $6, 'Disponible')`,
+                [guildId, nombre, tipo, coordenadas, precio, foto]
+            );
 
-            startupLog('Loading commands...');
-            await loadCommands(this);
-            startupLog(`Commands loaded: ${this.commands.size}`);
-
-            startupLog('Initializing family system...');
-            const { FamilyGraph } = await import('./family/utils/graph.js');
-            const { FamilyManager } = await import('./family/managers/familyManager.js');
-            const { MarriageManager } = await import('./family/managers/marriageManager.js');
-            const { AdoptionManager } = await import('./family/managers/adoptionManager.js');
-            const { RelationshipManager } = await import('./family/managers/relationshipManager.js');
-
-            this.family.graph = new FamilyGraph();
-            this.family.managers.family = new FamilyManager(this.family.graph);
-            this.family.managers.marriage = new MarriageManager(this.family.graph);
-            this.family.managers.adoption = new AdoptionManager(this.family.graph);
-            this.family.managers.relationship = new RelationshipManager(this.family.graph);
-
-            startupLog('Family system ready');
-
-            startupLog('Loading handlers...');
-            await this.loadHandlers();
-
-            startupLog('Starting web server...');
-            this.startWebServer();
-
-            startupLog('Logging into Discord...');
-            await this.login(BOT_TOKEN);
-
-            startupLog('Registering slash commands...');
-            await this.registerCommands();
-
-            startupLog(`ONLINE ✅ | ${this.commands.size} commands | ${this.buttons.size} buttons | ${this.selectMenus.size} menus`);
-
+            await interaction.reply({ content: `✅ ¡Parcela **${nombre}** (Tipo ${tipo}) añadida a la base de datos con éxito!` });
         } catch (error) {
-            logger.error('Failed to start bot:', error);
             console.error(error);
-            process.exit(1);
+            await interaction.reply({ content: '❌ Ocurrió un error al guardar la parcela en la base de datos.', flags: 64 });
         }
     }
-
-    startWebServer() {
-        const app = express();
-        const port = Number(process.env.PORT || 3000);
-
-        app.get('/', (req, res) => {
-            res.json({ message: 'CatPom online', version: pkg.version });
-        });
-
-        app.get('/health', (req, res) => {
-            res.json({ status: 'healthy', uptime: process.uptime() });
-        });
-
-        this.webServer = app.listen(port, () => {
-            startupLog(`Web server running on port ${port}`);
-        });
-    }
-
-    async loadHandlers() {
-        const handlers = ['loaders/events', 'loaders/interactions'];
-
-        for (const handler of handlers) {
-            const module = await import(`./handlers/${handler}.js`);
-            if (typeof module.default === 'function') {
-                await module.default(this);
-                startupLog(`Loaded ${handler}`);
-            }
-        }
-    }
-
-    async registerCommands() {
-        try {
-            await registerSlashCommands(this, { clientId: CLIENT_ID });
-        } catch (error) {
-            logger.error('Command registration failed:', error);
-        }
-    }
-
-    async shutdown(reason = 'UNKNOWN') {
-        shutdownLog(`CatPom shutting down: ${reason}`);
-        try {
-            if (this.webServer) {
-                this.webServer.close();
-            }
-            if (global.pgPool && typeof global.pgPool.end === 'function') {
-                await global.pgPool.end();
-            }
-            this.destroy();
-            process.exit(0);
-        } catch (error) {
-            logger.error('Shutdown error:', error);
-            process.exit(1);
-        }
-    }
-}
-
-const bot = new CatPom();
-
-process.on('SIGTERM', () => bot.shutdown('SIGTERM'));
-process.on('SIGINT', () => bot.shutdown('SIGINT'));
-
-process.on('uncaughtException', error => {
-    console.error('💥 UNCAUGHT EXCEPTION', error);
-    handleTaskError('uncaught_exception', error, { fatal: true });
-});
-
-process.on('unhandledRejection', reason => {
-    console.error('💥 UNHANDLED REJECTION', reason);
-    handleTaskError(
-        'unhandled_rejection',
-        reason instanceof Error ? reason : new Error(String(reason)),
-        { errorCode: ErrorCodes.UNHANDLED_REJECTION }
-    );
-});
-
-bot.start();
-
-export default CatPom;
+};
