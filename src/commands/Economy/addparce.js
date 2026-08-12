@@ -21,45 +21,40 @@ export default {
             return interaction.reply({ content: '❌ No tienes permisos de Encargado de Parcelas.', flags: 64 });
         }
 
-        // 1. Avisamos a Discord inmediatamente para evitar el error de "la aplicación no ha respondido"
         await interaction.deferReply({ flags: 64 });
 
         const guildId = interaction.guild.id;
-        const nombre = interaction.options.getString('nombre');
-        const tipo = interaction.options.getString('tipo');
-        const coordenadas = interaction.options.getString('coordenadas');
-        const precio = interaction.options.getInteger('precio');
-        const foto = interaction.options.getString('foto');
-        const db = interaction.client.db;
+        const database = interaction.client.db;
 
-        if (!db) {
+        if (!database) {
             return interaction.editReply({ content: '❌ La base de datos no está disponible en este momento.' });
         }
 
+        const nuevaParcela = {
+            id: Date.now().toString(),
+            nombre: interaction.options.getString('nombre'),
+            tipo: interaction.options.getString('tipo'),
+            coordenadas: interaction.options.getString('coordenadas'),
+            precio: interaction.options.getInteger('precio'),
+            foto: interaction.options.getString('foto'),
+            estado: 'Disponible',
+            propietario_id: null
+        };
+
         try {
-            await db.query(
-                `CREATE TABLE IF NOT EXISTS parcelas (
-                    id SERIAL PRIMARY KEY,
-                    guild_id VARCHAR(50),
-                    nombre VARCHAR(100),
-                    tipo VARCHAR(10),
-                    coordenadas VARCHAR(100),
-                    precio INTEGER,
-                    foto TEXT,
-                    estado VARCHAR(50) DEFAULT 'Disponible',
-                    propietario_id VARCHAR(50)
-                )`
-            );
+            // Obtenemos las parcelas actuales del servidor (o un array vacío si no hay ninguna)
+            const storageKey = `guild:${guildId}:parcelas`;
+            const parcelasActuales = (await database.get(storageKey)) || [];
 
-            await db.query(
-                `INSERT INTO parcelas (guild_id, nombre, tipo, coordenadas, precio, foto, estado) 
-                 VALUES ($1, $2, $3, $4, $5, $6, 'Disponible')`,
-                [guildId, nombre, tipo, coordenadas, precio, foto]
-            );
+            // Añadimos la nueva parcela
+            parcelasActuales.push(nuevaParcela);
 
-            await interaction.editReply({ content: `✅ ¡Parcela **${nombre}** (Tipo ${tipo}) añadida a la base de datos con éxito!` });
+            // Guardamos de vuelta usando el wrapper oficial del bot
+            await database.set(storageKey, parcelasActuales);
+
+            await interaction.editReply({ content: `✅ ¡Parcela **${nuevaParcela.nombre}** (Tipo ${nuevaParcela.tipo}) añadida al catálogo con éxito!` });
         } catch (error) {
-            console.error('Error al guardar parcela:', error);
+            console.error('Error al guardar parcela en la base de datos:', error);
             await interaction.editReply({ content: '❌ Ocurrió un error al guardar la parcela en la base de datos.' });
         }
     }
