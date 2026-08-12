@@ -1,15 +1,10 @@
 import { SlashCommandBuilder } from 'discord.js';
-import pg from 'pg';
+import pkg from 'pg';
 
-const { Pool } = pg;
+const { Pool } = pkg;
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    host: process.env.PGHOST || 'postgres',
-    database: process.env.PGDATABASE,
-    user: process.env.PGUSER,
-    password: process.env.PGPASSWORD,
-    port: process.env.PGPORT ? parseInt(process.env.PGPORT) : 5432,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: { rejectUnauthorized: false }
 });
 
 const ROL_ENCARGADO_ID = '1536563139489964134';
