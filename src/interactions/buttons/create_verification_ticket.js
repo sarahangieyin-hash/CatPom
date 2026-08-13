@@ -73,7 +73,7 @@ Indícanos por este ticket qué pueblo eliges:
 - Sakura
 - Hrafheim
 
-Si tienes cualquier duda, pregunta en este ticket o menciona a <@&1515791573026082948>.`
+If tienes cualquier duda, pregunta en este ticket o menciona a <@&1515791573026082948>.`
             );
 
         await channel.send({
@@ -91,30 +91,50 @@ Si tienes cualquier duda, pregunta en este ticket o menciona a <@&15157915730260
             ]
         });
 
-        // 🕒 RECORDATORIO AUTOMÁTICO DE INACTIVIDAD (A los 10 minutos = 600000 ms)
-        const TIEMPO_ESPERA = 10 * 60 * 1000; 
+        // 🕒 1. PRIMER AVISO: A los 10 minutos (600,000 ms)
+        const TIEMPO_10M = 10 * 60 * 1000; 
 
         setTimeout(async () => {
             try {
-                // Volvemos a buscar el canal para asegurarnos de que sigue abierto
                 const channelCheck = await guild.channels.fetch(channel.id).catch(() => null);
                 if (!channelCheck) return;
 
-                // Comprobamos los últimos mensajes del canal
-                const messages = await channelCheck.messages.fetch({ limit: 10 });
+                const messages = await channelCheck.messages.fetch({ limit: 20 });
                 
-                // Verificamos si el usuario ya ha escrito algo
                 const userHasSpoken = messages.some(m => m.author.id === interaction.user.id);
+                const botAlreadyWarned10M = messages.some(m => m.author.id === guild.client.user.id && m.content.includes("10 minutos"));
 
-                // Si pasaron 10 minutos y el usuario NO ha dicho nada, mandamos el aviso
-                if (!userHasSpoken) {
+                if (!userHasSpoken && !botAlreadyWarned10M) {
                     await channelCheck.send({
-                        content: `🔔 ${interaction.user}, ¡Hola! Notamos que aún no has respondido en este ticket.\n\nPor favor, **lee las instrucciones de arriba** y envíanos los datos requeridos (usuario de Minecraft, edad, audio, captura y pueblo) para poder verificarte.`
+                        content: `🔔 ${interaction.user}, ¡Hola! Han pasado 10 minutos y notamos que aún no has respondido en este ticket.\n\nPor favor, **lee las instrucciones de arriba** y envíanos los datos requeridos para poder verificarte.`
                     });
                 }
             } catch (error) {
-                console.error("Error al enviar el recordatorio de verificación:", error);
+                console.error("Error en el recordatorio de 10m:", error);
             }
-        }, TIEMPO_ESPERA);
+        }, TIEMPO_10M);
+
+        // 🕒 2. SEGUNDO AVISO: A las 12 horas (43,200,000 ms)
+        const TIEMPO_12H = 12 * 60 * 60 * 1000; 
+
+        setTimeout(async () => {
+            try {
+                const channelCheck = await guild.channels.fetch(channel.id).catch(() => null);
+                if (!channelCheck) return;
+
+                const messages = await channelCheck.messages.fetch({ limit: 30 });
+                
+                const userHasSpoken = messages.some(m => m.author.id === interaction.user.id);
+                const botAlreadyWarned12H = messages.some(m => m.author.id === guild.client.user.id && m.content.includes("12 horas"));
+
+                if (!userHasSpoken && !botAlreadyWarned12H) {
+                    await channelCheck.send({
+                        content: `⚠️ ${interaction.user}, ¡Atención! Han pasado 12 horas y este ticket de verificación sigue sin actividad por tu parte.\n\nPor favor, aporta la información necesaria (usuario, edad, audio, captura y pueblo) para completar tu acceso.`
+                    });
+                }
+            } catch (error) {
+                console.error("Error en el recordatorio de 12h:", error);
+            }
+        }, TIEMPO_12H);
     }
 };
