@@ -73,7 +73,7 @@ Indícanos por este ticket qué pueblo eliges:
 - Sakura
 - Hrafheim
 
-If tienes cualquier duda, pregunta en este ticket o menciona a <@&1515791573026082948>.`
+Si tienes cualquier duda, pregunta en este ticket o menciona a <@&1515791573026082948>.`
             );
 
         await channel.send({
