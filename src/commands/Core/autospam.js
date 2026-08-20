@@ -31,10 +31,10 @@ export default {
 
         interval = setInterval(async () => {
             try {
-                await interaction.channel.send('Mensaje automático 🧪');
+                await interaction.channel.send('Mensaje automático');
             } catch (error) {
                 console.error('Error enviando mensaje automático:', error);
             }
-        }, 30000);
+        }, 10000);
     }
 };
